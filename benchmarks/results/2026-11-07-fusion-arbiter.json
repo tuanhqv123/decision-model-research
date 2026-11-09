@@ -1,0 +1,28 @@
+{
+ "protocol": "AC-v2 398 High, pure; E2 vs stage-2 arm; arbiter fitted on val 827, test scored once",
+ "arbiter": "logistic on [conf, box_conf, found, entropy, margin, is_spatial] x {E2, arm, diff} + point distance",
+ "fit_rows": 107,
+ "tau_px": 0,
+ "val": {
+  "base": 0.6275695284159613,
+  "fused": 0.656590084643289
+ },
+ "test": {
+  "base": 0.6407035175879398,
+  "fused": 0.6407035175879398,
+  "delta_pts": 0.0,
+  "gained": 14,
+  "lost": 14,
+  "mcnemar_p": 1.0,
+  "ci95_pts": [
+   -2.74,
+   2.53
+  ],
+  "rows_switched": 214
+ },
+ "pass_bar": {
+  "delta_ge_1.5": false,
+  "significant": false,
+  "verdict": "FAIL"
+ }
+}

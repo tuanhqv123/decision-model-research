@@ -1,0 +1,78 @@
+{
+ "n": 398,
+ "duplicates": [],
+ "independent_runs": [
+  "E2pure",
+  "E2mem",
+  "gndB1406",
+  "cont500",
+  "cur24k900",
+  "E2_705",
+  "arm20"
+ ],
+ "all_runs": [
+  "E2pure",
+  "E2mem",
+  "gndB1406",
+  "cont500",
+  "cur24k900",
+  "E2_705",
+  "arm20",
+  "cont250",
+  "cur24k1500",
+  "gndB1056"
+ ],
+ "per_run": {
+  "E2pure": 0.6407,
+  "E2mem": 0.6482,
+  "gndB1406": 0.6482,
+  "cont500": 0.6457,
+  "cur24k900": 0.6281,
+  "E2_705": 0.6131,
+  "arm20": 0.608,
+  "cont250": 0.6382,
+  "cur24k1500": 0.6231,
+  "gndB1056": 0.6407
+ },
+ "oracle": {
+  "independent": {
+   "runs": 7,
+   "acc": 0.794,
+   "delta_vs_best": 0.1458
+  },
+  "all": {
+   "runs": 10,
+   "acc": 0.809,
+   "delta_vs_best": 0.1608
+  }
+ },
+ "vote": {
+  "cv_by_px": {
+   "0": 0.6407,
+   "4": 0.6457,
+   "8": 0.6457,
+   "16": 0.6457,
+   "32": 0.6583,
+   "64": 0.6583,
+   "96": 0.6583,
+   "128": 0.6583
+  },
+  "px": 32,
+  "cv_acc": 0.6583,
+  "acc": 0.6583,
+  "delta_pts": 1.76,
+  "gained": 10,
+  "lost": 3,
+  "mcnemar_p": 0.0923,
+  "ci95_pts": [
+   0.0,
+   3.52
+  ]
+ },
+ "arbiter": {
+  "design": "per-checkpoint correctness, one example per (row x run), 5-fold by episode",
+  "train_examples": 2786,
+  "cv_acc": 0.6533,
+  "delta_vs_best": 0.0051
+ }
+}

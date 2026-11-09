@@ -1,0 +1,11 @@
+{
+  "kernel_type": "script",
+  "id": "trnanh140999/d12b2s-acv2-kaggle",
+  "title": "d12b2s acv2 kaggle",
+  "code_file": "run_d12b_kaggle.py",
+  "language": "python",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "machine_shape": "NvidiaTeslaT4"
+}

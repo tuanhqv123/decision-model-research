@@ -1,0 +1,65 @@
+{
+ "val": "benchmarks/results/2026-10-29-evals/E2-val.jsonl",
+ "test": "benchmarks/results/2026-10-29-evals/E2-705-V.jsonl",
+ "alpha": 0.1,
+ "auroc": {
+  "global": [
+   0.6769762029877637,
+   0.6623110496061315
+  ],
+  "routed": [
+   0.7600030027775693,
+   0.7092026825633383
+  ]
+ },
+ "aurc": {
+  "global": [
+   0.2433147338578377,
+   0.26956217559691487
+  ],
+  "routed": [
+   0.20897281397533574,
+   0.23913091308588968
+  ]
+ },
+ "frontier": [
+  {
+   "delta": 0.3,
+   "max_coverage": 0.7799274486094316
+  },
+  {
+   "delta": 0.25,
+   "max_coverage": 0.6614268440145102
+  },
+  {
+   "delta": 0.2,
+   "max_coverage": 0.47642079806529625
+  },
+  {
+   "delta": 0.15,
+   "max_coverage": null
+  },
+  {
+   "delta": 0.1,
+   "max_coverage": null
+  },
+  {
+   "delta": 0.05,
+   "max_coverage": null
+  }
+ ],
+ "gate": [
+  {
+   "delta": 0.2,
+   "tau": 0.5269121813031161,
+   "val_coverage": 0.47642079806529625,
+   "val_risk": 0.17258883248730963,
+   "val_ub": 0.19948390985666775,
+   "test_coverage": 0.38944723618090454,
+   "test_risk": 0.23870967741935484,
+   "test_ub": 0.2882378189549184,
+   "test_n": 155,
+   "held": false
+  }
+ ]
+}

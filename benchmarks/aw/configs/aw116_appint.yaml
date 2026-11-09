@@ -1,0 +1,147 @@
+protocol: aw-main-v1
+agent: d1_appint
+checkpoint: appint_full@938
+model:
+  url: http://172.17.0.1:8700
+  token: awgate2026
+  track: V
+  return_readouts: true
+environment:
+  url: http://127.0.0.1:5051
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+  # The APKs are already installed in this container (93 episodes have run). Re-running the
+  # ~5-8 min setup on every resume both wastes time and can fail on a transient a11y dump, which
+  # is what ended the 2026-11-08 resume attempt before a single episode started.
+  emulator_setup: false
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  tasks:
+  - AudioRecorderRecordAudio
+  - AudioRecorderRecordAudioWithFileName
+  - BrowserDraw
+  - BrowserMaze
+  - BrowserMultiply
+  - CameraTakePhoto
+  - CameraTakeVideo
+  - ClockStopWatchPausedVerify
+  - ClockStopWatchRunning
+  - ClockTimerEntry
+  - ContactsAddContact
+  - ContactsNewContactDraft
+  - ExpenseAddMultiple
+  - ExpenseAddMultipleFromGallery
+  - ExpenseAddMultipleFromMarkor
+  - ExpenseAddSingle
+  - ExpenseDeleteDuplicates
+  - ExpenseDeleteDuplicates2
+  - ExpenseDeleteMultiple
+  - ExpenseDeleteMultiple2
+  - ExpenseDeleteSingle
+  - FilesDeleteFile
+  - FilesMoveFile
+  - MarkorAddNoteHeader
+  - MarkorChangeNoteContent
+  - MarkorCreateFolder
+  - MarkorCreateNote
+  - MarkorCreateNoteAndSms
+  - MarkorCreateNoteFromClipboard
+  - MarkorDeleteAllNotes
+  - MarkorDeleteNewestNote
+  - MarkorDeleteNote
+  - MarkorEditNote
+  - MarkorMergeNotes
+  - MarkorMoveNote
+  - MarkorTranscribeReceipt
+  - MarkorTranscribeVideo
+  - NotesIsTodo
+  - NotesMeetingAttendeeCount
+  - NotesRecipeIngredientCount
+  - NotesTodoItemCount
+  - OpenAppTaskEval
+  - OsmAndFavorite
+  - OsmAndMarker
+  - OsmAndTrack
+  - RecipeAddMultipleRecipes
+  - RecipeAddMultipleRecipesFromImage
+  - RecipeAddMultipleRecipesFromMarkor
+  - RecipeAddMultipleRecipesFromMarkor2
+  - RecipeAddSingleRecipe
+  - RecipeDeleteDuplicateRecipes
+  - RecipeDeleteDuplicateRecipes2
+  - RecipeDeleteDuplicateRecipes3
+  - RecipeDeleteMultipleRecipes
+  - RecipeDeleteMultipleRecipesWithConstraint
+  - RecipeDeleteMultipleRecipesWithNoise
+  - RecipeDeleteSingleRecipe
+  - RecipeDeleteSingleWithRecipeWithNoise
+  - RetroCreatePlaylist
+  - RetroPlayingQueue
+  - RetroPlaylistDuration
+  - RetroSavePlaylist
+  - SaveCopyOfReceiptTaskEval
+  - SimpleCalendarAddOneEvent
+  - SimpleCalendarAddOneEventInTwoWeeks
+  - SimpleCalendarAddOneEventRelativeDay
+  - SimpleCalendarAddOneEventTomorrow
+  - SimpleCalendarAddRepeatingEvent
+  - SimpleCalendarAnyEventsOnDate
+  - SimpleCalendarDeleteEvents
+  - SimpleCalendarDeleteEventsOnRelativeDay
+  - SimpleCalendarDeleteOneEvent
+  - SimpleCalendarEventOnDateAtTime
+  - SimpleCalendarEventsInNextWeek
+  - SimpleCalendarEventsInTimeRange
+  - SimpleCalendarEventsOnDate
+  - SimpleCalendarFirstEventAfterStartTime
+  - SimpleCalendarLocationOfEvent
+  - SimpleCalendarNextEvent
+  - SimpleCalendarNextMeetingWithPerson
+  - SimpleDrawProCreateDrawing
+  - SimpleSmsReply
+  - SimpleSmsReplyMostRecent
+  - SimpleSmsResend
+  - SimpleSmsSend
+  - SimpleSmsSendClipboardContent
+  - SimpleSmsSendReceivedAddress
+  - SportsTrackerActivitiesCountForWeek
+  - SportsTrackerActivitiesOnDate
+  - SportsTrackerActivityDuration
+  - SportsTrackerLongestDistanceActivity
+  - SportsTrackerTotalDistanceForCategoryOverInterval
+  - SportsTrackerTotalDurationForCategoryThisWeek
+  - SystemBluetoothTurnOff
+  - SystemBluetoothTurnOffVerify
+  - SystemBluetoothTurnOn
+  - SystemBluetoothTurnOnVerify
+  - SystemBrightnessMax
+  - SystemBrightnessMaxVerify
+  - SystemBrightnessMin
+  - SystemBrightnessMinVerify
+  - SystemCopyToClipboard
+  - SystemWifiTurnOff
+  - SystemWifiTurnOffVerify
+  - SystemWifiTurnOn
+  - SystemWifiTurnOnVerify
+  - TasksCompletedTasksForDate
+  - TasksDueNextWeek
+  - TasksDueOnDate
+  - TasksHighPriorityTasks
+  - TasksHighPriorityTasksDueOnDate
+  - TasksIncompleteTasksOnDate
+  - TurnOffWifiAndTurnOnBluetooth
+  - TurnOnWifiAndOpenApp
+  - VlcCreatePlaylist
+  - VlcCreateTwoPlaylists
+  step_budget: 25
+  diagnostic: false
+episode:
+  wall_clock_budget_s: 600
+  transition_pause_s: 1.0
+policy:
+  allow_app_fallback: false
+  loop_detection:
+    repeat: 3

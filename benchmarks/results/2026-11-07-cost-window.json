@@ -1,0 +1,62 @@
+{
+ "input": {
+  "gate": "benchmarks/results/2026-11-03-stage0/gate_test938.json",
+  "fusion": null,
+  "accuracy": 0.6482
+ },
+ "operating_point": {
+  "coverage": 0.40703517587939697,
+  "risk": 0.1728395061728395,
+  "cp_upper": 0.2170187841482096,
+  "test_n": 162
+ },
+ "assumption": "C_ask = 1, an answered ask resolves the decision correctly; C_err = R",
+ "table_cost_per_1000": {
+  "always_act": {
+   "0.5": 175.9,
+   "1": 351.8,
+   "2": 703.6,
+   "3": 1055.4,
+   "4": 1407.2,
+   "6": 2110.8,
+   "8": 2814.4,
+   "16": 5628.8
+  },
+  "always_ask": {
+   "0.5": 1000.0,
+   "1": 1000.0,
+   "2": 1000.0,
+   "3": 1000.0,
+   "4": 1000.0,
+   "6": 1000.0,
+   "8": 1000.0,
+   "16": 1000.0
+  },
+  "gate_empirical": {
+   "0.5": 628.1,
+   "1": 663.3,
+   "2": 733.7,
+   "3": 804.0,
+   "4": 874.4,
+   "6": 1015.1,
+   "8": 1155.8,
+   "16": 1718.6
+  },
+  "gate_upper_bound": {
+   "0.5": 637.1,
+   "1": 681.3,
+   "2": 769.6,
+   "3": 858.0,
+   "4": 946.3,
+   "6": 1123.0,
+   "8": 1299.6,
+   "16": 2006.3
+  }
+ },
+ "breakeven": {
+  "gate_vs_always_act_R_gt": 2.107,
+  "gate_vs_always_act_R_gt_using_upper": 2.251,
+  "gate_vs_always_ask_R_lt": 5.786,
+  "gate_vs_always_ask_R_lt_using_upper": 4.608
+ }
+}

@@ -1,0 +1,19 @@
+TASKS_FINISHED=104 PLANNED=116 SUCCESS=15 SR=14.4% WILSON=8.9-22.4
+BUCKETS {'timeout_non_terminating': 34, 'unscored_checker_error': 12, 'success': 15, 'premature_status': 31, 'setup_error': 12}
+premature median_steps=7
+timeout   median_steps=25
+conf p50=0.785  gate p50=0.334  gate==0 frac=11.7%
+drift success: n=15 mean=-0.072453 decaying=40%
+drift fail   : n=77 mean=-0.202465 decaying=73%
+type_text emitted: 19/104 success=1
+no type_text     : 85/104 success=14
+EMITTED_ACTIONS=1394 INVALID=0 INVALID_RATE=0.0%
+ENV_CRASH_EPISODES=11/104 TIMEOUT_EPISODES=34/104
+UNSCORED_CHECKER_UNAVAILABLE=12 of 104 finished (ran, but the checker raised; NOT a model outcome)
+SCORABLE=80 SUCCESS=15 SR_SCORABLE=18.8% WILSON_SCORABLE=11.7-28.7
+GENUINE_ATTEMPTS=92 SUCCESS=15 SR_OVER_ATTEMPTS=16.3%
+SR_REACHABLE=15/102=14.7% n_reachable=102 n_all=104 definition=excludes_answer_needing_tasks
+COVERAGE_FIELD_POPULATED=0/104 reason=androidworld_exposes_no_gold_action_list
+ENV_CRASH_IS_SETUP_FAILURE=11/11 setup_errors=12 — the crashes ARE the setup failures, not a second defect
+ACTION_MIX {'open_app': 94, 'click': 1038, 'status': 49, 'wait': 43, 'type_text': 24, 'scroll': 195}
+SUCCESSES ['CameraTakePhoto', 'ExpenseDeleteMultiple', 'ExpenseDeleteSingle', 'OpenAppTaskEval', 'RecipeDeleteSingleRecipe', 'RecipeDeleteSingleWithRecipeWithNoise', 'SimpleCalendarDeleteOneEvent', 'SystemBluetoothTurnOff', 'SystemBluetoothTurnOffVerify', 'SystemBluetoothTurnOn', 'SystemBluetoothTurnOnVerify', 'SystemBrightnessMaxVerify', 'SystemBrightnessMinVerify', 'SystemWifiTurnOff', 'SystemWifiTurnOffVerify']

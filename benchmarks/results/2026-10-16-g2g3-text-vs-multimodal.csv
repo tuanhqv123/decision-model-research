@@ -1,0 +1,7 @@
+mode,objective,acc,ece,brier,conf_mean
+text,ce,0.5828,0.093,0.2298,0.553
+text,proper,0.5828,0.0386,0.2423,0.621
+text,joint,0.5828,0.0315,0.242,0.614
+multimodal,ce,0.5828,0.0293,0.2388,0.567
+multimodal,proper,0.5828,0.0332,0.2434,0.616
+multimodal,joint,0.5828,0.0298,0.2433,0.613

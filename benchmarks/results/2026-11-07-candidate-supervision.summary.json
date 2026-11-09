@@ -1,0 +1,30 @@
+{
+ "train": {
+  "spatial": 8400,
+  "gold_in_candidates": 8231,
+  "text_overlap_top1": 1124,
+  "text_overlap_top5": 3325,
+  "text_overlap_top10": 4507,
+  "gold_has_text": 6985,
+  "gold_not_in_candidates": 169,
+  "n_cands_median": 36.0,
+  "n_cands_p90": 76,
+  "ceiling_pct": 97.99,
+  "text_top1_pct": 13.66,
+  "gold_has_text_pct": 84.86
+ },
+ "val": {
+  "spatial": 474,
+  "gold_in_candidates": 463,
+  "text_overlap_top1": 51,
+  "text_overlap_top5": 183,
+  "text_overlap_top10": 240,
+  "gold_has_text": 381,
+  "gold_not_in_candidates": 11,
+  "n_cands_median": 32.0,
+  "n_cands_p90": 72,
+  "ceiling_pct": 97.68,
+  "text_top1_pct": 11.02,
+  "gold_has_text_pct": 82.29
+ }
+}

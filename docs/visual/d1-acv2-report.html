@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>d1-2B trên AndroidControl</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Literata:opsz,wght@7..72,500;7..72,700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column (~70ch) with full-width tables/charts; report in the voice of a lab notebook. */
+:root{
+  --bg:#f6f8f8; --surface:#ffffff; --ink:#14201f; --muted:#56656a; --line:#d6dfe0;
+  --accent:#0e6e6a; --accent-soft:#e1efee; --warn:#a85a00; --warn-soft:#fbefe0; --bad:#a3333d; --good:#2f7a3d;
+  --f-display:"Literata", Georgia, serif; --f-body:"Be Vietnam Pro", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1616; --surface:#162020; --ink:#e3ecec; --muted:#9bb0b1; --line:#2a3a3b;
+  --accent:#5cc4bd; --accent-soft:#16312f; --warn:#f0a94a; --warn-soft:#33270f; --bad:#ec7a84; --good:#79c98a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1616; --surface:#162020; --ink:#e3ecec; --muted:#9bb0b1; --line:#2a3a3b;
+  --accent:#5cc4bd; --accent-soft:#16312f; --warn:#f0a94a; --warn-soft:#33270f; --bad:#ec7a84; --good:#79c98a; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.25;margin:0}
+h1{font-size:2.1rem} h2{font-size:1.45rem;padding-top:6px;border-top:1px solid var(--line)} h3{font-size:1.08rem}
+p{margin:0} ul,ol{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lede{font-size:1.08rem;color:var(--muted)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.callout.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.verdict{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.verdict div{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:4px}
+.verdict b{font-family:var(--f-mono);font-size:1.5rem;font-variant-numeric:tabular-nums}
+.verdict span{color:var(--muted);font-size:.9rem}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+tr:last-child td{border-bottom:none}
+td.r{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.ours td{background:var(--accent-soft);font-weight:600}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:.72rem;padding:1px 7px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.tag.good{color:var(--good)} .tag.bad{color:var(--bad)} .tag.warn{color:var(--warn)} .tag.acc{color:var(--accent)}
+figure{margin:0;display:flex;flex-direction:column;gap:8px}
+figcaption{color:var(--muted);font-size:.86rem}
+.chart{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px}
+svg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.flow div{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.flow b{font-size:.92rem} .flow span{color:var(--muted);font-size:.85rem}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+.small{font-size:.88rem;color:var(--muted)}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+
+<header style="display:flex;flex-direction:column;gap:12px">
+  <div class="eyebrow">Báo cáo nghiên cứu · 29/10/2026</div>
+  <h1>Model quyết định 2B trên AndroidControl: làm gì, được gì, chưa được gì</h1>
+  <p class="lede">Giải thích từ đầu đến cuối: bài toán, cách đo, cách train, từng thí nghiệm, kết quả thật sau khi tự kiểm toán, và trả lời thẳng ba câu hỏi: vì sao không train tiếp, kết quả có giá trị không, và mình có đổi mới không.</p>
+</header>
+
+<section>
+  <h2>Kết luận trong một màn hình</h2>
+  <div class="verdict">
+    <div><b class="num">64,32%</b><span>AC-v2 High Pass@1, chấm bằng <code>eval_rl.py</code> chính thức, đúng protocol leaderboard (256/398 step)</span></div>
+    <div><b class="num">[59,5 – 68,8]</b><span>Khoảng tin cậy 95%. Tập test chỉ 398 step nên không tách được thứ hạng nhóm đầu</span></div>
+    <div><b class="num">84,2 / 56,5</b><span>Type / Grounding. Type cao hơn SOTA (81,2); Grounding thua xa (71,3)</span></div>
+    <div><b class="num">ECE 0,036</b><span>Sau calibration fit trên validation; gate rủi ro ≤25% giữ đúng trên test</span></div>
+  </div>
+  <div class="callout">
+    <p><b>Phát biểu trung thực:</b> model quyết định 2B, chạy <b>một forward pass, không sinh token nào</b>, đạt mức ngang các agent sinh text 4–8B (GUI-Libra-8B 64,3, Mem-W-4B 63,07). <b>Chưa phá SOTA</b> (Mem-W-8B 68,59). Khoảng cách còn lại nằm gần như toàn bộ ở grounding.</p>
+  </div>
+</section>
+
+<section>
+  <h2>1. Bài toán và cách đo</h2>
+  <p><b>AndroidControl</b> (Google, 2024) là tập ~15k episode người dùng thao tác app Android thật. Mỗi bước có screenshot, cây accessibility (a11y), mô tả bước và action đúng. Bản <b>AC-v2</b> là 398 step chọn lọc từ tập test, được GUI-Libra và Mem-W dùng làm leaderboard.</p>
+  <ul>
+    <li><b>Input của agent (High level):</b> screenshot + mục tiêu (goal) + <i>Interaction History</i>, tức danh sách mô tả các bước đã làm. Mình xác nhận điều này bằng cách đọc code harness <code>guilibra_plan.py</code>: nó đưa <code>previous_actions</code> vào prompt. Trước đó dự án tưởng là "chỉ goal", và đó là lý do các lần đo cũ bị thấp.</li>
+    <li><b>Output:</b> 1 trong 8 loại action (click, gõ chữ, long press, scroll, wait, back, mở app, kết thúc task) cùng toạ độ hoặc giá trị.</li>
+    <li><b>Cách chấm:</b> click đúng khi điểm bấm rơi vào element a11y nhỏ nhất chứa điểm gold. Gõ chữ phải đúng chữ. Scroll phải đúng hướng. Mở app phải đúng tên. 22% số step là "status" (nhận ra task đã xong).</li>
+    <li><b>Type</b> = đoán đúng loại action. <b>Grounding</b> = trong các step cần bấm vào màn hình, tỉ lệ bấm trúng element.</li>
+  </ul>
+  <div class="tw"><table>
+    <thead><tr><th>Hạng</th><th>Hệ thống</th><th>Kích thước</th><th style="text-align:right">Pass@1</th><th style="text-align:right">Type / Ground</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Mem-W-8B (UI-Venus-1.5-8B + memory)</td><td>8B</td><td class="r">68,59</td><td class="r">81,16 / 71,30</td></tr>
+      <tr><td>2</td><td>GUI-Libra-8B</td><td>8B</td><td class="r">64,30</td><td class="r">–</td></tr>
+      <tr class="ours"><td>≈2</td><td>d1-2B của mình (protocol thuần, scorer chính thức)</td><td>2B</td><td class="r">64,32</td><td class="r">84,17 / 56,50</td></tr>
+      <tr><td>3</td><td>Mem-W-4B</td><td>4B</td><td class="r">63,07</td><td class="r">74,62 / 70,85</td></tr>
+      <tr><td>4</td><td>GPT-5 + UGround</td><td>–</td><td class="r">61,30</td><td class="r">–</td></tr>
+      <tr><td>5</td><td>UI-Venus-1.5-8B</td><td>8B</td><td class="r">61,06</td><td class="r">74,62 / 61,06</td></tr>
+      <tr><td>…</td><td>Step-GUI-4B · Qwen3-VL-32B · Qwen3-VL-8B · Qwen3-VL-2B</td><td></td><td class="r">59,30 · 59,05 · 54,80 · 45,48</td><td class="r"></td></tr>
+    </tbody></table></div>
+  <p class="small">Số của các hệ thống khác do tác giả tự báo cáo (bảng 2 của paper Mem-W). Số của mình chạy trên harness mình dựng lại, phần chấm dùng nguyên văn <code>eval_rl.py</code> của GUI-Libra.</p>
+</section>
+
+<section>
+  <h2>2. Decision model khác agent thông thường thế nào</h2>
+  <p>Agent thông thường (GUI-Libra, UI-Venus, Mem-W) là VLM <b>sinh text</b>: nó viết ra JSON như <code>{"action_type":"Click","point_2d":[540,390]}</code>, thường kèm một đoạn suy luận. Mỗi bước tốn hàng chục đến hàng trăm token.</p>
+  <p><b>d1-2B</b> (Liquid AI, 10/2026) là <b>decision model</b>. Nó đọc state và các câu hỏi có kiểu <b>một lần</b>, rồi đọc thẳng xác suất ở các vị trí "answer slot" trong cùng forward pass. <b>Không sinh token nào</b>, nên không thể trả lời sai format. Với mỗi bước, mình hỏi 5 câu cùng lúc:</p>
+  <div class="flow">
+    <div><b>action</b><span>choice 8 lựa chọn → phân bố xác suất</span></div>
+    <div><b>target_box</b><span>box: có/không + 4 cạnh, mỗi cạnh là phân bố trên 0–999‰ màn hình</span></div>
+    <div><b>scroll_dir</b><span>choice 4 hướng</span></div>
+    <div><b>app_name</b><span>pointer: chỉ ra đoạn chữ trong state</span></div>
+    <div><b>type_text</b><span>pointer: chỉ ra chữ cần gõ</span></div>
+  </div>
+  <p>Hệ quả: mỗi quyết định <b>có sẵn độ tin cậy</b> (xác suất) mà không tốn thêm gì. Đây là cơ sở cho phần calibration ở mục 6. Đo được: <span class="num">~108 ms/step</span> khi chạy theo batch 8 trên một RTX 4090.</p>
+</section>
+
+<section>
+  <h2>3. Những gì phát hiện được trước khi train</h2>
+  <p>Mỗi lỗi dưới đây, nếu không bắt được, đều sẽ làm sai toàn bộ kết quả:</p>
+  <div class="tw"><table>
+    <thead><tr><th>Phát hiện</th><th>Cách phát hiện</th><th>Xử lý</th></tr></thead>
+    <tbody>
+      <tr><td>Protocol leaderboard <b>có history</b></td><td>Research agent báo, mình tự đọc <code>guilibra_plan.py</code>; 398/398 row có <code>previous_actions</code> đúng bằng số bước</td><td>Đưa history vào state</td></tr>
+      <tr><td>Data "completion/curated" cũ chứa <b>episode của tập test</b> (ví dụ ep 27)</td><td>Đối chiếu với <code>splits.json</code> chính thức</td><td>Build lại data từ GCS gốc, assert 350 episode eval không có trong train</td></tr>
+      <tr><td>Scorer leaderboard thực là <code>eval_rl.py</code></td><td>Diff từng dòng với bản port của mình</td><td>Tương đương; khác 1 chỗ (không đọc toạ độ cho action không-spatial) → sửa theo</td></tr>
+      <tr><td>Train phải đi đúng đường inference</td><td><b>Parity test</b>: log-prob lúc train = lúc serve, 24/24 sample, cả 2 track</td><td>Train bằng chính code serving của d1, có gradient</td></tr>
+      <tr><td>Gradient checkpointing có thể tính lại với attention mask sai</td><td>So gradient bật/tắt checkpointing: sai lệch 0,06%</td><td>Backward chạy bên trong context attention</td></tr>
+      <tr><td><b>LR 3e-5 phá hỏng grounding</b></td><td><b>Overfit test</b> 32 sample: sai số cạnh box tăng 270→460‰, eval còn 3,3%</td><td>LR 1e-5 + đóng băng embedding/LM head (tied): sai số cạnh về ~3‰</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>4. Cách train (recipe cuối)</h2>
+  <ol>
+    <li><b>Data gốc:</b> tải 20 shard AndroidControl từ <code>gs://gresearch/android_control</code> (47GB) và parse cây a11y. Kết quả: 13.603 episode train → <span class="num">88.288</span> quyết định. Trong đó có 13.603 sample <b>status</b> tự tạo từ màn hình cuối của mỗi episode, vì data gốc không có nhãn "đã xong". AC-v2 cũng tạo nhãn status theo đúng cách này.</li>
+    <li><b>Chắt lọc</b> (theo GUI-Libra, AndroidControl-Curated):
+      <ul>
+        <li>Bỏ click vào vùng container chiếm >20% màn hình (1.107 sample).</li>
+        <li>Bỏ step mà mô tả nói action khác (709).</li>
+        <li>Bỏ click vào vùng chết, tức không thuộc element nào (134).</li>
+        <li>Bỏ step mà chữ cần gõ không có trong state (823).</li>
+        <li>Cân lại tỉ lệ theo phân phối eval (status 22%, click 53%, scroll 9%…) và lấy <span class="num">15.000</span> sample trải trên 9.005 episode.</li>
+      </ul>
+    </li>
+    <li><b>Mục tiêu box:</b> lấy theo <b>element nhỏ nhất chứa điểm gold</b>, đúng định nghĩa của scorer. Không lấy theo điểm click thô. Mỗi cạnh dùng nhãn mềm Gaussian σ=4‰.</li>
+    <li><b>Loss:</b>
+      <ul>
+        <li>CE cho action và hướng scroll.</li>
+        <li>CE với nhãn mềm cho 4 cạnh box.</li>
+        <li>CE cho vị trí start/end của pointer (tên app, chữ gõ).</li>
+      </ul>
+    </li>
+    <li><b>Train:</b>
+      <ul>
+        <li>Full fine-tune, đóng băng embedding/LM head.</li>
+        <li>AdamW 8-bit + bf16 stochastic rounding, LR 1e-5 cosine, batch 16.</li>
+        <li><span class="num">938 step</span> (1 lượt qua 15k), khoảng <b>1,6 giờ trên một RTX 4090</b>.</li>
+      </ul>
+    </li>
+  </ol>
+</section>
+
+<section>
+  <h2>5. Các thí nghiệm và kết quả</h2>
+  <p>Ba máy chạy ba thí nghiệm độc lập. Mỗi thí nghiệm chỉ đổi một yếu tố, và tự eval trên 398 step trong lúc train:</p>
+  <figure>
+    <div class="chart">
+      <svg viewBox="0 0 640 300" width="640" height="300" role="img" aria-label="Đường cong điểm theo step của run E2 và R2a">
+        <g stroke="var(--line)" stroke-width="1">
+          <line x1="44" y1="266" x2="520" y2="266"/><line x1="44" y1="182.7" x2="520" y2="182.7"/>
+          <line x1="44" y1="99.3" x2="520" y2="99.3"/><line x1="44" y1="16" x2="520" y2="16"/>
+        </g>
+        <text x="36" y="270" text-anchor="end">40</text><text x="36" y="186.7" text-anchor="end">50</text>
+        <text x="36" y="103.3" text-anchor="end">60</text><text x="36" y="20" text-anchor="end">70</text>
+        <text x="44" y="284" text-anchor="middle">0</text><text x="163.3" y="284" text-anchor="middle">235</text>
+        <text x="282.5" y="284" text-anchor="middle">470</text><text x="401.8" y="284" text-anchor="middle">705</text>
+        <text x="520" y="284" text-anchor="middle">938</text><text x="282" y="298" text-anchor="middle">optimizer step (16 sample/step)</text>
+        <g stroke-dasharray="4 4" stroke-width="1.2">
+          <line x1="44" y1="27.75" x2="520" y2="27.75" stroke="var(--bad)"/>
+          <line x1="44" y1="63.5" x2="520" y2="63.5" stroke="var(--warn)"/>
+          <line x1="44" y1="73.75" x2="520" y2="73.75" stroke="var(--muted)"/>
+          <line x1="44" y1="228.7" x2="520" y2="228.7" stroke="var(--muted)"/>
+        </g>
+        <text x="526" y="31">Mem-W-8B 68,59</text><text x="526" y="61">GUI-Libra-8B 64,3</text>
+        <text x="526" y="80">Mem-W-4B 63,07</text><text x="526" y="232">Qwen3-VL-2B 45,48</text>
+        <polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="163.3,170.1 282.5,113.6 401.8,88.4 520,59.2"/>
+        <g fill="var(--accent)"><circle cx="163.3" cy="170.1" r="4"/><circle cx="282.5" cy="113.6" r="4"/><circle cx="401.8" cy="88.4" r="4"/><circle cx="520" cy="59.2" r="4"/></g>
+        <circle cx="520" cy="63.3" r="6" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+        <polyline fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="2 3" points="163.3,163.8 282.5,151.3 401.8,124 520,109.4"/>
+        <g fill="var(--muted)"><circle cx="163.3" cy="163.8" r="3"/><circle cx="282.5" cy="151.3" r="3"/><circle cx="401.8" cy="124" r="3"/><circle cx="520" cy="109.4" r="3"/></g>
+        <text x="300" y="104" style="fill:var(--accent)">E2: chỉ V, 15k sạch</text>
+        <text x="300" y="168">R2a: + memory TF-IDF</text>
+      </svg>
+    </div>
+    <figcaption>Điểm track V theo step. Các điểm E2 là eval có kèm gợi ý tên app (51,5 → 58,3 → 61,3 → 64,8). Vòng tròn rỗng ở step 938 là số <b>chính thức đúng protocol: 64,32</b>.</figcaption>
+  </figure>
+  <div class="tw"><table>
+    <thead><tr><th>Run</th><th>Thay đổi</th><th style="text-align:right">Điểm cuối (V)</th><th>Kết luận</th></tr></thead>
+    <tbody>
+      <tr class="ours"><td>E2</td><td>Chỉ track V, 15k sạch</td><td class="r">64,82 (64,32 thuần)</td><td><span class="tag good">tốt nhất</span></td></tr>
+      <tr><td>E1</td><td>Trộn V + VA (có danh sách element a11y)</td><td class="r">47,24 @235</td><td><span class="tag bad">−4 so với E2 cùng step</span></td></tr>
+      <tr><td>E3</td><td>Trộn V + VA, 24k</td><td class="r">49,50 V · 55,53 VA @300</td><td><span class="tag warn">trộn làm hại track V</span></td></tr>
+      <tr><td>R2a</td><td>E2 + memory: 2 episode train giống nhất (TF-IDF)</td><td class="r">58,79</td><td><span class="tag bad">−6,0</span> retrieval kém gây nhiễu</td></tr>
+      <tr><td>R2b</td><td>Chỉ V, 24k sạch</td><td class="r">62,31</td><td><span class="tag warn">không hơn 15k</span></td></tr>
+      <tr><td>E2c</td><td>E2 train tiếp trên 8k data mới</td><td class="r">64,57</td><td><span class="tag warn">bão hoà</span></td></tr>
+      <tr><td>Val</td><td>E2 trên validation split (827, không trùng test)</td><td class="r">62,76</td><td><span class="tag good">khớp với test</span></td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>6. Calibration và gate act / ask: phần đóng góp chính</h2>
+  <p>Confidence ban đầu chỉ là xác suất của loại action. Nhưng lỗi chủ yếu nằm ở chỗ bấm sai vị trí, nên confidence này dự báo kém (AUROC 0,63). Mình ghép <b>p(action) × độ tin cậy của box</b>, cả hai đều có sẵn trong cùng forward pass. AUROC lên 0,72. Sau đó <b>fit isotonic trên validation</b>, chọn ngưỡng τ trên validation, và <b>áp nguyên lên test</b>:</p>
+  <div class="tw"><table>
+    <thead><tr><th>Đo trên TEST (mọi thứ fit trên validation)</th><th style="text-align:right">Giá trị</th></tr></thead>
+    <tbody>
+      <tr><td>ECE: thô → sau isotonic</td><td class="r">0,160 → 0,036</td></tr>
+      <tr><td>Ngân sách rủi ro 25% (τ = 0,544): tự làm / đúng / rủi ro thật</td><td class="r">55,0% / 76,7% / 23,3%</td></tr>
+      <tr><td>Ngân sách rủi ro 20% (τ = 0,735): tự làm / đúng / rủi ro thật</td><td class="r">36,7% / 81,5% / 18,5%</td></tr>
+    </tbody></table></div>
+  <p>Ý nghĩa: agent biết <b>khi nào nên tự làm và khi nào nên hỏi người</b>, và lời hứa về rủi ro <b>giữ đúng trên dữ liệu chưa thấy</b>. Theo những gì mình tìm được, chưa paper nào báo ECE hay đường coverage–risk trên AndroidControl-High.</p>
+</section>
+
+<section>
+  <h2>7. Kết quả trên leaderboard có giá trị thật không?</h2>
+  <figure>
+    <div class="chart">
+      <svg viewBox="0 0 640 330" width="640" height="330" role="img" aria-label="Leaderboard và khoảng tin cậy của d1-2B">
+        <rect x="408.9" y="18" width="142.9" height="270" fill="var(--accent-soft)"/>
+        <text x="480" y="14" text-anchor="middle" style="fill:var(--accent)">khoảng tin cậy 95% của d1-2B</text>
+        <g stroke="var(--line)"><line x1="185.4" y1="18" x2="185.4" y2="288"/><line x1="262.1" y1="18" x2="262.1" y2="288"/>
+          <line x1="338.9" y1="18" x2="338.9" y2="288"/><line x1="415.7" y1="18" x2="415.7" y2="288"/>
+          <line x1="492.5" y1="18" x2="492.5" y2="288"/><line x1="569.3" y1="18" x2="569.3" y2="288"/></g>
+        <text x="185.4" y="304" text-anchor="middle">45</text><text x="262.1" y="304" text-anchor="middle">50</text>
+        <text x="338.9" y="304" text-anchor="middle">55</text><text x="415.7" y="304" text-anchor="middle">60</text>
+        <text x="492.5" y="304" text-anchor="middle">65</text><text x="569.3" y="304" text-anchor="middle">70</text>
+        <text x="380" y="322" text-anchor="middle">AC-v2 High Pass@1 (%)</text>
+        <g>
+          <text x="162" y="34" text-anchor="end">Mem-W-8B</text><circle cx="547" cy="30" r="5" fill="var(--ink)"/>
+          <text x="162" y="60" text-anchor="end" style="fill:var(--accent);font-weight:600">d1-2B (mình)</text>
+          <line x1="408.9" y1="56" x2="551.8" y2="56" stroke="var(--accent)" stroke-width="2"/><circle cx="481.4" cy="56" r="6" fill="var(--accent)"/>
+          <text x="162" y="86" text-anchor="end">GUI-Libra-8B</text><circle cx="481.1" cy="82" r="5" fill="var(--ink)"/>
+          <text x="162" y="112" text-anchor="end">Mem-W-4B</text><circle cx="462.2" cy="108" r="5" fill="var(--ink)"/>
+          <text x="162" y="138" text-anchor="end">GPT-5+UGround</text><circle cx="435.7" cy="134" r="5" fill="var(--ink)"/>
+          <text x="162" y="164" text-anchor="end">UI-Venus-1.5-8B</text><circle cx="432" cy="160" r="5" fill="var(--ink)"/>
+          <text x="162" y="190" text-anchor="end">Step-GUI-4B</text><circle cx="404.9" cy="186" r="5" fill="var(--muted)"/>
+          <text x="162" y="216" text-anchor="end">Qwen3-VL-32B</text><circle cx="401.1" cy="212" r="5" fill="var(--muted)"/>
+          <text x="162" y="242" text-anchor="end">Qwen3-VL-8B</text><circle cx="335.9" cy="238" r="5" fill="var(--muted)"/>
+          <text x="162" y="268" text-anchor="end">Qwen3-VL-2B</text><circle cx="192.7" cy="264" r="5" fill="var(--muted)"/>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Vùng tô là khoảng tin cậy 95% (bootstrap) của mình. Mọi hệ thống có chấm đậm nằm trong vùng này đều <b>không phân biệt được</b> với mình về mặt thống kê.</figcaption>
+  </figure>
+  <p><b>Giá trị có, nhưng phải nói đúng mức:</b></p>
+  <ul>
+    <li><span class="tag bad">yếu</span> <b>"Hạng 2" chỉ đúng về con số.</b> 398 step cho sai số khoảng ±4,7 điểm, nên từ hạng 1 đến hạng 6 đều nằm chồng nhau. Mình chỉ hơn có ý nghĩa thống kê các model ≤59.</li>
+    <li><span class="tag warn">cần ghi rõ</span> Mình <b>train trên split train của chính AndroidControl</b>. GUI-Libra cũng dùng data AC, còn Mem-W thì không. So với Mem-W là so khác điều kiện.</li>
+    <li><span class="tag warn">cần ghi rõ</span> Quyết định "chỉ train V" được chọn dựa trên eval test. Validation khớp (62,76), nhưng vẫn phải khai báo.</li>
+    <li><span class="tag good">mạnh</span> <b>Hiệu năng trên kích thước:</b> 2B, một forward pass, 0 token mà ngang các agent 8B. Type 84,2 cao hơn mọi số Type được báo cáo trong bảng.</li>
+    <li><span class="tag good">mạnh</span> <b>Calibration kiểm chứng out-of-sample:</b> phần này có giá trị ngay cả khi điểm leaderboard chỉ ở mức ngang.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>8. Vì sao không train tiếp?</h2>
+  <p>Có thử, và dữ liệu nói rằng <b>train thêm cùng kiểu thì không lên</b>:</p>
+  <ul>
+    <li><b>E2c</b> (E2 train tiếp trên 8k sample sạch chưa thấy): 64,57, so với 64,82 → không tăng.</li>
+    <li><b>R2b</b> (24k thay vì 15k): 62,31 → không hơn.</li>
+    <li>Type đã cao hơn SOTA (84,2 so với 81,2). Phần thua là <b>grounding 56,5 so với 71,3</b>, mà thêm cùng loại data không sửa được grounding.</li>
+    <li>Ngoài ra còn mốc dừng 05:30 bạn đặt, nên không còn thời gian cho một hướng mới cần thêm ~2h.</li>
+  </ul>
+  <p><b>Muốn vượt 68,59 phải đổi cách, không phải train lâu hơn.</b> Ba hướng có bằng chứng từ paper, xếp theo kỳ vọng:</p>
+  <div class="tw"><table>
+    <thead><tr><th>Hướng</th><th>Bằng chứng</th><th>Vì sao hợp</th></tr></thead>
+    <tbody>
+      <tr><td><b>RL với phần thưởng = chính scorer</b></td><td>GUI-Libra 3B: SFT 40,2 → +RL 48,7–55,8 (không CoT / có CoT)</td><td>Thưởng trực tiếp cho "bấm trúng element"; decision model cho sẵn phân bố để làm policy gradient</td></tr>
+      <tr><td><b>Grounding head tốt hơn</b>: nhãn nhiều-patch, Gaussian theo kích thước element</td><td>GUI-Actor, V2P: tăng mạnh trên ScreenSpot so với nhãn một điểm</td><td>Đánh thẳng vào nút thắt grounding</td></tr>
+      <tr><td><b>Độ phân giải ảnh cao hơn</b> (720 px → ~1,6 MP mà d1 được train)</td><td>AdaGround: grounding tăng tới khi target ≥3 token</td><td>Icon nhỏ hiện chỉ ~1 token</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>9. Có đổi mới và mạnh hơn không?</h2>
+  <div class="tw"><table>
+    <thead><tr><th>Phần</th><th>Mới hay học lại</th></tr></thead>
+    <tbody>
+      <tr><td>Fine-tune in-domain trên AC, chắt lọc data, target theo element, history</td><td><span class="tag warn">học lại</span> GUI-Libra, AndroidControl-Curated, Magma-R1</td></tr>
+      <tr><td>Agent <b>single-pass, 0 token</b> (decision model) trên AC-High, ngang agent 8B</td><td><span class="tag good">mới</span> chưa tìm thấy kết quả công bố nào</td></tr>
+      <tr><td>Train qua <b>chính đường serving</b> của decision model, có parity test</td><td><span class="tag good">mới</span> về kỹ thuật (Liquid chưa công bố recipe RLCD)</td></tr>
+      <tr><td>Gate act/ask <b>có kiểm soát rủi ro, kiểm chứng out-of-sample</b> trên AC</td><td><span class="tag good">mới</span> CORA/SafeGround làm trên benchmark khác, cần mô hình riêng hoặc K lần lấy mẫu</td></tr>
+      <tr><td>Kết quả âm: trộn track, memory TF-IDF, thêm data</td><td><span class="tag acc">có ích</span> cho cộng đồng</td></tr>
+    </tbody></table></div>
+  <p><b>Mạnh hơn SOTA? Chưa.</b> Về độ chính xác thô, Mem-W-8B vẫn hơn khoảng 4 điểm. Mình mạnh hơn ở <b>tỉ lệ hiệu năng trên kích thước</b> và ở <b>độ tin cậy được calibrate</b>. Đó là trục mà paper nhắm tới ("Calibrated to Be Trusted").</p>
+</section>
+
+<section>
+  <h2>10. Đã đọc paper gì, học được gì</h2>
+  <div class="tw"><table>
+    <thead><tr><th>Paper</th><th>Bài học</th><th>Đã áp dụng</th></tr></thead>
+    <tbody>
+      <tr><td>Mem-W (2605.09317), <i>tự đọc</i></td><td>SOTA 68,59 nhờ memory (+7,5, chủ yếu Type); backbone đóng băng; <b>không</b> train trên AC</td><td>Thử memory in-domain (R2a) → âm, vì retrieval TF-IDF kém</td></tr>
+      <tr><td>GUI-Libra (2602.22190), <i>tự đọc + đọc code harness</i></td><td>Protocol có history; SFT 3B chỉ ~40; RL +8–11; lọc data +4,5</td><td>History, chắt lọc data; RL là bước tiếp theo</td></tr>
+      <tr><td>AndroidControl-Curated / Magma-R1 (2510.18488), <i>tự đọc</i></td><td>Model nhỏ chuyên domain: Type cao, Grounding thấp; nhãn AC nhiễu nhiều</td><td>Lọc nhiễu, target theo element</td></tr>
+      <tr><td>GUI-Actor, V2P, LiMAC, AndroidControl gốc, UI-R1, GUI-R1, InfiGUI-R1, GUI-G1, Ferret-UI Lite, CORA, SafeGround</td><td>Nhãn grounding mềm/nhiều-patch; track a11y báo cáo riêng; lọc theo độ khó dành cho RL; calibration của agent</td><td>Gaussian cho cạnh box; VA tách track. Phần này do agent nghiên cứu tóm tắt đầu phiên; sau khi bạn yêu cầu, ba paper trên thì mình tự đọc.</td></tr>
+    </tbody></table></div>
+</section>
+
+<section>
+  <h2>11. Sai lầm trong quá trình</h2>
+  <div class="callout warn">
+    <ul>
+      <li>Ban đầu chạy <b>toàn bộ 88k</b> với cơ chế sync weights giữa 3 máy mà chưa chắt lọc data và chưa có overfit test. Bạn chỉ ra đúng; mình dừng sau ~25 phút.</li>
+      <li>LR 3e-5 phá grounding. Overfit test bắt được trước khi tốn giờ GPU.</li>
+      <li>Hub sync làm đầy disk Model_Training_Server (máy có DB prod) trong thời gian ngắn. Đã dọn ngay và chuyển hub đi.</li>
+      <li>Một lệnh launch treo dẫn tới chạy trùng job trên 5090. Giới hạn VRAM làm job trùng tự dừng, process prod không bị ảnh hưởng.</li>
+      <li>Báo 64,82 trước khi tự kiểm toán. Con số đó có dùng gợi ý tên app ngoài protocol; số đúng là 64,32.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>12. Để công bố được</h2>
+  <ol>
+    <li>Báo <b>64,32%</b> (scorer chính thức, protocol thuần) kèm khoảng tin cậy; ghi rõ train in-domain.</li>
+    <li>Chạy <b>≥3 seed</b>, báo mean ± std.</li>
+    <li>Thử RL với phần thưởng = scorer để nhắm vượt 68,59.</li>
+    <li>Thêm một benchmark độc lập (AndroidWorld) để chứng minh không chỉ khớp riêng với AC.</li>
+    <li>Đọc kỹ LFM Open License trước khi công bố weights.</li>
+  </ol>
+  <p class="small">Toàn bộ code nằm ở <code>benchmarks/train/</code>; số liệu ở <code>benchmarks/results/2026-10-29-d1-acv2-sft.md</code>; checkpoint ở <code>backup-2026-10-29/ckpt-E2-final/</code>.</p>
+</section>
+
+</main>
+
+</body>
+</html>

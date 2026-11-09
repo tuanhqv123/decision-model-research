@@ -1,0 +1,22 @@
+
+=== paired comparison, n=398 common rows, 350 episodes
+  base                   255/398 =  64.07%
+  cand                   242/398 =  60.80%
+  delta                  -3.27 pts   episode-clustered bootstrap95 [-7.34, +0.76]
+  McNemar exact          b(base only)=41  c(cand only)=28  p=0.148
+  agreement              both=214  neither=115  discordant=69 (17.3% of rows)
+  verdict                no significant difference
+
+  per gold type (delta must be read bucket by bucket: a win can hide a trade):
+    type                 base       cand    delta   note
+    click           118/212    127/212         +9   
+    navigate_back    13/20      12/20          -1   <- REGRESSION
+    open_app         18/27      18/27          +0   
+    scroll           18/37      22/37          +4   
+    status           78/87      53/87         -25   <- REGRESSION
+    type_text         7/11       7/11          +0   
+    wait              3/4        3/4           +0   
+
+  per bucket:
+    spatial gold       base 125/223  cand 134/223  delta +9 rows (+2.26 pts)
+    non-spatial gold   base 130/175  cand 108/175  delta -22 rows (-5.53 pts)

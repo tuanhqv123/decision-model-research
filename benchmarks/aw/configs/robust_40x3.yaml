@@ -1,0 +1,35 @@
+# Paired robustness: the same 40 task instances, three seeds, every agent.
+protocol: aw-main-v1
+
+agent: d1_sft
+checkpoint: E2@938
+
+model:
+  url: http://127.0.0.1:8700
+  track: V
+  return_readouts: true
+
+environment:
+  url: http://127.0.0.1:5051
+  serial: emulator-5554
+  memory_gb: 24
+
+suite:
+  family: android_world
+  seeds: [30, 31, 32]
+  n_task_combinations: 1
+  tasks_subset: 40          # fixed list in configs/subset40.txt
+  step_budget: 20
+
+episode:
+  wall_clock_budget_s: 300
+  transition_pause_s: 1.0
+
+policy:
+  allow_app_fallback: false
+  loop_detection:
+    repeat: 3
+
+report:
+  paired: true              # same (task_name, task_idx, seed) for every agent
+  emit_coverage_split: true
