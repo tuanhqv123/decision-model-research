@@ -1,0 +1,31 @@
+# exported subset: code + reports only
+.venv*/
+venv/
+venv*
+.python-version
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+node_modules/
+.DS_Store
+*.log
+*.key
+*.token
+
+# heavy data / regenerable artefacts
+benchmarks/data/
+benchmarks/decision-index/
+coordinator/*.json
+coordinator/*.jsonl
+vkjobs/
+backup-*/
+references/raw/*.zip
+references/raw/*.tar
+*.tgz
+*.tar
+*.safetensors
+*.bin
+*.pt
+*.onnx
+*.gguf

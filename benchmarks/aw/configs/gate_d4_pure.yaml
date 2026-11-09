@@ -1,0 +1,31 @@
+protocol: aw-main-v1
+agent: d1_sft
+checkpoint: E2@938
+model:
+  url: http://127.0.0.1:8700
+  token: awgate2026
+  track: V
+  return_readouts: true
+environment:
+  url: http://127.0.0.1:5051
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  tasks:
+  - ContactsAddContact
+  - ClockStopWatchRunning
+  - SystemWifiTurnOn
+  - MarkorCreateNote
+  step_budget: 10
+  diagnostic: false
+episode:
+  wall_clock_budget_s: 1500
+  transition_pause_s: 1.0
+policy:
+  allow_app_fallback: false
+  loop_detection:
+    repeat: 3

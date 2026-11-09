@@ -1,0 +1,20 @@
+{
+ "track": "V",
+ "n": 398,
+ "step_acc": 0.6307,
+ "type_acc": 0.809,
+ "grounding": 0.6823,
+ "per_type": {
+  "click": "124/212",
+  "navigate_back": "11/20",
+  "open_app": "18/27",
+  "scroll": "14/37",
+  "status": "74/87",
+  "type_text": "7/11",
+  "wait": "3/4"
+ },
+ "ece_action": 0.2474,
+ "always_status": 0.2186,
+ "eval_sec": 80,
+ "tag": "appint_v2"
+}

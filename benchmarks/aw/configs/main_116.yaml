@@ -1,0 +1,42 @@
+# Full AndroidWorld suite, single fixed task seed.
+# Reference: benchmarks/aw/awenv/__init__.py PROTOCOL
+protocol: aw-main-v1
+
+agent: d1_sft
+checkpoint: E2@938
+
+model:
+  url: http://127.0.0.1:8700
+  token: awgate2026
+  track: V              # V = screenshot only, the leaderboard-comparable path
+  return_readouts: true # store slot logits now; RL later needs them
+
+environment:
+  url: http://127.0.0.1:5051
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  tasks: all            # all 116 task types
+  step_budget: 20
+
+episode:
+  wall_clock_budget_s: 300
+  transition_pause_s: 1.0
+
+policy:
+  allow_app_fallback: false   # scaffolding must be off for the headline
+  loop_detection:
+    repeat: 3
+
+gate:
+  min_coverage_for_baseline: 0.0
+  require_liveness_all_layers: true
+
+report:
+  emit_coverage_split: true
+  protocol_note: "AndroidWorld numbers are not comparable across papers; report controls + protocol."

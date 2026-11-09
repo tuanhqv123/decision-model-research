@@ -1,0 +1,46 @@
+# MAI-UI Technical Report — arXiv:2512.22047v1
+# Retrieved 2026-11-08 from https://arxiv.org/html/2512.22047v1
+# Verbatim excerpts. These are the ONLY quantitative inputs behind paper §5.12.1,
+# Limitation 11, notes/2026-11-08-compound-accuracy-reframe.md and the value brief §5.1.
+
+## Contribution bullet (verbatim)
+"Online GUI navigation. In challenging dynamic real-time environments, MAI-UI-235B-A22B achieves a new
+state of the art success rate of 76.7% on AndroidWorld, surpassing UI-Tars-2, Gemini-2.5-Pro, and Seed1.8.
+Additionally, MAI-UI-32B, MAI-UI-8B, and MAI-UI-2B attain success rate of 73.3%, 70.7%, and 49.1% on
+AndroidWorld, respectively, all outperforming competitive models at comparable scales."
+
+## Table 9 caption (verbatim)
+"Table 9: Online RL performance gains and ablations on standard GRPO and interaction budget per trajectory
+(max_env_steps)"
+
+## Table 9 body (verbatim; SFT vs RL rows)
+"Method AndroidWorld
+SFT vs. RL Comparison
+MAI-UI-2B-SFT 45.1
+MAI-UI-2B-RL 49.1 (+4.0)
+MAI-UI-8B-SFT 64.7
+MAI-UI-8B-RL 70.7 (+6.0)
+MAI-UI-32B-SFT 69.8
+MAI-UI-32B-RL 73.3 (+3.5)
+RL Ablation on 8B
+MAI-UI-8B-SFT 64.7
+GRPO (max_env_steps=50) 66.5 (+1.8)
+Our method (max_en..."
+
+## Table 6 baselines (verbatim fragments)
+"Model Paras. Success Rate Baselines Qwen3-VL-2B 2B 36.4 ScaleCUA-3B 23.7 Ferret-UI Lite-3B 28.0"
+"MAI-UI-235B-A22B attains a 76.7% success rate, surpassing UI-TARS-2 (73.3%) and Gemini-2.5-Pro (69.7%)
+by +3.4 and +7.0 points, respectively. The 32B variant reaches 73.3%..."
+
+## RL recipe (verbatim fragments)
+"MAI-UI-2B-SFT 45.1 ... GRPO yields a modest gain of +1.8 percentage points on AndroidWorld. In contrast,
+our enhanced GRPO with data curriculum, repetition penalty, and experience replay achieves a +6.0
+percentage point improvement, delivering an additional +4.2 percentage points over the baseline."
+
+## Benchmark definition (verbatim)
+"AndroidWorld (Rawles et al., 2024b) provides 116 tasks across 20 Android apps in a live Android emulator,
+and requires continuous interaction with dynamic mobile environment."
+
+## NOTE ON SCOPE
+The AndroidWorld paper (arXiv:2405.14573v2) reports M3A at 30.6% (a11y tree, GPT-4 Turbo) and human at 80.0%.
+The step count per task is NOT published as a single number; §5.12.1 uses n = 10 and states that choice.

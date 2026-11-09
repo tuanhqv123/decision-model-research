@@ -1,0 +1,20 @@
+{
+ "track": "V",
+ "n": 398,
+ "step_acc": 0.2437,
+ "type_acc": 0.2889,
+ "grounding": 0.375,
+ "per_type": {
+  "click": "6/212",
+  "navigate_back": "0/20",
+  "open_app": "19/27",
+  "scroll": "3/37",
+  "status": "68/87",
+  "type_text": "0/11",
+  "wait": "1/4"
+ },
+ "ece_action": 0.7018,
+ "always_status": 0.2186,
+ "eval_sec": 80,
+ "tag": "appint_smoke"
+}

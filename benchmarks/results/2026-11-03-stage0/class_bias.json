@@ -1,0 +1,23 @@
+{
+ "bias": {
+  "click": -1.0,
+  "type_text": 1.5,
+  "long_press": 0.0,
+  "scroll": 0.25,
+  "wait": -0.25,
+  "navigate_back": -1.25,
+  "open_app": -0.75,
+  "status": -0.25
+ },
+ "val_type_acc": [
+  0.8053204353083434,
+  0.8210399032648126
+ ],
+ "test_type_acc": [
+  0.8417085427135679,
+  0.8140703517587939
+ ],
+ "test_fixed": 7,
+ "test_regressed": 18,
+ "mcnemar_p": 0.043285250663757324
+}

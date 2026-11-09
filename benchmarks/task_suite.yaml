@@ -1,0 +1,76 @@
+# Frozen task suite for the calibration-reliability benchmark
+# Each entry = a source, its size, license status, and the metric it feeds.
+# Version this file; changes require re-documenting baselines (benchmarks drift).
+
+---
+meta:
+  owner: decision-model-research
+  version: "0.1"
+  created: 2026-10-09
+  notes: >
+    Light set first (no AndroidWorld emulator). Used for C3 baselines and the
+    decision head. Every entry must have a resolvable source + a license we can
+    rely on before publishing.
+
+task_sets:
+
+  - id: decision_index_public
+    label: "Decision Index (public suite)"
+    what_it_measures: "Broad typed-decision quality + calibration (choice/score/noul)."
+    source: "https://github.com/apolinario/decision-index"   # MIT kit; rebuilds frozen suite
+    size: "110,201 requests / 42 benchmarks (public split)"
+    license: "Kit MIT; suite text from other datasets — verify each benchmark's terms"
+    status: "kit runnable locally/HF Job; must pin commit"
+    entry: "run_decision_index.py"
+    metric: "index, ECE(binned), coverage-risk"
+
+  - id: screenspot
+    label: "ScreenSpot (GUI grounding)"
+    what_it_measures: "Grounding-level uncertainty (instruction -> bounding box)."
+    source: "https://huggingface.co/datasets/ZhuOnR/ScreenSpot"
+    size: "1,272 test samples, ~602 MB download"
+    license: "apache-2.0 (verified via HF card)"
+    status: "verified; has bbox, instruction, image, data_source"
+    entry: "run_grounding.py"
+    metric: "grounding accuracy + confidence -> coverage-risk, FDR"
+
+  - id: screenspot_pro
+    label: "ScreenSpot-Pro (professional/high-res grounding)"
+    what_it_measures: "Hard grounding on professional apps (small targets, high-res)."
+    source: "https://huggingface.co/datasets/likaixin/ScreenSpot-Pro"
+    size: "1,585 annotated images, 26 professional tools"
+    license: "MIT (GitHub repo likaixin2000); confirm HF dataset card"
+    status: "choose repo/card; ~large images"
+    entry: "run_grounding.py"
+    metric: "grounding accuracy + confidence -> coverage-risk, FDR"
+
+  - id: android_control
+    label: "AndroidControl (mobile action decisions)"
+    what_it_measures: "Next-action selection from real Android screens + accessibility trees."
+    source: "https://github.com/google-research/google-research/tree/master/android_control"
+    mirror: "https://huggingface.co/datasets/alucent/mirror-Android-Control (or smolagents/android-control)"
+    size: "15,283 demonstrations, 833 apps, 40 categories"
+    license: "google-research; confirm (likely Apache-2.0); mirrors may add terms"
+    status: "use a held-out subset for coverage-risk; confirm mirror license"
+    entry: "run_android_actions.py"
+    metric: "action accuracy + confidence -> coverage-risk, FDR, cascade"
+
+  - id: jevbench
+    label: "JevBench (typed decision class)"
+    what_it_measures: "Calibrated decision quality on public decision items."
+    source: "https://huggingface.co/datasets/Leanmcp/jevbench"
+    size: "231 public items (Benchmark Heaven snapshot); Leanmcp framework holds 1,500/system"
+    license: "confirm Leanmcp dataset card / Benchmark Heaven terms"
+    status: "confirm which snapshot; note board-vs-framework drift"
+    entry: "run_decision_index.py"
+    metric: "ECE, Brier, coverage-risk, cascade"
+
+  - id: curated_refusal
+    label: "Curated Refusal / OOD set (ours)"
+    what_it_measures: "Has the model refuse / ask when it should (honesty under ambiguity)."
+    source: "curated from public screenshots + ambiguous instructions"
+    size: "~200 items (start)"
+    license: "ours (public source images under their terms)"
+    status: "to build in C3"
+    entry: "run_refusal.py"
+    metric: "refuse/ask correctness, coverage-risk"

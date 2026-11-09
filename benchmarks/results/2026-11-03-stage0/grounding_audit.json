@@ -1,0 +1,650 @@
+{
+ "summary": {
+  "pred": "benchmarks/results/2026-10-29-evals/E2-938-V.jsonl",
+  "spatial_joined": 198,
+  "hits": 131,
+  "exact_hit_rate": 0.6616161616161617,
+  "cats": {
+   "same_label": 1,
+   "subtree": 12,
+   "iou_ge_0.5": 0,
+   "overlaps_gold": 0,
+   "different_element": 54
+  },
+  "tolerant_hit_rate": 0.7272727272727273,
+  "ambiguous_rows": 19,
+  "ambiguous_missed": 9
+ },
+ "examples": [
+  {
+   "key": [
+    1024,
+    7
+   ],
+   "bucket": "different_element",
+   "gold_label": "Don Quixote and Sancho Panza",
+   "pred_label": "Continue",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    7878,
+    3
+   ],
+   "bucket": "subtree",
+   "gold_label": "",
+   "pred_label": "",
+   "iou": 0.218
+  },
+  {
+   "key": [
+    7961,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "custom icon-xe-add Add currency",
+   "pred_label": "currency_usd USD custom icon-xe-chevron-",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    6405,
+    17
+   ],
+   "bucket": "subtree",
+   "gold_label": "",
+   "pred_label": "",
+   "iou": 0.008
+  },
+  {
+   "key": [
+    6903,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Save",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    15409,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "Home",
+   "pred_label": "Search here",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    15865,
+    3
+   ],
+   "bucket": "different_element",
+   "gold_label": "More actions for PXL_20230921_130839603.",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    17647,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "Artworks",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    16464,
+    11
+   ],
+   "bucket": "different_element",
+   "gold_label": "Delete",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    1293,
+    1
+   ],
+   "bucket": "subtree",
+   "gold_label": "Blood pressure is best lowered by 2 exer",
+   "pred_label": "",
+   "iou": 0.055
+  },
+  {
+   "key": [
+    12483,
+    9
+   ],
+   "bucket": "subtree",
+   "gold_label": "Fashion",
+   "pred_label": "",
+   "iou": 0.006
+  },
+  {
+   "key": [
+    10590,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "Created",
+   "pred_label": "Share",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    7548,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Size",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    19061,
+    5
+   ],
+   "bucket": "subtree",
+   "gold_label": "",
+   "pred_label": "",
+   "iou": 0.002
+  },
+  {
+   "key": [
+    7935,
+    3
+   ],
+   "bucket": "subtree",
+   "gold_label": "Philadelphia",
+   "pred_label": "",
+   "iou": 0.007
+  },
+  {
+   "key": [
+    6443,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "Stay Assured",
+   "pred_label": "Search",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    10265,
+    3
+   ],
+   "bucket": "different_element",
+   "gold_label": "221",
+   "pred_label": "Tools & Hardware",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    11234,
+    4
+   ],
+   "bucket": "different_element",
+   "gold_label": "Discover Magazine",
+   "pred_label": "@DiscoverMag \u2022 9 magazines",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    15076,
+    4
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "1080x1920",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    8658,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "Settings",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    13934,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    4560,
+    0
+   ],
+   "bucket": "different_element",
+   "gold_label": "The fine idea",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    17181,
+    3
+   ],
+   "bucket": "subtree",
+   "gold_label": "Notifications",
+   "pred_label": "",
+   "iou": 0.007
+  },
+  {
+   "key": [
+    2889,
+    8
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Open",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    17611,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Run/Train",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    4608,
+    6
+   ],
+   "bucket": "different_element",
+   "gold_label": "Play",
+   "pred_label": "50",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    140,
+    6
+   ],
+   "bucket": "different_element",
+   "gold_label": "To",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    3419,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "Go Back",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    15968,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "Oct 8 \u2013 14",
+   "pred_label": "Day",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    6714,
+    0
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    14607,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "kitchen cabinets storage racks",
+   "pred_label": "Go",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    4581,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "My Collection",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    12356,
+    3
+   ],
+   "bucket": "subtree",
+   "gold_label": "See all",
+   "pred_label": "",
+   "iou": 0.003
+  },
+  {
+   "key": [
+    6424,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Days",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    10142,
+    4
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Done",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    14307,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "search_autosuggest_product_click_1",
+   "pred_label": "Done",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    2473,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Discover",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    15865,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "More navigation options",
+   "pred_label": "More actions for Copy of screenshot.txt",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    11829,
+    0
+   ],
+   "bucket": "different_element",
+   "gold_label": "Following",
+   "pred_label": "In the Face of Mounting Climate Risks, t",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    11450,
+    0
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Preferred Measurements",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    3007,
+    0
+   ],
+   "bucket": "different_element",
+   "gold_label": "Spelman College Museum of Fine Art Unite",
+   "pred_label": "View All",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    2269,
+    10
+   ],
+   "bucket": "different_element",
+   "gold_label": "0",
+   "pred_label": "=",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    16441,
+    0
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    10739,
+    6
+   ],
+   "bucket": "different_element",
+   "gold_label": "1",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    18950,
+    7
+   ],
+   "bucket": "same_label",
+   "gold_label": "Increase",
+   "pred_label": "Increase",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    13307,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "TOI",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    10690,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "Sleep",
+   "pred_label": "Records",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    4902,
+    0
+   ],
+   "bucket": "different_element",
+   "gold_label": "Open drawer",
+   "pred_label": "INDEPENDENCE CELEBRATION",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    16705,
+    3
+   ],
+   "bucket": "subtree",
+   "gold_label": "World",
+   "pred_label": "",
+   "iou": 0.031
+  },
+  {
+   "key": [
+    20097,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "\u091c\u093e\u0930\u0940 \u0930\u0916\u0947\u0902",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    19676,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "Quick log",
+   "pred_label": "Track your exercise 5 days left this wee",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    18444,
+    6
+   ],
+   "bucket": "different_element",
+   "gold_label": "Create",
+   "pred_label": "Add a description, mention, or hashtags ",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    16353,
+    3
+   ],
+   "bucket": "different_element",
+   "gold_label": "NOT NOW",
+   "pred_label": "CONTINUE",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    4883,
+    3
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    18444,
+    4
+   ],
+   "bucket": "different_element",
+   "gold_label": "Photo: /storage/emulated/0/DCIM/Camera/P",
+   "pred_label": "Photo: /storage/emulated/0/Pictures/Sket",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    6541,
+    2
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Pin from www.inspireuplift.com, Title: \u0418",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    15225,
+    3
+   ],
+   "bucket": "subtree",
+   "gold_label": "Power Tools",
+   "pred_label": "",
+   "iou": 0.058
+  },
+  {
+   "key": [
+    12514,
+    3
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    8726,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Record using this app",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    16402,
+    0
+   ],
+   "bucket": "different_element",
+   "gold_label": "Filter",
+   "pred_label": "",
+   "iou": 0.0
+  },
+  {
+   "key": [
+    7935,
+    5
+   ],
+   "bucket": "subtree",
+   "gold_label": "New York City",
+   "pred_label": "",
+   "iou": 0.008
+  },
+  {
+   "key": [
+    1704,
+    0
+   ],
+   "bucket": "subtree",
+   "gold_label": "Search",
+   "pred_label": "Fullscreen view of sky with IC2118 selec",
+   "iou": 0.009
+  },
+  {
+   "key": [
+    5899,
+    1
+   ],
+   "bucket": "different_element",
+   "gold_label": "",
+   "pred_label": "Pin from www.zedge.net, Title: Dragon wa",
+   "iou": 0.0
+  }
+ ]
+}

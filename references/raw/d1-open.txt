@@ -1,0 +1,407 @@
+- Models
+
+- Research
+
+- Engineering Blog
+
+- Solutions
+
+- Developers
+
+- Company
+
+- Models
+
+- Research
+
+- Engineering Blog
+
+- Solutions
+
+- Developers
+
+- Company
+
+Try our API
+
+News/Models
+
+# Open d1: Edge decision models for text, vision, and audio
+
+OCT 7, 2026
+
+On this page
+
+- Architecture and Training
+
+- Benchmarks
+
+- Fast Inference Everywhere
+
+- Open d1 in Action
+
+- Get Started
+
+- Citation
+
+Today, we release d1-3B and d1-omni-600M, two open-weight models in our d1 decision model family.
+
+d1-3B scores 48.57 on the Decision Index v0.2.1 (public split), ahead of every model under 10B and on par with Decider 35B-A3B, a decision model 12x its size. It runs the full NVIDIA stack, from DGX in the data center to Jetson at the edge: d1-3B answers a question in 8 ms on an NVIDIA GeForce RTX 4090, 16 ms on a Jetson AGX Thor, and 26 ms on a Jetson AGX Orin. Even the Jetson Orin Nano runs it in 50 ms, fast enough for real-time decisions on the smallest edge hardware.
+
+d1-omni-600M is our first experimental checkpoint, handling both text and image, as well as text and audio. It scores 15.95 on the same index.
+
+d1-3B and d1-omni-600M models are available today on Hugging Face. Check out our docs on how to run them locally.
+
+## Architecture and Training
+
+Unlike our generative Liquid Foundation Models (LFMs), our d1 decision models don’t produce tokens. Instead, they produce an answer in a single forward pass.
+
+d1-3B and d1-omni-600M are trained from two very different backbones:
+
+- d1-3B is trained from LFM2.5-VL-3B, our latest VLM, which is decoder-only. It accepts text and images as inputs.
+
+- d1-omni-600M is trained from LFM2.5-Encoder-350M, a bidirectional encoder. It adds vision and audio encoders to handle all three modalities. It accepts either text and image, or text and audio as inputs.
+
+d1-3B. We averaged the weights of LFM2.5-2.6B and the text backbone of LFM2.5-VL-3B to create a better base model. We then fine-tuned checkpoints with different random seeds and data mixtures before merging them again. Training on long inputs, shuffling answer options, and fixing shortcuts in the data made a bigger difference than more advanced techniques.
+
+Figure 2: d1-3B architecture diagram
+
+d1-omni-600M. We first fine-tuned LFM2.5-Encoder-350M on decision tasks, then added audio and vision in stages. For audio, we trained a FastConformer encoder with an adapter to connect it to the backbone, then fine-tuned the audio encoder with a frozen text backbone. For vision, we took the encoder from LFM2.5-VL-450M and trained an adapter plus LoRA updates to the backbone. Those updates were active only when the input included images, and the vision encoder stayed frozen. We then fine-tuned the full model, merged the LoRA updates, and averaged the weights with the previous checkpoint to regularize the final model.
+
+Figure 3: d1-omni-600M architecture diagram.
+
+## Benchmarks
+
+Text benchmarks. We evaluated d1-3B and d1-omni-600M across seven public benchmarks covering reading comprehension, toxicity detection, intent classification, medical QA, and cross-lingual understanding.
+
+Benchmark
+
+d1-omni-600M
+
+d1-3B
+
+Decider 2B
+
+Decider 4B
+
+SQuAD 2.0
+
+74.0
+
+85.3
+
+67.7
+
+76.0
+
+Civil Comments
+
+95.8
+
+93.0
+
+93.6
+
+92.8
+
+MASSIVE intent
+
+86.1
+
+87.3
+
+81.1
+
+88.3
+
+PubMedQA
+
+61.3
+
+66.0
+
+65.7
+
+63.3
+
+BoolQ
+
+77.7
+
+86.7
+
+87.3
+
+89.0
+
+XNLI
+
+74.7
+
+85.0
+
+85.0
+
+88.6
+
+PAWS-X
+
+79.5
+
+76.9
+
+59.5
+
+69.8
+
+Mean
+
+78.4
+
+82.9
+
+77.1
+
+81.1
+
+Table 1: Text benchmark comparison
+
+d1-3B leads with a mean of 82.9, the highest in the table and ahead of Decider 4B (81.1). d1-omni-600M reaches 78.4, outperforming Decider 2B (77.1) at a quarter of the parameters. It also posts the highest score in the table on toxicity detection (Civil Comments: 95.8) and paraphrase identification (PAWS-X: 79.5).
+
+Vision and audio performance. The Decision Index v0.3 includes a private vision split, which we do not report on in this release. Instead. we validated that d1-3B retains the vision capabilities of its LFM2.5-VL-3B backbone on standard vision benchmarks, and that d1-omni-600M handles all three modalities. Their vision capabilities are shown in our playground demos below. Dedicated audio decision benchmarks are currently an open problem. We look forward to seeing the community develop them as the category of multimodal decision models matures.
+
+## Fast Inference Everywhere
+
+d1-3B and d1-omni-600M run the full NVIDIA stack — from DGX in the data center, to RTX workstations, to Jetson at the edge — with day-one support for llama.cpp.
+
+Since decision models don’t generate output tokens, we measure end-to-end latency, from input to output. We report inference numbers for d1-3B. d1-omni-600M is an early research release and is under active development.
+
+Edge inference. We measure latency on an Apple M5 Pro and, in collaboration with NVIDIA, on an NVIDIA Jetson AGX Thor, a Jetson AGX Orin 64 GB, and a Jetson Orin Nano. We measure one request at a time, across a single question, three questions over one state, a 3.4K-token state, and a 384px image.
+
+One question
+
+3 questions
+
+3.4K-token state
+
+384px image
+
+64 states, packed
+
+Apple M5 Pro
+
+30 ms
+
+41 ms
+
+640 ms
+
+62 ms
+
+78 / s
+
+Jetson AGX Thor
+
+16 ms
+
+20 ms
+
+220 ms
+
+35 ms
+
+262 / s
+
+Jetson AGX Orin 64 GB
+
+26 ms
+
+35 ms
+
+560 ms
+
+83 ms
+
+110 / s
+
+Jetson Orin Nano
+
+50 ms
+
+73 ms
+
+1,640 ms
+
+202 ms
+
+38 / s
+
+Table 2: Edge inference
+
+d1-3B answers a single question in under 50 ms on every measured device. Three questions take only 1.3x the time of one, with the AGX Thor going from 16 ms to 20 ms.
+
+GPU inference. We measure latency on an NVIDIA RTX 4090 and an AMD MI325X, one request at a time, across a single question, three questions over one state, a 3.4K-token state, and a 384px image.
+
+One question
+
+3 questions
+
+3.4K-token state
+
+384px image
+
+64 states, packed
+
+NVIDIA RTX 4090
+
+8 ms
+
+21 ms
+
+102 ms
+
+17 ms
+
+475 / s
+
+AMD MI325X
+
+9 ms
+
+14 ms
+
+44 ms
+
+18 ms
+
+1,106 / s
+
+Table 3: GPU inference
+
+On GPU, d1-3B answers a question in under 10 ms and processes a 384px image in under 18 ms on both platforms.
+
+## Open d1 in Action
+
+These results make our small open d1 decision models a strong fit anywhere you need fast, structured decisions, including multimodal inputs. d1-3B delivers the highest decision quality at its size, while d1-omni-600M fits where footprint matters.
+
+To show what real-time decisions look like in practice, we built ten demos that run our open d1-3 B in a loop over live camera input, from gesture-controlled games to live content moderation, each reading answers from one pass per frame. You can try them out in our Hugging Face space without any setup.
+
+In collaboration with NVIDIA, we also demonstrate d1-3B navigating an environment in Isaac Sim, with the model served on a Jetson in a hardware-in-the-loop setup.
+
+## Get Started
+
+Start building today with d1-3B and d1-omni-600M, available on Hugging Face.
+
+With d1, we're delivering on our vision of AI that runs anywhere. These models are:
+
+- Open-weight — Download, fine-tune, and deploy without restrictions
+
+- Fast from day one — Native support for llama.cpp across Apple, AMD, Qualcomm, and NVIDIA with NVFP4
+
+- A family — Two sizes let you trade accuracy for footprint as your deployment demands.
+
+We can't wait to see what you build.
+
+Download d1-3B on Hugging FaceDownload d1-omni-600M on Hugging Face Read the NVIDIA Jetson AI Lab on d1-3B Read the NVIDIA Jetson AI Lab on d1-omni-600M
+
+## Citation
+
+For citations, please use the following reference or BibTeX:
+
+Liquid AI, "Open d1: Edge decision models for text, vision, and audio", Liquid AI Blog, Oct 2026.
+
+```
+@article{liquidAI2026opend1,
+  author  = {Liquid AI},
+  title   = {Open d1: Edge decision models for text, vision, and audio},
+  journal = {Liquid AI Blog},
+  year    = {2026},
+  note    = {www.liquid.ai/blog/open-d1},
+}
+```
+
+Share on social:
+
+For press inquiries, email us at press@liquid.ai
+
+Building the fastest, most compute-efficient, and capable foundation models so intelligence can live anywhere.
+
+Est. 2023
+
+Email address
+
+Subscribe
+
+## Models
+
+- Liquid Foundation Models (LFMs)
+
+- Model Playground
+
+- Hugging Face
+
+- Apollo
+
+## Developer Resources
+
+- Demos
+
+- Documentation
+
+- Hackathons
+
+- Discord
+
+- GitHub
+
+## Industry Solutions
+
+- Automotive
+
+- Consumer electronics
+
+- E-commerce
+
+- Financial services
+
+- Healthcare
+
+- Industrial
+
+- Defense
+
+- Agentic AI
+
+## Research
+
+- Liquid Labs
+
+- Automated Foundation Model Design
+
+- Blog
+
+## Company
+
+- About
+
+- Careers
+
+- News
+
+- Events
+
+- FAQ
+
+- Contact
+
+- Shoutouts
+
+© 2026 Liquid AI, Inc.
+
+- Terms
+
+- Privacy
+
+- Press
+
+- Your Privacy Choices

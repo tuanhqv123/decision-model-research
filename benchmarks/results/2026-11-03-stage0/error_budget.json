@@ -1,0 +1,183 @@
+[
+ {
+  "path": "benchmarks/results/2026-10-29-evals/E2-938-V.jsonl",
+  "n": 398,
+  "correct": 258,
+  "acc": 0.6482412060301508,
+  "acc_ci95": [
+   0.6001129975241456,
+   0.6935350468794205
+  ],
+  "buckets": {
+   "A_spatial_type_ok_element_wrong": 68,
+   "B_spatial_type_wrong": 27,
+   "C1_nonspatial_type_wrong": 36,
+   "C2_nonspatial_value_wrong": 9
+  },
+  "oracle": {
+   "grounding_only": 0.8190954773869347,
+   "type_only": 0.8065326633165829,
+   "grounding_plus_type": 0.9773869346733668,
+   "perfect": 1.0
+  },
+  "named": {
+   "premature_status (acted as done, should act)": 21,
+   "spurious_navigate_back": 8,
+   "gold_scroll_missed": 19,
+   "open_app_wrong_value": 6,
+   "gold_click_missed": 91
+  },
+  "per_type": {
+   "click": [
+    121,
+    212
+   ],
+   "navigate_back": [
+    13,
+    20
+   ],
+   "open_app": [
+    20,
+    27
+   ],
+   "scroll": [
+    18,
+    37
+   ],
+   "status": [
+    76,
+    87
+   ],
+   "type_text": [
+    7,
+    11
+   ],
+   "wait": [
+    3,
+    4
+   ]
+  }
+ },
+ {
+  "path": "benchmarks/results/2026-10-29-evals/E2-val.jsonl",
+  "n": 827,
+  "correct": 519,
+  "acc": 0.6275695284159613,
+  "acc_ci95": [
+   0.5941005446306151,
+   0.6598588141689441
+  ],
+  "buckets": {
+   "A_spatial_type_ok_element_wrong": 137,
+   "B_spatial_type_wrong": 52,
+   "C1_nonspatial_type_wrong": 109,
+   "C2_nonspatial_value_wrong": 10
+  },
+  "oracle": {
+   "grounding_only": 0.7932285368802902,
+   "type_only": 0.8222490931076178,
+   "grounding_plus_type": 0.9879081015719468,
+   "perfect": 1.0
+  },
+  "named": {
+   "premature_status (acted as done, should act)": 51,
+   "spurious_navigate_back": 19,
+   "gold_scroll_missed": 45,
+   "open_app_wrong_value": 4,
+   "gold_click_missed": 167
+  },
+  "per_type": {
+   "click": [
+    253,
+    420
+   ],
+   "long_press": [
+    0,
+    1
+   ],
+   "navigate_back": [
+    20,
+    29
+   ],
+   "open_app": [
+    38,
+    45
+   ],
+   "scroll": [
+    41,
+    86
+   ],
+   "status": [
+    120,
+    137
+   ],
+   "type_text": [
+    32,
+    53
+   ],
+   "wait": [
+    15,
+    56
+   ]
+  }
+ },
+ {
+  "path": "benchmarks/results/2026-10-29-evals/E2-705-V.jsonl",
+  "n": 398,
+  "correct": 244,
+  "acc": 0.6130653266331658,
+  "acc_ci95": [
+   0.564350904362503,
+   0.6596179430639455
+  ],
+  "buckets": {
+   "A_spatial_type_ok_element_wrong": 70,
+   "B_spatial_type_wrong": 27,
+   "C1_nonspatial_type_wrong": 47,
+   "C2_nonspatial_value_wrong": 10
+  },
+  "oracle": {
+   "grounding_only": 0.7889447236180904,
+   "type_only": 0.7989949748743719,
+   "grounding_plus_type": 0.9748743718592965,
+   "perfect": 1.0
+  },
+  "named": {
+   "premature_status (acted as done, should act)": 22,
+   "spurious_navigate_back": 6,
+   "gold_scroll_missed": 26,
+   "open_app_wrong_value": 8,
+   "gold_click_missed": 93
+  },
+  "per_type": {
+   "click": [
+    119,
+    212
+   ],
+   "navigate_back": [
+    11,
+    20
+   ],
+   "open_app": [
+    18,
+    27
+   ],
+   "scroll": [
+    11,
+    37
+   ],
+   "status": [
+    75,
+    87
+   ],
+   "type_text": [
+    7,
+    11
+   ],
+   "wait": [
+    3,
+    4
+   ]
+  }
+ }
+]

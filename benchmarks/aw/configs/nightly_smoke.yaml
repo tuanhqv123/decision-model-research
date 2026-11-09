@@ -1,0 +1,50 @@
+# Nightly regression: 8 fixed tasks, ~5 minutes, one agent.
+# Alerts on SR drop, any crash, latency regression, or invalid-action rise.
+protocol: aw-main-v1
+
+agent: d1_sft
+checkpoint: E2@938
+
+model:
+  url: http://127.0.0.1:8700
+  token: awgate2026
+  track: V
+  return_readouts: false
+
+environment:
+  url: http://127.0.0.1:5051
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  tasks:
+    - ContactsAddContact
+    - ClockStopWatchRunning
+    - SystemBluetoothTurnOn
+    - SystemWifiTurnOn
+    - SimpleCalendarAddOneEvent
+    - MarkorCreateNote
+    - FilesDeleteFile
+    - SettingsTurnOnAirplaneMode
+  step_budget: 12
+
+episode:
+  wall_clock_budget_s: 180
+  transition_pause_s: 1.0
+
+policy:
+  allow_app_fallback: false
+  loop_detection:
+    repeat: 3
+
+regression:
+  baseline: runs/nightly_baseline.json
+  alert_on:
+    sr_drop_tasks: 2
+    crash_rate_above: 0.0
+    latency_regression_pct: 25
+    invalid_action_rise_pp: 5
