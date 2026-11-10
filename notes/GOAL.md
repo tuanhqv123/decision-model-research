@@ -3,6 +3,15 @@
 *Last updated: **2026-11-08** (first full 116-task AndroidWorld run launched; compound-accuracy arithmetic added; `app_intent` fix verified as a read-slot repair, not a capability). Previous: 2026-11-07 internal audit restated the headline. This file is the north
 star. If any note, plan, or todo disagrees with it, this file wins until it is deliberately updated.*
 
+> **2026-11-10 DECISION — read first.** The operator made **AndroidWorld (116 tasks, official
+> `suite_utils` protocol) the single primary benchmark**. The AC-v2 numbers below remain true as measured,
+> but AC-v2 is no longer optimised: its history input is the oracle human step instructions, which
+> AndroidWorld cannot supply. Every AndroidWorld number recorded before 2026-11-10 was run on **unseeded,
+> non-official task instances** and is not comparable to published scores. Record:
+> `notes/decision-2026-11-10-androidworld-primary.md`; evidence:
+> `docs/research/2026-11-10-AUDIT-androidworld-contract.md`. Where this banner and the sections below
+> disagree, this banner wins until §1 is rewritten from new measurements.
+
 > **What changed and why.** The 2026-10-13 version was written before the d1-2B pivot (base model),
 > before the AC-v2 protocol was fixed (benchmark), and before any calibration measurement existed. Three
 > of its claims (C1, C2, and the on-device venue) have since been tested and **falsified or found
@@ -126,6 +135,8 @@ preprocessing → training → eval). The pure per-row predictions ARE on disk n
 | Online "environment crash" | **withdrawn** — both were Clock-task `is_successful()` exceptions on a **live** device (next episode ran 10 steps immediately after); harness fixed, 2 regression tests (suite was 110 passed / 35 skipped then; now 132) | measured, misclassified by the harness, now corrected |
 | Cost window (gate vs trivial policies) | beats always-act and always-ask for `C_err/C_ask` in **2.11–5.79** (fitted checkpoint) and **2.08–4.19** (next checkpoint); 2.36–8.14 at 5% fallible delegation | measured from saved artifacts, assumptions stated (`benchmarks/results/2026-11-07-cost-window.md`) |
 | Stage-2 status down-weighting arm | val **62.76 → 63.85 (+1.09, p=0.44)**, test **64.07 → 60.80 (−3.27, p=0.15)** | **fails its pre-registered bar**; −27 premature terminations bought −26 correct ones |
+| **`is_done` readout (`episodic-s0`)** | **`auroc_nonterm` is NULL — not computable.** On 824 val rows, `step == n_steps` and `action == status` are the **same 137 rows** (137/137; **0 positives among 687 non-status rows**). The `auroc` 0.960 is that shortcut; `risk @ 50% coverage` = **0.670** | **measured negative — the question does not exist in this corpus.** Retracted 2026-11-10: `benchmarks/results/2026-11-10-episodic-s0-fails-prereg.md` |
+| **`episodic-s0` on AC-v2** | **55.78% (222/398) vs 64.07% = −8.29 pts**; `type_acc` 0.7764 vs 0.8417 (−6.53); `status` **64/87 vs 76/87**; **grounding 0.600 (114/218 = 0.5229) vs 0.5605, +3.95** | **fails pre-registered condition 3.** The redundant readout consumed capacity in exactly the class it was built from; grounding improved. **Not a benchmark checkpoint — do not quote a number from it** |
 | Duplicated-list training lever (15k vs 22.5k) | +2.62 pts grounding (15k 56.80 ± 1.29 n=3; 22.5k 59.42 ± 0.45 n=4), every 22.5k seed beats every 15k seed | **suggestive, NOT certified** — grounding is a count/223 so each arm has 2 distinct values, variance ratio **8.3×**, Student pooled p=0.012 but assumption violated, **Welch p=0.063**, permutation p=0.029 is the minimum attainable at n=3 vs 4. Pre-registered bar (t≥2.78 at 5 seeds) never reached |
 | AndroidWorld full benchmark | **INCOMPLETE at time of writing**: 104/116 finished, **15 successes**; SR **18.8% (15/80)** over **scorable** episodes (the only denominator that answers how good we could judge), 16.3% (15/92) over genuinely attempted, 14.4% (15/104) counting everything; **Wilson (scorable) 11.7–28.7%**; buckets 34 non-terminating timeouts / 31 premature `status` / **12 unscored (`checker_unavailable`)** / 12 setup raise; **0 invalid of 1,394 emitted (0.0%)** | **in progress, not a headline**. Refresh: `scripts/refresh_aw116.py` then `scripts/sync_paper_aw116.py` |
 | Per-step accuracy → task success | `P(task) = p^n`. Our 64.07% implies **2.8% over 8 steps, 1.2% over 10**. Published end-to-end scores imply per-step **92.3% (MAI-UI-2B SFT)**, 93.1% (2B +RL), 95.7% (8B SFT), 96.6% (8B +RL), 97.4% (235B +RL), 88.8% (M3A 30.6%) | **measured arithmetic** — `notes/2026-11-08-compound-accuracy-reframe.md`. AC-v2 step accuracy and AndroidWorld task success are not the same axis. |
@@ -228,6 +239,8 @@ needs Δ accuracy ≥ +1 **and** Δ routed AUROC ≥ 0.
 | 2026-10-28 | Scorer bug fixed; all earlier spatial numbers bannered | a key-subset fallback leaked into the spatial branch |
 | 2026-10-29 | Headline = 64.07% pure (255/398), official scorer, differential-tested — *written as 64.32/256 at the time; no artifact yields 256, corrected 2026-11-07* | first defensible number |
 | 2026-11-07 | **Stage-2 status down-weighting FAILED** its pre-registered bar (val +1.09, test −3.27); the class weight trades premature for correct terminations 27:26. Next arm must be an explicit progress readout | arm result, same date |
+| 2026-11-10 | **`episodic-s0` is NOT a benchmark checkpoint** and the `is_done` gate is OFF by default. `is_done` is a copy of the action label (137/137 terminal rows are `status`; 0 positives among 687 non-status rows), so `auroc_nonterm` is null and no threshold has an operating point. AC-v2 55.78% vs 64.07% (−8.29) fails pre-registered condition 3 | the eval was already on disk from 2026-11-09 22:58 and unread; `benchmarks/results/2026-11-10-episodic-s0-fails-prereg.md` |
+| 2026-11-10 | **Any AndroidWorld number from `episodic-s0` is descriptive, never a test** | PRE-REG §(c): task success at n=116 has an MDE of ~14 points |
 | 2026-11-07 | **Headline restated to 64.07% (255/398)**; no 256/398 artifact exists. Grounding restated to 56.05% pure (56.50% was step 705). Candidate coverage 96.9%, not 100%. Online invalid-action intervals overlap (p=0.065) and the two conditions ran different instances | internal audit `outputs/.drafts/calibrated-decision-value-research-internal-audit.md` |
 | 2026-11-02 | Online AndroidWorld loop tried; 1/6 vs 0/6, emulator unstable — **superseded 2026-11-07 by 1/8 in both conditions** (see the row above) | honesty + infra result, not a benchmark result |
 | 2026-11-07 | Online restated to **1/8 in both conditions** (Wilson 2.2–47.1%); the 25% "crash rate" withdrawn as a Clock-task checker bug | audit |

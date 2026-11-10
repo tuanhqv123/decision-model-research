@@ -3,7 +3,7 @@ agent: d1_sft
 checkpoint: E2@938
 model:
   url: http://127.0.0.1:8700
-  token: awgate2026
+  token: SET_AT_RUN_TIME
   track: V
   return_readouts: true
 environment:

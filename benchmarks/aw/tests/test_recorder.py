@@ -165,3 +165,84 @@ def test_report_does_not_pick_up_another_directorys_episodes(tmp_path):
 
     b = Recorder(str(tmp_path / "b"), "run-b", config={"protocol": "aw-main-v1"})
     assert b.episodes() == [], "a separate run root must not see the other root's episodes"
+
+
+def test_rebuild_index_restores_skip_behaviour(tmp_path):
+    """Rebuilding index.db from episode files must make completed work skippable again.
+
+    `has_result` consults SQLite only. On 2026-11-10 the run directory was nested, the episode
+    files were moved back by hand, and the index was left empty — so every finished episode would
+    have been re-run while the summary looked normal. The artifact is the jsonl; the database is
+    a cache and must be reconstructible from it.
+    """
+    import json
+    import subprocess
+    import sys
+
+    from awenv.recorder import Recorder
+
+    root = tmp_path / "run"
+    ep = root / "episodes"
+    ep.mkdir(parents=True)
+
+    def write(episode_id, with_result=True):
+        lines = [json.dumps({"type": "episode", "episode_id": episode_id, "run_id": "r1",
+                             "task_name": "T"})]
+        if with_result:
+            lines.append(json.dumps({"type": "result", "episode_id": episode_id,
+                                     "success": True}))
+        (ep / ("%s.jsonl" % episode_id)).write_text("\n".join(lines) + "\n")
+
+    write("done_one")
+    write("done_two")
+    write("half_written", with_result=False)
+
+    script = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                          "rebuild_index.py")
+    out = subprocess.run([sys.executable, script, str(root)],
+                         capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr
+
+    rec = Recorder(str(root), "r1", config={})
+    assert rec.has_result("done_one") is True
+    assert rec.has_result("done_two") is True
+    assert rec.has_result("half_written") is False, "an episode with no result line is not done"
+    rec.close()
+
+
+def test_rebuild_index_removes_rows_whose_file_is_gone(tmp_path):
+    """A stale index row is a lie and blocks the gate forever.
+
+    On 2026-11-10 an episode file was deleted by hand while its index row survived. Preflight
+    compared "14 ok in index" to "13 files on disk", reported a mismatch, and refused to start a
+    chunk — twice, because rebuilding could not remove the row (`INSERT OR REPLACE` only adds).
+    The rebuild is the authority on what exists, so it must delete as well as insert.
+    """
+    import json
+    import subprocess
+    import sys
+
+    from awenv.recorder import Recorder
+
+    root = tmp_path / "run"
+    ep = root / "episodes"
+    ep.mkdir(parents=True)
+    for name in ("keep_me", "delete_me"):
+        (ep / ("%s.jsonl" % name)).write_text("\n".join([
+            json.dumps({"type": "episode", "episode_id": name, "run_id": "r1"}),
+            json.dumps({"type": "result", "episode_id": name, "success": True}),
+        ]) + "\n")
+
+    script = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                          "rebuild_index.py")
+    subprocess.run([sys.executable, script, str(root)], check=True, capture_output=True)
+
+    (ep / "delete_me.jsonl").unlink()
+    out = subprocess.run([sys.executable, script, str(root)], check=True, capture_output=True,
+                         text=True)
+    assert "stale" in out.stdout.lower(), out.stdout
+
+    rec = Recorder(str(root), "r1", config={})
+    assert rec.has_result("keep_me") is True
+    assert rec.has_result("delete_me") is False, "a deleted episode is still in the index"
+    rec.close()

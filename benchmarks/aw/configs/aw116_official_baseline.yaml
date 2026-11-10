@@ -1,0 +1,35 @@
+# The first AndroidWorld run on the OFFICIAL protocol (decision 2026-11-10, K2).
+#
+# What is fixed relative to every earlier run (audit §8, branch aw-official-harness):
+#   H1 float scores (0.5 partial credit), H2 seed-30 instances via sha256(f"30_{name}_0"),
+#   H3 initialise-then-go-home, H4 instance complexity budget, H5 one State per observation.
+#   Official SR = mean of per-task scores, raised tasks excluded (suite_utils.py:544-558, 684-716).
+#
+# Checkpoint: `ckpt-E2-final`, contract `e2` (8 actions, 5 questions — what it was trained on), track V.
+# NOT `appint_full`: it was trained on 1,380 rows whose goals are AndroidWorld's own task goals
+# (`source: aw_registry_app_intent`), so its AndroidWorld score would be measured on goals it saw.
+# E2 saw no AndroidWorld data. Pre-registration: docs/research/PRE-REG-2026-11-10-contract-v1.md (B0).
+#
+# Preflight must pass with `--expect-contract e2` before chunk 1. The image's two android_world copies
+# are byte-identical and match upstream 55ddaf5 except 4 generated *_pb2.py files (checked 2026-11-10).
+protocol: aw-main-v1
+agent: d1_e2_official
+checkpoint: ckpt-E2-final
+model:
+  url: http://172.17.0.1:8701
+  token: tok  # localhost-only API behind an SSH tunnel; not a secret
+  track: V
+  return_readouts: true
+  done_threshold: 0.0
+environment:
+  url: http://127.0.0.1:5000
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+  emulator_setup: false
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  step_budgets_file: /tmp/budgets.json
+  tasks: all

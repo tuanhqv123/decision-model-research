@@ -108,6 +108,118 @@ def _runner(tmp_path, task=None, agent=None, env=None):
     return runner, rec, task, env
 
 
+def test_max_new_bounds_a_chunk_and_the_next_resumes():
+    """A chunk must stop after N NEW episodes, and a second chunk must continue.
+
+    The a11y forwarder needs a container restart every ~15-20 min, so 116 tasks run as several
+    chunks in separate processes. `--limit` cannot express that: it truncates the SPEC list
+    before skipping, so a chunk whose first N specs are already done would attempt nothing.
+    """
+    from awenv.recorder import Recorder
+    from awenv.runner import Runner
+    from awenv.runner import EpisodeSpec
+
+    class Env:
+        def reset(self):
+            pass
+
+        def screenshot(self):
+            import numpy as np
+            return np.zeros((4, 4, 3), dtype=np.uint8)
+
+        def elements(self):
+            return []
+
+        def execute(self, action):
+            return {"ok": True}
+
+        def close(self):
+            pass
+
+    class Agent:
+        def __init__(self, *a, **k):
+            pass
+
+        def factory(self, env):
+            outer = self
+
+            class A:
+                def step(self, goal, i):
+                    return {"i": i, "action_raw": {"action": "wait"}, "action_executed": None,
+                            "invalid_action": False, "scaffolding": [], "done": True,
+                            "screenshot_pixels": None, "action_ok": None}
+
+            return A()
+
+    class Task:
+        goal = "g"
+
+        def initialize_task(self, env):
+            pass
+
+        def tear_down(self, env):
+            pass
+
+        def is_successful(self, env):
+            return True
+
+    specs = [EpisodeSpec(episode_id="e%d" % i, task_name="T", task_idx=0, seed=30, agent="a")
+             for i in range(5)]
+
+    import tempfile
+    root = tempfile.mkdtemp()
+    rec = Recorder(root, "run", config={})
+    r = Runner(recorder=rec, env_factory=lambda: Env(),
+               agent_factory=lambda env: Agent().factory(env),
+               task_factory=lambda spec: Task(), protocol="p", checkpoint="c")
+    out = r.run(specs, step_budget=1, goal_of=lambda s, t: "g", max_new=2)
+    assert out["attempted"] == 2, out
+    rec.close()
+
+    rec2 = Recorder(root, "run", config={})
+    r2 = Runner(recorder=rec2, env_factory=lambda: Env(),
+                agent_factory=lambda env: Agent().factory(env),
+                task_factory=lambda spec: Task(), protocol="p", checkpoint="c")
+    out2 = r2.run(specs, step_budget=1, goal_of=lambda s, t: "g", max_new=2)
+    assert out2["skipped"] == 2, out2
+    assert out2["attempted"] == 2, out2
+    rec2.close()
+
+
+def test_teardown_receives_the_environment():
+    """`tear_down(env)` must be called with the env, or it raises and is silently skipped.
+
+    AndroidWorld's signature is `TaskEval.tear_down(self, env)` (task_eval.py:182) and both
+    upstream callers pass it (suite_utils.py:288, server/android_server.py:183). Calling it
+    with no argument raised TypeError on every episode, and the bare except swallowed it, so
+    nothing was ever torn down and one task's foreground app leaked into the next task.
+    """
+    from awenv.runner import _teardown_task
+
+    seen = []
+
+    class Task:
+        def tear_down(self, env):
+            seen.append(env)
+
+    env = object()
+    _teardown_task(Task(), env)
+    assert seen == [env], "tear_down was not given the environment"
+
+
+def test_teardown_accepts_a_no_argument_fake():
+    from awenv.runner import _teardown_task
+
+    called = []
+
+    class Task:
+        def tear_down(self):
+            called.append(True)
+
+    _teardown_task(Task(), object())
+    assert called == [True]
+
+
 def test_plan_episodes_is_deterministic_and_agent_scoped(tmp_path):
     tasks = [("ClockStopWatchRunning", 0), ("ContactsAddContact", 1)]
 
@@ -542,3 +654,102 @@ def test_the_bridge_forwards_get_state_to_the_wrapped_env():
         pass
     else:
         raise AssertionError("unknown attributes must raise AttributeError")
+
+
+# ---------------------------------------------------------------- official scoring (H1, H3)
+# Upstream android_world@55ddaf5:
+#   suite_utils.py:246-247  task.initialize_task(env); interaction_results = run_episode(task)
+#   episode_runner.py:79    agent.reset(start_on_home_screen) -> env.reset(go_home=True)
+#   suite_utils.py:248,261  task_successful = task.is_successful(env)   # a FLOAT (0.5 = partial)
+#                           agent_successful = task_successful if interaction_results.done else 0.0
+
+
+class ScoreTask(FakeTask):
+    def __init__(self, value, calls=None):
+        super().__init__("ClockStopWatchRunning", 0)
+        self.value = value
+        self.calls = calls
+
+    def initialize(self, env):
+        if self.calls is not None:
+            self.calls.append("initialize")
+        super().initialize(env)
+
+    def is_successful(self, env):
+        self.checked += 1
+        return self.value
+
+
+class OrderEnv(FakeEnv):
+    def __init__(self, calls):
+        super().__init__()
+        self.calls = calls
+
+    def reset(self):
+        self.calls.append("reset")
+        super().reset()
+
+
+def test_partial_credit_is_a_float_not_a_success(tmp_path):
+    runner, rec, task, env = _runner(tmp_path, task=ScoreTask(0.5))
+    runner.run([_spec()], step_budget=10)
+    ep = rec.episodes()[0]
+    assert ep["task_score"] == 0.5
+    assert ep["score"] == 0.5
+    assert ep["success"] is False
+
+
+def test_correct_world_without_declared_done_scores_zero(tmp_path):
+    runner, rec, task, env = _runner(tmp_path, task=ScoreTask(1.0), agent=FakeAgent(n_steps=99))
+    runner.run([_spec()], step_budget=3)
+    ep = rec.episodes()[0]
+    assert ep["task_score"] == 1.0
+    assert ep["score"] == 0.0
+    assert ep["success"] is False
+
+
+def test_non_numeric_checker_is_unscored(tmp_path):
+    runner, rec, task, env = _runner(tmp_path, task=ScoreTask(None))
+    runner.run([_spec()], step_budget=10)
+    ep = rec.episodes()[0]
+    assert ep["unscored"] is True
+    assert "None" in ep["checker_error"]
+    assert ep["score"] is None
+
+
+def test_initialize_happens_before_go_home(tmp_path):
+    calls = []
+    runner, rec, task, env = _runner(tmp_path, task=ScoreTask(1.0, calls), env=OrderEnv(calls))
+    runner.run([_spec()], step_budget=10)
+    assert calls[:2] == ["initialize", "reset"]
+
+
+# ---------------------------------------------------------------- instance budget (H4)
+# suite_utils.py:459, 491-502: max_n_steps = int(10 * task.complexity), read from the INSTANCE —
+# information_retrieval.py:70 overrides the class value in __init__.
+def test_budget_comes_from_the_instance(tmp_path):
+    task = FakeTask("ClockStopWatchRunning", 0)
+    task.complexity = 2.0
+    runner, rec, task, env = _runner(tmp_path, task=task, agent=FakeAgent(n_steps=99))
+    runner.run([_spec()], step_budget=4)
+    ep = rec.episodes()[0]
+    assert rec.episode_header(ep["episode_id"])["step_budget"] == 20
+    assert ep["n_steps"] == 20
+
+
+def test_budget_falls_back_when_the_task_has_no_complexity(tmp_path):
+    runner, rec, task, env = _runner(tmp_path, agent=FakeAgent(n_steps=99))
+    runner.run([_spec()], step_budget=4)
+    ep = rec.episodes()[0]
+    assert rec.episode_header(ep["episode_id"])["step_budget"] == 4
+
+
+def test_numpy_scalar_checker_results_are_scores(tmp_path):
+    """Upstream averages whatever number the checker returns; numpy scalars must not become 'unscored'."""
+    np = pytest.importorskip("numpy")
+    for raw, want in ((np.bool_(True), 1.0), (np.int64(1), 1.0), (np.float64(0.5), 0.5)):
+        runner, rec, task, env = _runner(tmp_path / str(want) / type(raw).__name__, task=ScoreTask(raw))
+        runner.run([_spec()], step_budget=10)
+        ep = rec.episodes()[0]
+        assert ep["unscored"] is False, type(raw)
+        assert ep["task_score"] == want

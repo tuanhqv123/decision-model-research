@@ -84,7 +84,7 @@ def test_baselines_plug_into_the_real_agent_core():
 
 
 def test_policy_registry_names_are_stable():
-    assert policy_names() == ("wait", "random")
+    assert policy_names() == ("wait", "random", "status_now")
     assert isinstance(build_policy("wait"), WaitPolicy)
     with pytest.raises(KeyError):
         build_policy("m3a")
@@ -96,3 +96,25 @@ def test_m3a_is_declared_outside_the_policy_registry():
 
     assert "m3a" not in baselines.policy_names()
     assert callable(baselines.build_m3a)
+
+
+def test_status_now_policy_declares_done_at_once_through_the_real_agent_core():
+    """Q11 floor: an agent that declares `status` at step 0. Any task it 'solves' is satisfied by
+    the initial state, and that share of every arm's score is free."""
+    from awenv.agent import AgentCore
+    from awenv.baselines import StatusNowPolicy
+
+    class Env:
+        def screenshot(self):
+            return None
+
+        def elements(self):
+            return []
+
+        def execute(self, action):
+            raise AssertionError("status must not execute anything")
+
+    rec = AgentCore(build_policy("status_now"), Env()).step("any goal", i=0)
+    assert rec["done"] is True
+    assert isinstance(build_policy("status_now"), StatusNowPolicy)
+    assert "status_now" in policy_names()

@@ -35,10 +35,12 @@ That per-step diagnosis is necessary but **not sufficient for task-level claims*
 explicitly. A multi-step task succeeds only if every step does, so with per-step accuracy `p` over `n` steps
 `P(task) = p^n`; our measured 64.07% implies **2.8% over eight steps and 1.2% over ten**. Inverting the same
 relation on published end-to-end AndroidWorld scores recovers the per-step accuracy those systems must run at —
-**92.3% for MAI-UI-2B after SFT alone, 93.1% after its online RL, 97.4% for the 235B variant** [maiui2026] —
-which places the frontier roughly **28 per-step points** above us and identifies the gap as **supervision**
-(multi-step trajectory corpora, a judge-driven data loop, a 50-step horizon, a 12-action space) rather than as
-a defect this paper's method could remove. We therefore do not treat 64.07% as a near-miss on any end-to-end
+**92.3% for MAI-UI-2B after SFT alone, 93.1% after its online RL, 97.4% for the 235B variant**. These are
+**derived, not reported**: MAI-UI publishes task success only and reports no per-step metric at all
+[maiui2026], and the inversion assumes step independence, which our own data refutes (§5.12.1). Read as an
+order-of-magnitude inference it still places the frontier far above us and identifies the gap as
+**supervision** (multi-step trajectory corpora, a judge-driven data loop, a 50-step horizon, a 12-action space)
+rather than as a defect this paper's method could remove. We therefore do not treat 64.07% as a near-miss on any end-to-end
 number, and we report our own first full AndroidWorld run **only with its completeness line**: 104 of 116 tasks finished, 15 successes, SR 14.4% (95% Wilson 8.9–22.4%), with **zero invalid actions among 1,394 emitted** — so the interface is no longer the binding constraint and **composition** is. Within AC-v2, element selection
 remains the dominant *per-step* error; across tasks, the dominant error is stringing correct steps together.
 
@@ -869,7 +871,10 @@ single most important thing in this paper that was not previously written down:
 
 Our measured `p = 0.6407` gives **10.8% over 5 steps, 2.8% over 8, 1.2% over 10, and 0.1% over 15**. Table
 5.12.1 inverts the rule on published end-to-end AndroidWorld scores [androidworld2024] to recover the
-per-step accuracy those systems must have:
+per-step accuracy those systems *would* need **if their steps were independent**. The qualifier matters: that
+independence assumption is measurably false for our own model (§5.12.1.1), so the column below is an
+upper-bound-style inference, not a measurement, and no published system reports a per-step number to check it
+against.
 
 | system | end-to-end (published) | implied per-step (10 steps) |
 |---|---|---|
@@ -880,23 +885,58 @@ per-step accuracy those systems must have:
 | MAI-UI-8B after online RL | 70.7% | 96.6% |
 | MAI-UI-235B-A22B after online RL | 76.7% | 97.4% |
 
-**Every competitive GUI agent runs at 92–97% per-step accuracy.** And the SFT/RL rows separate two claims
-that are easy to conflate. MAI-UI's online RL is worth **+4.0 points** at 2B (45.1 → 49.1), +6.0 at 8B,
-+3.5 at 32B — real, but only **+0.8 per-step points at 2B** (92.3 → 93.1). Their *SFT checkpoint alone*
-already sits at 92.3%. So the distance from our 64.07% is about **28 points of per-step
-accuracy at matched supervision** — and it is therefore **not** the online RL that separates us. It is the
-supervision: multi-step trajectory corpora, thousands of expert and synthesised tasks executed on a live
-emulator with MLLM-judge rejection sampling, a 50-step horizon, and a 12-action space.
+**On the independence assumption, every competitive GUI agent must be running at 92–97% per-step.** The
+SFT/RL rows also separate two quantities that are easy to conflate. MAI-UI's online RL is worth **+4.0 points
+of task success** at 2B (45.1 → 49.1), +6.0 at 8B, +3.5 at 32B. The per-step column moves far less
+(+0.8 derived at 2B, 92.3 → 93.1) — which is exactly what the product rule predicts: a large task-level gain
+can sit on a small step-level gain. We therefore make **no** claim about a "28-point per-step gap". What is
+measured is a **task-success gap** (45.1% vs our 18.8% scorable) and it is attributable to **supervision**:
+multi-step trajectory corpora, thousands of expert and synthesised tasks executed on a live emulator with
+MLLM-judge rejection sampling, a 50-step horizon, and a 12-action space.
 
 The right comparison point for this work is consequently **MAI-UI-2B-SFT, 45.1% end-to-end** — the same
 ~2B scale under the same SFT-only setting — not the 76.7% 235B model, and not even the 49.1% RL-tuned 2B. The published recipes
 get there with online RL over hundreds of parallel emulators, multi-step trajectory data, and a wider action
 space; §6 Limitation 11 states what of that is and is not available here.
 
-This also **retro-explains** the online result in §5.7. A 64% per-step model is predicted to complete 2.8% of
-8-step tasks; the measured **1/8 (12.5%, Wilson 2.2–47.1%)** is consistent with that prediction. The 1/8 was
-therefore never evidence of a harness defect, and the search for one (`app_name`, checked and repaired in
-§5.7) could not have moved the task rate materially on its own.
+### 5.12.1.1 The independence assumption is false, and our own data says so
+
+Before using `P(task) = p^n` to explain anything, we tested its premise on ourselves. It predicts that a
+model at 64.07% per-step completes **2.84%** of 8-step tasks. Our measured task success is
+**18.8% (15/80 scorable)** — a factor of **6.6× higher** than the product rule allows.
+
+The assumption fails for the obvious reason: GUI steps are strongly dependent. Most of a task is a sequence of
+easy taps on a screen whose state the model just produced; the per-step error rate on *those* screens is far
+below the 64% average, which is dominated by the hard AC-v2 mix. Tasks are also not uniform in length, and a
+hard step can be recovered by the next action.
+
+The cleanest test uses the homogeneous subset. Of the 80 scorable episodes, the 66 that never emitted
+`type_text` have a median length of **12 steps** and a success rate of **14/66 = 21.2%**. The product rule at
+`p = 0.6407`, `n = 12` predicts **0.479%** — a factor of **44×** too low; at `n = 12.5` it predicts **0.383%**,
+or **55×** too low. A refutation this large is not a small-sample artefact: it is the assumption being wrong.
+
+Consequences we accept:
+
+1. **`P(task) = p^n` is retained only as an order-of-magnitude intuition**, never as a prediction and never as
+   evidence that a run is broken. The predicted-to-measured factor is **6.6x**, and the per-step figures
+   inverted from published task scores are **derived, not reported** by those papers.
+2. **The 92.3/93.1/97.4 per-step column is not a published quantity and is not compared to our 64.07%.** It is
+   the value each published end-to-end score would imply *under an assumption we have measured to be false* for
+   our own model. We print it because inverting the rule is the only way to reach a per-step number from a
+   paper that publishes only task success; we label it derived and we make no gap claim from it.
+3. **The comparison we do make is the measured one**: task success, ours versus a published task-success
+   number, in the same unit. That comparison is 18.8% against MAI-UI-2B-SFT's 45.1%, and it does not depend on
+   any assumption about step independence.
+
+Inverting the rule on *our own* measurement illustrates the failure directly: 18.8% over 8 steps implies 81.1%
+per-step, over 10 steps 84.6% — against a measured 64.07%. No per-step figure in this paper should be read as
+interchangeable with a task figure, in either direction.
+
+This also **retro-explains** the online result in §5.7. The 8-task run gave **1/8 (12.5%, Wilson 2.2–47.1%)**,
+which the product rule would call better than its 2.8% prediction and which is simply what a small-n estimate
+of the 18.8% population looks like (Wilson interval contains it). The 1/8 was therefore never evidence of a
+harness defect, and the search for one (`app_name`, checked and repaired in §5.7) could not have moved the task
+rate materially on its own.
 
 **Two consequences are stated as limits rather than as results.** First, a paper reporting per-step accuracy
 cannot claim task success, and this paper does not. Second, the calibrated gate's value (§5.12) is a
@@ -1109,3 +1149,4 @@ interruption (§5.12), and that is the claim the tie can actually carry.
     `benchmarks/results/2026-11-07-cost-window.md`, script `benchmarks/train/cost_window.py`,
     data `benchmarks/results/2026-11-07-cost-window.json` (derived from `gate_test938.json`, `gate_test705.json`,
     `score_fusion.json`).
+23. `rightclick2026` — Yuan et al., *Right Click, Wrong Box: Grading GUI Grounding by What a Click Does*, arXiv:2610.36831 — https://arxiv.org/abs/2610.36831. Outcome-equivalent click grading; the 1/5–1/3 figures are **web** widgets, and the ~1% native-Android scope correction in §5.3 is **ours**, not the paper's.

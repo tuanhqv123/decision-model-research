@@ -1,0 +1,52 @@
+# Protocol aw-main-v1 + track VA.
+#
+# `track: VA` sends the a11y element list with the state, which is what the checkpoint was
+# trained to use: `--track mix` means 50% of training steps rendered an
+# "Elements on screen (id: label, position):" block (median 34 candidates/row, 99.2% of rows).
+# Running the benchmark at `track: V` withheld that block entirely, so the `target_el` head was
+# never exercised and grounding fell back to the box head, whose median miss is 437 px. Measured
+# on 2026-11-10: ExpenseAddMultiple clicked 56 times ~400 px above the SAVE button and never hit
+# it. VA answers with a named element instead of a guessed point:
+#   V : action=click conf=0.55 point=(697,823)          dist_to_SAVE=537 px
+#   VA: action=click conf=0.77 element=Social (0.89)
+
+#
+# Deviations from upstream: NONE. That is the point of this file.
+#   - `done_threshold: 0.0`  upstream lets the agent decide `done` (episode_runner.py:60-84)
+#   - `step_budgets_file`    upstream allocates int(10 * task.complexity) per task
+#                            (suite_utils.py:491); a flat number is a deviation and the
+#                            2026-11-08 run used a flat 25, so its 18.8% is not comparable
+#                            to this one.
+#
+# The suite is run in CHUNKS with a container restart between them: the accessibility
+# forwarder stops delivering protos after tens of minutes of emulator uptime, and the only
+# reliable fix is recreating the container. `--max-new N` bounds each chunk; the runner skips
+# episodes already on disk, so the next chunk resumes.
+protocol: aw-main-v1
+agent: d1_episodic
+checkpoint: episodic-s0@938
+model:
+  url: http://172.17.0.1:8701
+  token: tok
+  track: VA
+  return_readouts: true
+  done_threshold: 0.0
+environment:
+  url: http://127.0.0.1:5000
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+  emulator_setup: false
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  step_budgets_file: /tmp/budgets.json
+  # The 5 worst failures from the first 18, re-run after three fixes (history format, app_intent
+  # gating, ui_changed). Chosen by n_steps spent against task complexity, not by convenience.
+  tasks:
+  - ExpenseAddMultiple          # 60 steps spent, 56 clicks in one band, never pressed SAVE
+  - ExpenseAddMultipleFromMarkor # 48 steps
+  - ContactsNewContactDraft     # 3 x text_missing (empty type_text)
+  - CameraTakePhoto             # 10 steps, 5 x identical click
+  - BrowserMultiply             # 22 steps, typed '' twice

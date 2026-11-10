@@ -27,12 +27,47 @@ import torch
 import torch.nn.functional as F
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ac_common import AppMemory, TrajMemory, build_questions, build_state, gold_answers  # noqa: E402
+from ac_common import (DEFAULT_CONTRACT, AppMemory, TrajMemory, build_questions, build_state,  # noqa: E402
+                       gold_answers, write_contract)
+
+# Run-wide settings that every sample must agree on. `contract` names the question set (ac_common.CONTRACTS)
+# and is stamped on every saved checkpoint as contract.json, which the server requires.
+RUN = {"contract": DEFAULT_CONTRACT}
+
+
+def tracks_of(track):
+    """The serving tracks a `--track` training flag actually supervises."""
+    return {"V": ["V"], "VA": ["VA"], "mix": ["V", "VA"]}[track]
+
+
+def stamp_contract(ckpt_dir, track):
+    write_contract(ckpt_dir, RUN["contract"], tracks=tracks_of(track))
 
 BASE = "LiquidAI/d1-2B"
 BASE_REV = "cfe5760ff5d5998f91d9ac56bd4b2dbd96996d41"  # pinned: train and eval run the same remote code
 W_LOSS = {"hit": 0.0, "action": 1.0, "target_el": 1.0, "scroll_dir": 0.5, "presence": 0.2, "edge": 0.25,
-          "read": 0.5, "read_nothing": 0.05}
+          "read": 0.5, "read_nothing": 0.05, "is_done": 0.5}
+
+# The candidate cap below this discards most of the distractors the contrastive signal comes from.
+# The VA arm trained at 14 and threw away 58.6% of all candidates (DATA-SPEC §8) — that result is a
+# lower bound, not a verdict. Median candidate count with the production filter is 37.
+MIN_CAND_CAP = 40
+
+
+def check_cand_cap(track):
+    """Refuse to start a candidate-track run whose cap is below the median candidate count.
+
+    D1_MAX_CANDS=0 means 'no cap' in ac_common.build_state, which is fine. A cap between 1 and
+    MIN_CAND_CAP-1 is the memory workaround that produced a false negative; fail loudly instead.
+    """
+    cap = int(os.environ.get("D1_MAX_CANDS", "0") or 0)
+    if track in ("VA", "mix") and 0 < cap < MIN_CAND_CAP:
+        raise SystemExit(
+            f"D1_MAX_CANDS={cap} is below {MIN_CAND_CAP}. The median candidate count with the "
+            f"production filter is 37, so a cap of {cap} discards most distractors and any result "
+            f"is a lower bound, not a measurement. Set D1_MAX_CANDS>={MIN_CAND_CAP} (or 0 for no "
+            f"cap) and see docs/research/DATA-SPEC-2026-11-09.md §8."
+        )
 
 OBJECTIVE = "ce"          # "ce" (baseline) | "brier" (proper score) | "joint" (ce + lambda*brier)
 BRIER_LAMBDA = 0.5        # only used by "joint"
@@ -97,12 +132,12 @@ def make_sample(rec, data, track, memory, rng):
         rec = json.loads(rec)
     if "kind" in rec:  # auxiliary grounding sample (make_aux.py): same box question as the decision's target_box
         t, W, H = rec["target"], rec["W"], rec["H"]
-        qs = {"target_box": build_questions("V")["target_box"]}
+        qs = {"target_box": build_questions("V", contract=RUN["contract"])["target_box"]}
         gold = {"target_box": (t["y_min"] / H, t["y_max"] / H, t["x_min"] / W, t["x_max"] / W)}
         return AUX_STATE[rec["kind"]].format(rec["text"]), qs, gold, load_image(f"{data}/{rec['img']}")
     if track == "mix":
         track = "VA" if rng.random() < 0.5 else "V"
-    cands = rec["cands"] if track == "VA" else None
+    cands = rec.get("cands") if track == "VA" else None
     if track == "VA" and not cands:  # empty a11y list: a choice needs options -> the V form of this row
         track, cands = "V", None
     apps = memory.query(rec["goal"], exclude_ep=rec["ep"]) if memory else None
@@ -110,10 +145,10 @@ def make_sample(rec, data, track, memory, rng):
     # Tell build_state which candidate must survive any length cap, BEFORE the state is rendered.
     from ac_common import GOLD_KEEP, gold_candidate
     GOLD_KEEP["idx"] = (gold_candidate(cands, rec.get("target"), rec["action"].get("x"), rec["action"].get("y")) or {}).get("idx") if cands else None
-    from ac_common import app_intent_for
+    from ac_common import app_intent_for, ALLOW_APP_INTENT
     state = build_state(rec["goal"], track, cands, apps, rec.get("history"), trajs,
-                        app_intent=app_intent_for(rec["goal"]))
-    qs = build_questions(track, cands)
+                        app_intent=app_intent_for(rec["goal"]) if ALLOW_APP_INTENT else None)
+    qs = build_questions(track, cands, contract=RUN["contract"])
     gold = gold_answers(rec, track, cands, state)
     img = load_image(f"{data}/{rec['img']}")
     return state, qs, gold, img
@@ -237,8 +272,13 @@ def _losses(model, eng, M, samples, out, slots, reads, pointer, position_maps, b
                 if s_idx == 1:  # top edge: track the argmax error in thousandths
                     stats.setdefault("edge_err", []).append(abs(int(logp.argmax()) - center))
         else:
-            labels = list(requests[i][1][qi].criteria.keys())
-            gi = labels.index(gold[name])
+            if name == "is_done":
+                # noul: the two option groups are the readout's own yes/no forms, not a criteria map.
+                gi = 0 if gold[name] == "yes" else 1
+                labels = None
+            else:
+                labels = list(requests[i][1][qi].criteria.keys())
+                gi = labels.index(gold[name])
             ce = -logp[gi]
             if OBJECTIVE == "ce":
                 value = ce
@@ -260,18 +300,30 @@ def _losses(model, eng, M, samples, out, slots, reads, pointer, position_maps, b
         stats.setdefault("p_hit", []).append(float(lhit.detach().exp()))
 
     if pointer is not None:
+        # res.positions is [R, 2, T]: one row per READ (a Read contributes two slots: start and end),
+        # in query_plan's order. `reads` is the flat list of those slots, so read i owns reads[2i:2i+2].
+        # The old code walked reads[::2] and indexed pos[k]; that pairing breaks the moment a slot that
+        # is not a Read enters `reads`, and it silently unpacked the string "yes" as a span.
         pos = res.positions.reshape(-1, 2, res.positions.shape[-1])
-        for k, j in enumerate(reads[::2]):
+        read_pairs = [reads[i:i + 2] for i in range(0, len(reads), 2)]
+        for k, pair in enumerate(read_pairs):
+            if k >= pos.shape[0] or len(pair) < 2:
+                continue
+            j = pair[0]
             r, (i, qi), _, _, _ = slots[j]
             name, gold = names[i][qi], golds[i]
             if name not in gold:
                 continue
-            pm = position_maps[batch[r]]
-            if gold[name] == "nothing":
+            gv = gold[name]
+            if isinstance(gv, str):
+                if gv != "nothing":
+                    # "escalate": not copyable from the state, so there is no span to supervise.
+                    continue
                 first = last_t = 0
                 w = W_LOSS["read_nothing"]
             else:
-                a, b = gold[name]
+                a, b = gv
+                pm = position_maps[batch[r]]
                 idx = [t for t, o in enumerate(pm.offsets) if o and o[0] < b and o[1] > a]
                 if not idx:
                     continue
@@ -299,7 +351,7 @@ def periodic_eval(model, a, memory, step, log, base_dir, best):
     rows = load_rows(f"{a.evalset}/500_steps_filtered.json", f"{a.evalset}/images", a.data)
     score_v = None
     for track in a.eval_tracks.split(","):
-        out, summ = run_eval(model, rows, track, memory, a.eval_batch)
+        out, summ = run_eval(model, rows, track, memory, a.eval_batch, contract=RUN["contract"])
         summ["step"] = step
         line = "EVAL " + json.dumps(summ)
         print(line, flush=True)
@@ -358,6 +410,8 @@ def save(model, out, base_dir):
             shutil.copytree(src, f"{out}/{f}")
         else:
             shutil.copy(src, f"{out}/{f}")
+    # Stamped LAST so a contract.json inherited from --init can never survive under the new weights.
+    stamp_contract(out, RUN["track"])
 
 
 def main():
@@ -384,6 +438,8 @@ def main():
     ap.add_argument("--round-steps", type=int, default=300)
     ap.add_argument("--traj-k", type=int, default=0, help="procedural memory: k similar TRAIN episodes in the state")
     ap.add_argument("--loss-weights", default="", help="override W_LOSS, e.g. 'read=0,read_nothing=0'")
+    ap.add_argument("--contract", default=DEFAULT_CONTRACT,
+                    help="question set (ac_common.CONTRACTS); stamped on the checkpoint as contract.json")
     ap.add_argument("--objective", default="ce", choices=["ce", "brier", "joint"],
                     help="readout objective: ce (released recipe) | brier (proper score) | joint (ce+lambda*brier)")
     ap.add_argument("--brier-lambda", type=float, default=0.5, help="weight of the Brier term when --objective=joint")
@@ -394,8 +450,12 @@ def main():
     ap.add_argument("--eval-tracks", default="V,VA")
     ap.add_argument("--eval-batch", type=int, default=8)
     ap.add_argument("--evalset", default="evalset")
+    ap.add_argument("--task-complete-weight", type=float, default=0.5,
+                    help="loss weight for the is_done noul readout (default 0.5)")
     a = ap.parse_args()
 
+    check_cand_cap(a.track)
+    W_LOSS["is_done"] = float(a.task_complete_weight)
     for kv in filter(None, a.loss_weights.split(",")):
         k, v = kv.split("=")
         assert k in W_LOSS, k
@@ -406,6 +466,11 @@ def main():
     torch.manual_seed(a.seed)
     if a.mem_frac:
         torch.cuda.set_per_process_memory_fraction(a.mem_frac)
+    from ac_common import CONTRACTS
+    if a.contract not in CONTRACTS:
+        raise SystemExit(f"--contract {a.contract!r} is not one of {sorted(CONTRACTS)}")
+    RUN["contract"], RUN["track"] = a.contract, a.track
+    print(f"[contract] {a.contract} tracks={tracks_of(a.track)}", flush=True)
     os.makedirs(a.out, exist_ok=True)
     json.dump(vars(a), open(f"{a.out}/args.json", "w"), indent=1)
     t0 = time.time()

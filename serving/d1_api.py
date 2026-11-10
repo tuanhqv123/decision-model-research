@@ -24,11 +24,15 @@ from PIL import Image
 from pydantic import BaseModel
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ac_common import (FROM_OPTION, SPATIAL, app_intent_for, build_questions, build_state,  # noqa: E402
-                        pick_candidates)
+from ac_common import (FROM_OPTION, SPATIAL, app_intent_for, build_state, pick_candidates,  # noqa: E402
+                        questions_for, read_contract)
 from train_d1 import load_image  # noqa: E402
 
 MODEL_PATH = os.environ.get("D1_MODEL", "models/e2-final")
+# The questions a checkpoint is asked must be the ones it was trained on. `contract.json` next to the
+# weights says which; a checkpoint without one is refused at startup rather than served a guess
+# (2026-11-10: E2, trained on 8 options + 5 questions, was being served 9 + 6).
+CONTRACT = read_contract(MODEL_PATH)
 TOKEN = os.environ.get("D1_API_TOKEN", "")
 if os.environ.get("D1_MEM_FRAC"):
     torch.cuda.set_per_process_memory_fraction(float(os.environ["D1_MEM_FRAC"]))
@@ -62,22 +66,41 @@ def _check(token):
 
 
 def _normalise(nodes):
-    """AndroidWorld UI elements -> the node dicts ac_common.pick_candidates reads (adds width/height when absent)."""
+    """UI elements -> the node dicts `ac_common.pick_candidates` reads.
+
+    Accepts TWO shapes, because the harness and the raw AndroidWorld controller disagree:
+      * `bbox_pixels` as a dict with x_min/x_max/y_min/y_max (+ optional width/height/center)
+      * `bbox` as a [x_min, y_min, x_max, y_max] list, which is what the harness used to send
+    The old version only understood the first, so every element was dropped, `cands` came back
+    empty, `track` silently fell back to "V" — and the response then read `ans["target_el"]` and
+    raised `KeyError: target_el` (HTTP 500) because a V request has no such question.
+    """
     out = []
     for n in nodes or []:
         b = dict(n.get("bbox_pixels") or {})
+        if not b:
+            flat = n.get("bbox")
+            if isinstance(flat, (list, tuple)) and len(flat) == 4:
+                b = {"x_min": flat[0], "y_min": flat[1], "x_max": flat[2], "y_max": flat[3]}
         if not b or not all(k in b for k in ("x_min", "x_max", "y_min", "y_max")):
             continue
         b.setdefault("width", b["x_max"] - b["x_min"])
         b.setdefault("height", b["y_max"] - b["y_min"])
         b.setdefault("center", [(b["x_min"] + b["x_max"]) / 2, (b["y_min"] + b["y_max"]) / 2])
-        out.append({**n, "bbox_pixels": b})
+        # The harness sends `clickable`; pick_candidates reads the AndroidWorld spellings.
+        merged = {**n, "bbox_pixels": b}
+        if "is_clickable" not in merged:
+            merged["is_clickable"] = bool(n.get("clickable"))
+        if "is_visible" not in merged:
+            merged["is_visible"] = True
+        out.append(merged)
     return out
 
 
 @app.get("/health")
 def health():
-    return {"ok": True, "model": MODEL_PATH, "img_width": int(os.environ.get("D1_IMG_W", "720")),
+    return {"ok": True, "model": MODEL_PATH, "contract": CONTRACT["name"], "tracks": CONTRACT["tracks"],
+            "img_width": int(os.environ.get("D1_IMG_W", "720")),
             "gpu_mem_gb": round(torch.cuda.max_memory_allocated() / 2**30, 2), **STATS}
 
 
@@ -101,11 +124,17 @@ def decide(req: DecideReq, x_api_key: str | None = Header(default=None)):
             if not cands:
                 track = "V"
         img = load_image(io.BytesIO(base64.b64decode(req.image_b64)))
-        # Same line the trainer renders, so the pointer read has the app name to copy when the goal only
-        # implies it ("Turn wifi on" -> settings). Identical string on both paths by construction.
-        state = build_state(req.goal, track, cands, None, req.history,
-                            app_intent=app_intent_for(req.goal))
-        qs = build_questions(track, cands)
+        # `app_intent` is a scaffold line ("Application for this task: <app>") that only helps if
+        # the checkpoint was TRAINED with it. `ac_common.ALLOW_APP_INTENT` is False, so training
+        # rows never contain it — but this call passed it unconditionally, adding a line the model
+        # had never seen to every serve-time state. Gate on the same flag the trainer uses, so the
+        # two paths render the same string by construction rather than by intention.
+        from ac_common import ALLOW_APP_INTENT
+        state = build_state(
+            req.goal, track, cands, None, req.history,
+            app_intent=app_intent_for(req.goal) if ALLOW_APP_INTENT else None,
+        )
+        qs = questions_for(CONTRACT, track, cands)
         with LOCK, torch.inference_mode():
             t0 = time.time()
             ans = MODEL.system_one_batch([(state, qs, [img])])[0]["answers"]
@@ -129,12 +158,22 @@ def decide(req: DecideReq, x_api_key: str | None = Header(default=None)):
         out["text"] = ans["type_text"].get("text") or ""
     box = ans["target_box"].get("box")
     box_conf = ans["target_box"].get("confidence")
+    # is_done: independent p(task complete). The adapter uses it to refuse an early `status`
+    # (31 of 104 AndroidWorld episodes declared done at median step 7 on tasks needing 8-15).
+    if "is_done" in ans:
+        try:
+            out["is_done"] = float(ans["is_done"].get("noul"))
+        except (AttributeError, TypeError, ValueError):
+            pass
     if box:
         out["box"] = box
         out["box_point"] = [(box["left"] + box["right"]) / 2 * W, (box["top"] + box["bottom"]) / 2 * H]
     out["box_confidence"] = box_conf
     point = out.get("box_point")
-    if cands is not None:
+    # `if cands is not None` was true for an EMPTY list, so a request whose candidates had all
+    # been filtered out still tried to read `ans["target_el"]` — a question that only exists when
+    # track is VA. That is the `KeyError: target_el` / HTTP 500 seen on 2026-11-10.
+    if cands:
         ch = str(ans["target_el"].get("choice") or "")
         c = next((c for c in cands if str(c["idx"]) == ch), None)
         out["element"] = {"idx": int(ch) if ch.isdigit() else None, "confidence": ans["target_el"].get("confidence"),

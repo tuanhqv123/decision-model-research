@@ -130,6 +130,7 @@ Plan: `docs/plans/2026-10-13-androidcontrol-comparison-plan.md`. Bibkeys added:
 | bibkey | claim / asset | source | type | retrieved |
 |---|---|---|---|---|
 | uivenus15 | UI-Venus-1.5-8B: Qwen3-VL-8B fine-tune (Apache-2.0), 4-stage training, AC-v2 High 61.06 (leaderboard), grounding bottleneck, card metadata says "9B params" | arXiv:2602.09082 + HF inclusionAI/UI-Venus-1.5-8B | primary | 2026-10-14 |
+| **uivenus15-androidworld** | **The highest published 2B AndroidWorld result: UI-Venus-1.5-2B = 55.6%** (Table 2, "end-to-end models"). Also 8B 73.7, 30B-A3B 77.6; Table 2's neighbouring row prints MAI-UI-2B at 49.1. **Eval step budget NOT STATED; seeds NOT STATED; eval harness not named.** Merge ablation (verbatim reading): 30B-A3B is 71.0 ScreenSpot-Pro / 75.5 AndroidWorld **before** merging; Linear Merge costs −2.9 and −2.3; TIES-Merge gives 69.6 (−1.4) and 77.6 (+2.1). | arXiv:2602.09082 Table 2 + §3.4 (html v2) | primary | 2026-11-09 (A5 T2) |
 | uivenus2 | UI-Venus-2-9B: Qwen3.5-9B init, multi-teacher on-policy distillation, keypoint+multi-model-voting reward, GGUF+mmproj vision, AndroidWorld 80.2% (vendor self-scored), OSHarm ASR 11.3% / OSBlind ASR 48.8%, license pending/conflicting, card "1.47M params" metadata bug | arXiv:2609.00028 + HF inclusionAI/UI-Venus-2-9B | primary | 2026-10-14 |
 | memw2026 | Mem-W decode T=0/top-p 1.0/max 64 tok; latent compressor + memory bank; self-distill + outcome-aware RL; 68.59 author-reported | arXiv:2605.09317 | primary | 2026-10-13 (ledger) |
 

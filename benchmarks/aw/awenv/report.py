@@ -85,6 +85,16 @@ def format_markdown(report: Dict[str, Any], title: str = "AndroidWorld run") -> 
                 "the tasks that ran, not the suite.**" % (done, planned))
         lines.append("")
 
+    # The number comparable to published AndroidWorld results, before anything else.
+    off = task.get("official") or {}
+    if off:
+        sr_txt = "n/a" if off.get("sr") is None else "%.1f%%" % (100.0 * off["sr"])
+        line = "**Official SR (suite_utils): %s over %d tasks; %d excluded (raised)" % (
+            sr_txt, off.get("n_tasks_scored", 0), off.get("n_tasks_excluded", 0))
+        if off.get("excluded"):
+            line += ": " + ", ".join(off["excluded"])
+        lines += [line + ".**", ""]
+
     lines.append("| metric | value |")
     lines.append("|---|---|")
     lines.append("| **SR (all)** | %s |" % _fmt(task["sr"]))

@@ -1,0 +1,42 @@
+==========================================================================
+UNPAIRED  (two separate runs, different tasks or different seeds)
+==========================================================================
+     n      p1        MDE
+    80   0.188     19.90 pts
+   116   0.188     16.23 pts
+   348   0.188      8.96 pts
+    80   0.300     21.61 pts
+   116   0.300     17.85 pts
+   348   0.300     10.12 pts
+    80   0.451     21.83 pts
+   116   0.451     18.23 pts
+   348   0.451     10.60 pts
+
+==========================================================================
+PAIRED  (same 116 tasks, two checkpoints)   n = number of TASKS
+==========================================================================
+     n  discord        MDE  needed for +2       +4       +6
+    80     0.15     11.95pt           2941      733      325
+   116     0.15      9.97pt           2941      733      325
+   348     0.15      5.80pt           2941      733      325
+    80     0.25     15.43pt           4903     1224      543
+   116     0.25     12.87pt           4903     1224      543
+   348     0.25      7.48pt           4903     1224      543
+    80     0.35     18.26pt           6865     1715      761
+   116     0.35     15.23pt           6865     1715      761
+   348     0.35      8.85pt           6865     1715      761
+
+==========================================================================
+VERDICT ARITHMETIC — what a 116-task suite can actually resolve
+==========================================================================
+  discordant rate 0.15 -> MDE =  10.0 points on 116 paired tasks
+  discordant rate 0.25 -> MDE =  12.9 points on 116 paired tasks
+  discordant rate 0.35 -> MDE =  15.2 points on 116 paired tasks
+  our actual SCORABLE base (80) at psi=0.25 -> MDE =  15.4 points
+
+  For a +4-point claim at psi=0.25 you need 1224 paired tasks.
+  AndroidWorld has 116. Seeds are the only way to buy n:
+     1 seed(s) -> n= 116 -> MDE(psi=0.25) = 12.87 pts
+     3 seed(s) -> n= 348 -> MDE(psi=0.25) =  7.48 pts
+     5 seed(s) -> n= 580 -> MDE(psi=0.25) =  5.80 pts
+    10 seed(s) -> n=1160 -> MDE(psi=0.25) =  4.11 pts
