@@ -159,17 +159,8 @@ def gold_candidate(cands, target, gx, gy):
 GOLD_KEEP = {"idx": None}  # set by the trainer so a candidate cap never drops the gold element
 
 
-def build_state(goal, track, cands=None, apps=None, history=None, trajs=None, app_intent=None):
-    """history = the earlier steps' instructions, as the AC-v2 harness gives them (row['previous_actions'];
-    GUI-Libra guilibra_plan.py 'Interaction History'). Part of the leaderboard protocol.
-
-    History entries are BARE ("click", "type_text Floor lamp"); the `Step N: ` prefix is added
-    HERE and nowhere else. The episodic rebuild used to write the prefix into the data as well,
-    so training rows rendered as `Step 1: Step 1: open_app IKEA` — 159,954 of 159,954 entries
-    (measured 2026-11-10). The `cur15k` corpus, which E2 was trained on, carries no prefix
-    (0 of 57,096), which is why the double prefix went unnoticed until `episodic-s0` scored
-    55.78%: that arm was trained on a different string than every eval and every serve.
-    """
+def _goal_history_lines(goal, history):
+    """`Goal:` + `Previous actions:` lines — the head of every state, v1 and v2 alike."""
     lines = [f"Goal: {goal}"]
     if history:
         lines.append("Previous actions:")
@@ -183,6 +174,21 @@ def build_state(goal, track, cands=None, apps=None, history=None, trajs=None, ap
                 lines.append(f"Step {i}: {text}")
     else:
         lines.append("Previous actions: none")
+    return lines
+
+
+def build_state(goal, track, cands=None, apps=None, history=None, trajs=None, app_intent=None):
+    """history = the earlier steps' instructions, as the AC-v2 harness gives them (row['previous_actions'];
+    GUI-Libra guilibra_plan.py 'Interaction History'). Part of the leaderboard protocol.
+
+    History entries are BARE ("click", "type_text Floor lamp"); the `Step N: ` prefix is added
+    HERE and nowhere else. The episodic rebuild used to write the prefix into the data as well,
+    so training rows rendered as `Step 1: Step 1: open_app IKEA` — 159,954 of 159,954 entries
+    (measured 2026-11-10). The `cur15k` corpus, which E2 was trained on, carries no prefix
+    (0 of 57,096), which is why the double prefix went unnoticed until `episodic-s0` scored
+    55.78%: that arm was trained on a different string than every eval and every serve.
+    """
+    lines = _goal_history_lines(goal, history)
     if apps:
         lines.append("Apps used for similar tasks: " + "; ".join(apps))
     if app_intent:
@@ -212,6 +218,185 @@ def build_state(goal, track, cands=None, apps=None, history=None, trajs=None, ap
     return "\n".join(lines)
 
 
+# ----------------------------------------------------------------------------- contract v2: AW elements
+# R2 (PLAN-2026-11-10 §5): the model chooses among the elements AndroidWorld itself serves
+# (`forest_to_ui_elements(..., exclude_invisible_elements=True)`; corpus field `elements`, harness
+# `awenv_bridge._element_dicts`). Three things must be identical at train, eval and serve, so each exists once:
+#   canonical_element  — one dict per element, whichever shape it arrived in;
+#   ELEMENT_RULES      — which elements are shown, a pure function of the list and the screen (never the gold);
+#   render_elements    — the lines the model reads.
+# Measured 2026-11-07: lists above ~40 items destroy grounding (−17 val / −24 test); a short-list BENEFIT is
+# not established. The rule is chosen by a rule fixed before measuring (README of
+# benchmarks/results/2026-11-10-contract-v2/).
+SYSTEM_UI = "com.android.systemui"
+ELEMENT_FLAGS = ("clickable", "editable", "scrollable", "checkable", "checked", "selected", "long_clickable",
+                 "focused")
+INTERACTIVE_FLAGS = ("clickable", "editable", "scrollable", "checkable", "long_clickable")
+FLAG_WORDS = {"clickable": "click", "editable": "edit", "scrollable": "scroll", "checkable": "checkable",
+              "checked": "checked", "selected": "selected", "long_clickable": "long_click", "focused": "focused"}
+LABEL_CHARS = 40
+ELEMENT_CAP = 40
+NO_LABEL = "(no label)"
+V2_ELEMENTS_HEADER = "Elements on screen (id: label | type | state | position):"
+
+
+def _true(v):
+    return v is True or v == 1 or (isinstance(v, str) and v.strip().lower() == "true")
+
+
+def canonical_element(d):
+    """One element in the ONE form contract v2 reads, from any of the shapes that reach it:
+
+      * the R2 corpus (`aw_extract.element_record`): `class_name`, `bbox_pixels` {x_min..}, `is_*`, None for
+        absent strings;
+      * the harness (`awenv_bridge._element_dicts`): `class`, `bbox_pixels` (+ width/height/center) AND a flat
+        `bbox` list, `clickable` AND `is_clickable`, "" for absent strings;
+      * an older API request: only `bbox` [x_min, y_min, x_max, y_max] and `clickable`.
+    """
+    label = ""
+    for key in ("text", "content_description", "hint_text"):
+        value = " ".join(str(d.get(key) or "").split())
+        if value:
+            label = value[:LABEL_CHARS]
+            break
+    cls = str(d.get("class_name") or d.get("class") or "")
+    b = d.get("bbox_pixels")
+    if isinstance(b, dict) and all(k in b for k in ("x_min", "y_min", "x_max", "y_max")):
+        box = {k: int(b[k]) for k in ("x_min", "y_min", "x_max", "y_max")}
+    else:
+        flat = d.get("bbox")
+        box = ({k: int(v) for k, v in zip(("x_min", "y_min", "x_max", "y_max"), flat)}
+               if isinstance(flat, (list, tuple)) and len(flat) == 4 else None)
+    flags = {f: _true(d.get(f"is_{f}")) for f in ELEMENT_FLAGS}
+    flags["clickable"] = flags["clickable"] or _true(d.get("clickable"))
+    return {"label": label, "class_short": cls.rsplit(".", 1)[-1], "bbox": box, "flags": flags,
+            "package_name": str(d.get("package_name") or "")}
+
+
+def _app_on_screen(e, W, H):
+    b = e["bbox"]
+    if b is None or e["package_name"] == SYSTEM_UI:
+        return False
+    if b["x_max"] <= b["x_min"] or b["y_max"] <= b["y_min"]:      # zero area: nothing to tap
+        return False
+    return not (b["x_max"] <= 0 or b["y_max"] <= 0 or b["x_min"] >= W or b["y_min"] >= H)
+
+
+def _interactive(e):
+    return any(e["flags"][f] for f in INTERACTIVE_FLAGS)
+
+
+def _reading(elements, idx):
+    """Indices in reading order: top to bottom (y_min), then left to right (x_min), then AndroidWorld order."""
+    return sorted(idx, key=lambda i: (elements[i]["bbox"]["y_min"], elements[i]["bbox"]["x_min"], i))
+
+
+def rule_all_app(elements, W, H):
+    """(a) every app element on screen: no system UI, no zero-area box, not fully off-screen. AW order."""
+    return [i for i, e in enumerate(elements) if _app_on_screen(e, W, H)]
+
+
+def rule_interactive_or_labelled(elements, W, H):
+    """(b) (a) ∩ (an interactive flag or a non-empty label). AW order."""
+    return [i for i in rule_all_app(elements, W, H) if _interactive(elements[i]) or elements[i]["label"]]
+
+
+def rule_cap40_reading(elements, W, H):
+    """(c) (b), the first ELEMENT_CAP in reading order."""
+    return _reading(elements, rule_interactive_or_labelled(elements, W, H))[:ELEMENT_CAP]
+
+
+def rule_cap40_interactive_first(elements, W, H):
+    """(d) (b): interactive elements first (reading order), then labelled-only ones (reading order); cap."""
+    keep = rule_interactive_or_labelled(elements, W, H)
+    inter = [i for i in keep if _interactive(elements[i])]
+    labelled = [i for i in keep if not _interactive(elements[i])]
+    return (_reading(elements, inter) + _reading(elements, labelled))[:ELEMENT_CAP]
+
+
+ELEMENT_RULES = {
+    "all_app": rule_all_app,
+    "interactive_or_labelled": rule_interactive_or_labelled,
+    "cap40_reading": rule_cap40_reading,
+    "cap40_interactive_first": rule_cap40_interactive_first,
+}
+
+
+def select_elements(elements, W, H, rule):
+    """Raw element dicts (any shape) -> (kept canonical elements in kept order, their indices in `elements`)."""
+    canon = [canonical_element(d) for d in elements or []]
+    idx = ELEMENT_RULES[rule](canon, W, H)
+    return [canon[i] for i in idx], idx
+
+
+def element_label(e):
+    return e["label"] or NO_LABEL
+
+
+def option_texts(kept):
+    """`target_el` option texts, DISTINCT: a unique non-empty label stays as it is; an empty or repeated label gets
+    the element's centre in pixels ("OK at (150,450)"). Measured before this rule: on 17.2% of spatial train rows
+    the gold option's text equalled another option's (mostly "(no label)"), so only list order told them apart."""
+    from collections import Counter
+    counts = Counter(e["label"] for e in kept)
+    out, seen = {}, Counter()
+    for i, e in enumerate(kept, 1):
+        b = e["bbox"]
+        text = e["label"] if (e["label"] and counts[e["label"]] == 1) else (
+            "%s at (%d,%d)" % (element_label(e), (b["x_min"] + b["x_max"]) // 2, (b["y_min"] + b["y_max"]) // 2))
+        seen[text] += 1
+        out[str(i)] = text if seen[text] == 1 else "%s #%d" % (text, seen[text])
+    return out
+
+
+def _pct(v, size):
+    return round(100 * min(max(v, 0), size) / size)
+
+
+def render_elements(kept, W, H):
+    """`[i] label | class_short | flags | x:a-b% y:c-d%`, i = 1..n in kept order. The ONE renderer."""
+    lines = []
+    for i, e in enumerate(kept, 1):
+        b = e["bbox"]
+        flags = ",".join(FLAG_WORDS[f] for f in ELEMENT_FLAGS if e["flags"][f]) or "-"
+        lines.append(f"[{i}] {element_label(e)} | {e['class_short'] or '-'} | {flags} | "
+                     f"x:{_pct(b['x_min'], W)}-{_pct(b['x_max'], W)}% y:{_pct(b['y_min'], H)}-{_pct(b['y_max'], H)}%")
+    return lines
+
+
+def build_state_v2(goal, history, kept, W, H):
+    """Goal, previous actions, the rendered element list. No memory, trajectory or app-intent lines."""
+    return "\n".join(_goal_history_lines(goal, history) + [V2_ELEMENTS_HEADER] + render_elements(kept, W, H))
+
+
+def element_inputs(goal, history, elements, W, H, rule):
+    """(state, kept, kept indices) for one screen under contract v2 — called by train, eval and serve."""
+    kept, idx = select_elements(elements, W, H, rule)
+    return build_state_v2(goal, history, kept, W, H), kept, idx
+
+
+def element_centre(e):
+    """Where a tap on this element lands: its bbox centre (AndroidWorld taps elements the same way)."""
+    b = e["bbox"]
+    return [(b["x_min"] + b["x_max"]) / 2, (b["y_min"] + b["y_max"]) / 2]
+
+
+def centre_in_box(b, target):
+    """True iff the centre of bbox `b` lies inside `target` (edges inclusive) — a tap on `b` is credited."""
+    if b is None or target is None:
+        return False
+    cx, cy = (b["x_min"] + b["x_max"]) / 2, (b["y_min"] + b["y_max"]) / 2
+    return target["x_min"] <= cx <= target["x_max"] and target["y_min"] <= cy <= target["y_max"]
+
+
+def chosen_element(ans, kept):
+    """(rendered id, kept element) the `target_el` answer names, or (None, None)."""
+    choice = str(((ans or {}).get("target_el") or {}).get("choice") or "")
+    if choice.isdigit() and 1 <= int(choice) <= len(kept):
+        return int(choice), kept[int(choice) - 1]
+    return None, None
+
+
 # ----------------------------------------------------------------------------- contracts
 # A checkpoint is valid only with the questions it was trained on. Measured 2026-11-10: E2 was trained
 # with 8 action options and 5 questions; the serving code had since grown to 9 options and 6 questions
@@ -226,14 +411,23 @@ CONTRACTS = {
     # 2026-11-10 AndroidWorld contract: navigate_home kept (an AW action), is_done dropped (its label is
     # a restatement of `action == status`, 137/137 rows — see 2026-11-10-episodic-s0-fails-prereg.md)
     "v1": {"actions": tuple(ACTIONS), "is_done": False},
+    # 2026-11-10 R2: v1's 9 actions; the element is CHOSEN from the AndroidWorld element list
+    # (`target_el`), there is no `target_box`. VA only. `element_rule` is stamped on the checkpoint and
+    # the server applies the stamped rule, so a later change of this default cannot reach old weights.
+    "v2": {"actions": tuple(ACTIONS), "is_done": False, "elements": True, "element_rule": "cap40_reading"},
 }
 DEFAULT_CONTRACT = "v1"
+# Contracts that exist for one track only (a v2 state is meaningless without the element list).
+CONTRACT_TRACKS = {"v2": ("VA",)}
 
 
 def write_contract(ckpt_dir, name, tracks=("V",)):
     """Record, next to the weights, which question set and which tracks this checkpoint was trained on."""
     if name not in CONTRACTS:
         raise KeyError(name)
+    only = CONTRACT_TRACKS.get(name)
+    if only is not None and list(tracks) != list(only):
+        raise ValueError(f"contract {name!r} is defined for tracks {list(only)} only, not {list(tracks)}")
     import json
     with open(os.path.join(ckpt_dir, "contract.json"), "w") as fh:
         json.dump({"name": name, "tracks": list(tracks),
@@ -248,6 +442,10 @@ def read_contract(ckpt_dir):
         doc = json.load(fh)
     if doc.get("name") not in CONTRACTS:
         raise KeyError(doc.get("name"))
+    if CONTRACTS[doc["name"]].get("elements") and doc.get("element_rule") not in ELEMENT_RULES:
+        # The element list the model reads depends on the rule; serving it under a guessed rule is a
+        # train/serve skew by construction.
+        raise KeyError(f"contract {doc['name']!r} needs a known element_rule, got {doc.get('element_rule')!r}")
     doc.setdefault("tracks", ["V"])
     return doc
 
@@ -278,8 +476,13 @@ def render_history_line(action):
 
 
 def build_questions(track, cands=None, contract=DEFAULT_CONTRACT):
-    """Ordered dict of API-JSON questions for `contract`. Order is fixed; train, eval and serve share it."""
+    """Ordered dict of API-JSON questions for `contract`. Order is fixed; train, eval and serve share it.
+
+    Contract v2: `cands` is the KEPT canonical element list (`element_inputs`), and the element is chosen,
+    not boxed — action, target_el, scroll_dir, app_name, type_text."""
     spec = CONTRACTS[contract]
+    if spec.get("elements"):
+        return _build_questions_v2(track, cands, spec)
     q = {
         "action": {"type": "choice", "instructions": "The next UI action to perform to advance the task.",
                    "criteria": {k: ACTIONS[k] for k in spec["actions"]}},
@@ -295,6 +498,21 @@ def build_questions(track, cands=None, contract=DEFAULT_CONTRACT):
     if spec["is_done"]:
         q["is_done"] = {"type": "noul",
                         "instructions": "Has the task already been completed on this screen?"}
+    return q
+
+
+def _build_questions_v2(track, kept, spec):
+    if track != "VA":
+        raise ValueError(f"an element-list contract is asked on the VA track only, not {track!r}")
+    q = {"action": {"type": "choice", "instructions": "The next UI action to perform to advance the task.",
+                    "criteria": {k: ACTIONS[k] for k in spec["actions"]}}}
+    if kept:  # a choice needs at least one option; with none kept, a spatial action has no element
+        q["target_el"] = {"type": "choice", "instructions": "The element the next action acts on.",
+                          "criteria": option_texts(kept)}
+    q["scroll_dir"] = {"type": "choice", "instructions": "The direction, if the next action is a scroll.",
+                       "criteria": dict(SCROLL)}
+    q["app_name"] = {"type": "text", "instructions": "The exact app name, if the next action launches an app."}
+    q["type_text"] = {"type": "text", "instructions": "The exact text to type, if the next action enters text."}
     return q
 
 
@@ -517,3 +735,52 @@ def gold_answers(rec, track, cands, state):
         # teaches the model nothing about when to escalate (DATA-SPEC §4). Label it instead.
         g["type_text"] = "escalate"
     return g
+
+
+def _centre_in(e, t):
+    b = e["bbox"]
+    cx, cy = (b["x_min"] + b["x_max"]) / 2, (b["y_min"] + b["y_max"]) / 2
+    return t["x_min"] <= cx <= t["x_max"] and t["y_min"] <= cy <= t["y_max"]
+
+
+def gold_target_el_v2(rec, keep_idx, kept):
+    """(`target_el` gold id or None, case) for one row under contract v2.
+
+    The executed point is the chosen element's CENTRE and the scorer credits a point inside the gold target, so
+    the gold must be an element whose centre lies inside `rec["target"]` — supervising anything else teaches a
+    point the evaluation can never credit (the R4 defect class, fixed for v1 in `gold_candidate`). Order:
+      "idx"        — the element `target_el_idx` names (smallest AW element containing the gold point) survived
+                     the filter AND its centre is inside the target;
+      "creditable" — else the smallest KEPT element whose centre is inside the target;
+      "none"       — else no element supervision for this row (its action is still supervised).
+    Revised 2026-11-10 before any v2 training: the first version also accepted a named element whose centre was
+    outside the target (198 train rows) and left 498 rows with a creditable kept element unsupervised.
+    Non-spatial rows: (None, None).
+    """
+    if rec["action"]["action_type"] not in SPATIAL:
+        return None, None
+    t = rec.get("target")
+    if not t:
+        return None, "none"
+    pos = {orig: i for i, orig in enumerate(keep_idx, 1)}
+    orig = rec.get("target_el_idx")
+    if orig is not None and orig in pos and _centre_in(kept[pos[orig] - 1], t):
+        return str(pos[orig]), "idx"
+    inside = [i for i, e in enumerate(kept, 1) if _centre_in(e, t)]
+    if inside:
+        area = lambda i: ((kept[i - 1]["bbox"]["x_max"] - kept[i - 1]["bbox"]["x_min"]) *
+                          (kept[i - 1]["bbox"]["y_max"] - kept[i - 1]["bbox"]["y_min"]))
+        return str(min(inside, key=lambda i: (area(i), i))), "creditable"
+    return None, "none"
+
+
+def gold_answers_v2(rec, kept, keep_idx, state):
+    """Supervision for one row under contract v2 -> (gold, target_el case). `kept`/`keep_idx` come from
+    `element_inputs` on this row; the action, scroll, app and text golds are v1's (`gold_answers`)."""
+    g = gold_answers(rec, "V", None, state)
+    g.pop("target_box", None)
+    g.pop("is_done", None)
+    el, case = gold_target_el_v2(rec, keep_idx, kept)
+    if el is not None:
+        g["target_el"] = el
+    return g, case

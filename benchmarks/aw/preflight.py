@@ -100,6 +100,19 @@ def check_inside(c, expect_tasks, expect_contract=None):
     rc, out, _ = run("grep -q 'basename(os.path.normpath' /tmp/awh/aw/run_bench.py && echo yes")
     c.add("no-nest fix present", "yes" in out, out[:40])
 
+    # Every task of the suite must get its own episode id. Until 2026-11-10 `_slug` cut names at 24
+    # characters, so 12 of the 116 tasks shared an id with a shorter-named task and resumption
+    # skipped them in every 116-task run, while each chunk still printed a normal report. This
+    # plans the real suite with the installed harness and counts ids: an old harness gives 104/116.
+    rc, out, _ = run(
+        "cd /tmp/awh/aw && python3 -c 'import json; from awenv.runner import plan_episodes as p;"
+        "b=list(json.load(open(\"/tmp/budgets.json\"))); "
+        "print(len({s.episode_id for s in p([(n, 0) for n in b])}), len(b))' 2>&1 | tail -1")
+    ids_tasks = out.split()
+    c.add("episode ids unique over the suite",
+          len(ids_tasks) == 2 and ids_tasks[0] == ids_tasks[1] and ids_tasks[1] != "0",
+          "%s ids / %s tasks" % tuple((ids_tasks + ["?", "?"])[:2]))
+
     # dependencies a FRESH container lacks
     for mod in ("yaml", "numpy", "PIL", "requests"):
         rc, out, _ = run("python3 -c 'import %s' 2>&1 && echo ok" % mod)

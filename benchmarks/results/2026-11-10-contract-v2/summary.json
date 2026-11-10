@@ -1,0 +1,972 @@
+{
+ "selection_rule": "among rules with train p90 list length <= 40, the highest train gold coverage; ties -> shorter train median",
+ "tokenizer": "d1-2B tokenizer.json",
+ "target_el_question_block": "d1 prompt.question_block (exact)",
+ "train": {
+  "rows": 14965,
+  "spatial_rows": 8387,
+  "sha256": "3642d03b217dc0fe97549945d50e64d3482e4bf73c6a4a1fb5d63d40cf9a914b",
+  "rules": {
+   "all_app": {
+    "len": {
+     "n": 14965,
+     "p50": 43,
+     "p90": 118,
+     "p99": 157,
+     "max": 903,
+     "mean": 52.84
+    },
+    "empty_lists": 5,
+    "coverage": {
+     "n": 8363,
+     "of": 8387,
+     "pct": 99.71
+    },
+    "coverage_by_action": {
+     "click": {
+      "n": 7877,
+      "of": 7901,
+      "pct": 99.7
+     },
+     "long_press": {
+      "n": 37,
+      "of": 37,
+      "pct": 100.0
+     },
+     "type_text": {
+      "n": 449,
+      "of": 449,
+      "pct": 100.0
+     }
+    },
+    "target_el_idx_kept": {
+     "n": 8288,
+     "of": 8387,
+     "pct": 98.82
+    },
+    "target_el_centre_idx_kept": {
+     "n": 8357,
+     "of": 8387,
+     "pct": 99.64
+    },
+    "gold_cases": {
+     "idx": {
+      "n": 8288,
+      "of": 8387,
+      "pct": 98.82
+     },
+     "centre": {
+      "n": 89,
+      "of": 8387,
+      "pct": 1.06
+     },
+     "none": {
+      "n": 10,
+      "of": 8387,
+      "pct": 0.12
+     }
+    },
+    "supervised_but_centre_outside_gold": {
+     "n": 280,
+     "of": 8387,
+     "pct": 3.34
+    },
+    "creditable_kept_but_no_supervision": {
+     "n": 1,
+     "of": 8387,
+     "pct": 0.01
+    },
+    "creditable_kept_but_non_creditable_supervised": {
+     "n": 265,
+     "of": 8387,
+     "pct": 3.16
+    },
+    "kept_elements_unlabelled": {
+     "n": 327870,
+     "of": 790721,
+     "pct": 41.46
+    },
+    "rows_with_repeated_option_text": {
+     "n": 14515,
+     "of": 14965,
+     "pct": 96.99
+    },
+    "gold_element_unlabelled": {
+     "n": 2142,
+     "of": 8387,
+     "pct": 25.54
+    },
+    "gold_option_text_not_unique": {
+     "n": 3026,
+     "of": 8387,
+     "pct": 36.08
+    },
+    "state_tokens": {
+     "n": 14965,
+     "p50": 1118,
+     "p90": 2959,
+     "p99": 3935,
+     "max": 27146,
+     "mean": 1370.46
+    },
+    "target_el_question_tokens": {
+     "n": 14960,
+     "p50": 251,
+     "p90": 572,
+     "p99": 876,
+     "max": 7735,
+     "mean": 297.9
+    },
+    "state_chars": {
+     "n": 14965,
+     "p50": 2564,
+     "p90": 6615,
+     "p99": 8679,
+     "max": 54310,
+     "mean": 3114.99
+    }
+   },
+   "interactive_or_labelled": {
+    "len": {
+     "n": 14965,
+     "p50": 29,
+     "p90": 67,
+     "p99": 99,
+     "max": 582,
+     "mean": 34.23
+    },
+    "empty_lists": 43,
+    "coverage": {
+     "n": 7917,
+     "of": 8387,
+     "pct": 94.4
+    },
+    "coverage_by_action": {
+     "click": {
+      "n": 7441,
+      "of": 7901,
+      "pct": 94.18
+     },
+     "long_press": {
+      "n": 32,
+      "of": 37,
+      "pct": 86.49
+     },
+     "type_text": {
+      "n": 444,
+      "of": 449,
+      "pct": 98.89
+     }
+    },
+    "target_el_idx_kept": {
+     "n": 6932,
+     "of": 8387,
+     "pct": 82.65
+    },
+    "target_el_centre_idx_kept": {
+     "n": 6835,
+     "of": 8387,
+     "pct": 81.5
+    },
+    "gold_cases": {
+     "idx": {
+      "n": 6932,
+      "of": 8387,
+      "pct": 82.65
+     },
+     "centre": {
+      "n": 208,
+      "of": 8387,
+      "pct": 2.48
+     },
+     "none": {
+      "n": 1247,
+      "of": 8387,
+      "pct": 14.87
+     }
+    },
+    "supervised_but_centre_outside_gold": {
+     "n": 204,
+     "of": 8387,
+     "pct": 2.43
+    },
+    "creditable_kept_but_no_supervision": {
+     "n": 796,
+     "of": 8387,
+     "pct": 9.49
+    },
+    "creditable_kept_but_non_creditable_supervised": {
+     "n": 185,
+     "of": 8387,
+     "pct": 2.21
+    },
+    "kept_elements_unlabelled": {
+     "n": 49435,
+     "of": 512286,
+     "pct": 9.65
+    },
+    "rows_with_repeated_option_text": {
+     "n": 12149,
+     "of": 14965,
+     "pct": 81.18
+    },
+    "gold_element_unlabelled": {
+     "n": 768,
+     "of": 8387,
+     "pct": 9.16
+    },
+    "gold_option_text_not_unique": {
+     "n": 1622,
+     "of": 8387,
+     "pct": 19.34
+    },
+    "state_tokens": {
+     "n": 14965,
+     "p50": 777,
+     "p90": 1719,
+     "p99": 2488,
+     "max": 19442,
+     "mean": 914.62
+    },
+    "target_el_question_tokens": {
+     "n": 14922,
+     "p50": 179,
+     "p90": 370,
+     "p99": 642,
+     "max": 8748,
+     "mean": 205.49
+    },
+    "state_chars": {
+     "n": 14965,
+     "p50": 1868,
+     "p90": 4014,
+     "p99": 5653,
+     "max": 38911,
+     "mean": 2169.14
+    }
+   },
+   "cap40_reading": {
+    "len": {
+     "n": 14965,
+     "p50": 29,
+     "p90": 40,
+     "p99": 40,
+     "max": 40,
+     "mean": 27.1
+    },
+    "empty_lists": 43,
+    "coverage": {
+     "n": 7249,
+     "of": 8387,
+     "pct": 86.43
+    },
+    "coverage_by_action": {
+     "click": {
+      "n": 6779,
+      "of": 7901,
+      "pct": 85.8
+     },
+     "long_press": {
+      "n": 27,
+      "of": 37,
+      "pct": 72.97
+     },
+     "type_text": {
+      "n": 443,
+      "of": 449,
+      "pct": 98.66
+     }
+    },
+    "target_el_idx_kept": {
+     "n": 6575,
+     "of": 8387,
+     "pct": 78.4
+    },
+    "target_el_centre_idx_kept": {
+     "n": 6487,
+     "of": 8387,
+     "pct": 77.35
+    },
+    "gold_cases": {
+     "idx": {
+      "n": 6575,
+      "of": 8387,
+      "pct": 78.4
+     },
+     "centre": {
+      "n": 198,
+      "of": 8387,
+      "pct": 2.36
+     },
+     "none": {
+      "n": 1614,
+      "of": 8387,
+      "pct": 19.24
+     }
+    },
+    "supervised_but_centre_outside_gold": {
+     "n": 198,
+     "of": 8387,
+     "pct": 2.36
+    },
+    "creditable_kept_but_no_supervision": {
+     "n": 498,
+     "of": 8387,
+     "pct": 5.94
+    },
+    "creditable_kept_but_non_creditable_supervised": {
+     "n": 176,
+     "of": 8387,
+     "pct": 2.1
+    },
+    "kept_elements_unlabelled": {
+     "n": 46401,
+     "of": 405538,
+     "pct": 11.44
+    },
+    "rows_with_repeated_option_text": {
+     "n": 12051,
+     "of": 14965,
+     "pct": 80.53
+    },
+    "gold_element_unlabelled": {
+     "n": 753,
+     "of": 8387,
+     "pct": 8.98
+    },
+    "gold_option_text_not_unique": {
+     "n": 1444,
+     "of": 8387,
+     "pct": 17.22
+    },
+    "state_tokens": {
+     "n": 14965,
+     "p50": 777,
+     "p90": 1092,
+     "p99": 1193,
+     "max": 1687,
+     "mean": 741.11
+    },
+    "target_el_question_tokens": {
+     "n": 14922,
+     "p50": 171,
+     "p90": 275,
+     "p99": 369,
+     "max": 876,
+     "mean": 170.05
+    },
+    "state_chars": {
+     "n": 14965,
+     "p50": 1868,
+     "p90": 2606,
+     "p99": 2916,
+     "max": 3674,
+     "mean": 1779.14
+    }
+   },
+   "cap40_interactive_first": {
+    "len": {
+     "n": 14965,
+     "p50": 29,
+     "p90": 40,
+     "p99": 40,
+     "max": 40,
+     "mean": 27.1
+    },
+    "empty_lists": 43,
+    "coverage": {
+     "n": 7133,
+     "of": 8387,
+     "pct": 85.05
+    },
+    "coverage_by_action": {
+     "click": {
+      "n": 6670,
+      "of": 7901,
+      "pct": 84.42
+     },
+     "long_press": {
+      "n": 27,
+      "of": 37,
+      "pct": 72.97
+     },
+     "type_text": {
+      "n": 436,
+      "of": 449,
+      "pct": 97.1
+     }
+    },
+    "target_el_idx_kept": {
+     "n": 6295,
+     "of": 8387,
+     "pct": 75.06
+    },
+    "target_el_centre_idx_kept": {
+     "n": 6134,
+     "of": 8387,
+     "pct": 73.14
+    },
+    "gold_cases": {
+     "idx": {
+      "n": 6295,
+      "of": 8387,
+      "pct": 75.06
+     },
+     "centre": {
+      "n": 178,
+      "of": 8387,
+      "pct": 2.12
+     },
+     "none": {
+      "n": 1914,
+      "of": 8387,
+      "pct": 22.82
+     }
+    },
+    "supervised_but_centre_outside_gold": {
+     "n": 202,
+     "of": 8387,
+     "pct": 2.41
+    },
+    "creditable_kept_but_no_supervision": {
+     "n": 700,
+     "of": 8387,
+     "pct": 8.35
+    },
+    "creditable_kept_but_non_creditable_supervised": {
+     "n": 162,
+     "of": 8387,
+     "pct": 1.93
+    },
+    "kept_elements_unlabelled": {
+     "n": 49167,
+     "of": 405538,
+     "pct": 12.12
+    },
+    "rows_with_repeated_option_text": {
+     "n": 11780,
+     "of": 14965,
+     "pct": 78.72
+    },
+    "gold_element_unlabelled": {
+     "n": 770,
+     "of": 8387,
+     "pct": 9.18
+    },
+    "gold_option_text_not_unique": {
+     "n": 1277,
+     "of": 8387,
+     "pct": 15.23
+    },
+    "state_tokens": {
+     "n": 14965,
+     "p50": 777,
+     "p90": 1098,
+     "p99": 1210,
+     "max": 1572,
+     "mean": 743.26
+    },
+    "target_el_question_tokens": {
+     "n": 14922,
+     "p50": 162,
+     "p90": 273,
+     "p99": 381,
+     "max": 762,
+     "mean": 167.17
+    },
+    "state_chars": {
+     "n": 14965,
+     "p50": 1868,
+     "p90": 2662,
+     "p99": 2971,
+     "max": 3752,
+     "mean": 1795.65
+    }
+   }
+  }
+ },
+ "validation": {
+  "rows": 827,
+  "spatial_rows": 474,
+  "sha256": "6f15fc7e85a0c0365aa0e8a43e6869890ac098b939f209187bfba5b6cf6cfa55",
+  "rules": {
+   "all_app": {
+    "len": {
+     "n": 827,
+     "p50": 39,
+     "p90": 112,
+     "p99": 158,
+     "max": 166,
+     "mean": 50.13
+    },
+    "empty_lists": 2,
+    "coverage": {
+     "n": 474,
+     "of": 474,
+     "pct": 100.0
+    },
+    "coverage_by_action": {
+     "click": {
+      "n": 420,
+      "of": 420,
+      "pct": 100.0
+     },
+     "long_press": {
+      "n": 1,
+      "of": 1,
+      "pct": 100.0
+     },
+     "type_text": {
+      "n": 53,
+      "of": 53,
+      "pct": 100.0
+     }
+    },
+    "target_el_idx_kept": {
+     "n": 468,
+     "of": 474,
+     "pct": 98.73
+    },
+    "target_el_centre_idx_kept": {
+     "n": 472,
+     "of": 474,
+     "pct": 99.58
+    },
+    "gold_cases": {
+     "idx": {
+      "n": 468,
+      "of": 474,
+      "pct": 98.73
+     },
+     "centre": {
+      "n": 6,
+      "of": 474,
+      "pct": 1.27
+     },
+     "none": {
+      "n": 0,
+      "of": 474,
+      "pct": 0.0
+     }
+    },
+    "supervised_but_centre_outside_gold": {
+     "n": 19,
+     "of": 474,
+     "pct": 4.01
+    },
+    "creditable_kept_but_no_supervision": {
+     "n": 0,
+     "of": 474,
+     "pct": 0.0
+    },
+    "creditable_kept_but_non_creditable_supervised": {
+     "n": 19,
+     "of": 474,
+     "pct": 4.01
+    },
+    "kept_elements_unlabelled": {
+     "n": 17956,
+     "of": 41460,
+     "pct": 43.31
+    },
+    "rows_with_repeated_option_text": {
+     "n": 787,
+     "of": 827,
+     "pct": 95.16
+    },
+    "gold_element_unlabelled": {
+     "n": 145,
+     "of": 474,
+     "pct": 30.59
+    },
+    "gold_option_text_not_unique": {
+     "n": 187,
+     "of": 474,
+     "pct": 39.45
+    },
+    "state_tokens": {
+     "n": 827,
+     "p50": 1037,
+     "p90": 2816,
+     "p99": 3945,
+     "max": 4147,
+     "mean": 1310.63
+    },
+    "target_el_question_tokens": {
+     "n": 825,
+     "p50": 235,
+     "p90": 546,
+     "p99": 812,
+     "max": 1606,
+     "mean": 286.04
+    },
+    "state_chars": {
+     "n": 827,
+     "p50": 2398,
+     "p90": 6288,
+     "p99": 8613,
+     "max": 9366,
+     "mean": 2995.96
+    }
+   },
+   "interactive_or_labelled": {
+    "len": {
+     "n": 827,
+     "p50": 27,
+     "p90": 62,
+     "p99": 92,
+     "max": 119,
+     "mean": 31.76
+    },
+    "empty_lists": 8,
+    "coverage": {
+     "n": 450,
+     "of": 474,
+     "pct": 94.94
+    },
+    "coverage_by_action": {
+     "click": {
+      "n": 397,
+      "of": 420,
+      "pct": 94.52
+     },
+     "long_press": {
+      "n": 1,
+      "of": 1,
+      "pct": 100.0
+     },
+     "type_text": {
+      "n": 52,
+      "of": 53,
+      "pct": 98.11
+     }
+    },
+    "target_el_idx_kept": {
+     "n": 388,
+     "of": 474,
+     "pct": 81.86
+    },
+    "target_el_centre_idx_kept": {
+     "n": 387,
+     "of": 474,
+     "pct": 81.65
+    },
+    "gold_cases": {
+     "idx": {
+      "n": 388,
+      "of": 474,
+      "pct": 81.86
+     },
+     "centre": {
+      "n": 16,
+      "of": 474,
+      "pct": 3.38
+     },
+     "none": {
+      "n": 70,
+      "of": 474,
+      "pct": 14.77
+     }
+    },
+    "supervised_but_centre_outside_gold": {
+     "n": 17,
+     "of": 474,
+     "pct": 3.59
+    },
+    "creditable_kept_but_no_supervision": {
+     "n": 48,
+     "of": 474,
+     "pct": 10.13
+    },
+    "creditable_kept_but_non_creditable_supervised": {
+     "n": 15,
+     "of": 474,
+     "pct": 3.16
+    },
+    "kept_elements_unlabelled": {
+     "n": 2765,
+     "of": 26269,
+     "pct": 10.53
+    },
+    "rows_with_repeated_option_text": {
+     "n": 639,
+     "of": 827,
+     "pct": 77.27
+    },
+    "gold_element_unlabelled": {
+     "n": 66,
+     "of": 474,
+     "pct": 13.92
+    },
+    "gold_option_text_not_unique": {
+     "n": 100,
+     "of": 474,
+     "pct": 21.1
+    },
+    "state_tokens": {
+     "n": 827,
+     "p50": 733,
+     "p90": 1588,
+     "p99": 2324,
+     "max": 3896,
+     "mean": 860.05
+    },
+    "target_el_question_tokens": {
+     "n": 819,
+     "p50": 179,
+     "p90": 358,
+     "p99": 566,
+     "max": 1566,
+     "mean": 195.27
+    },
+    "state_chars": {
+     "n": 827,
+     "p50": 1785,
+     "p90": 3727,
+     "p99": 5409,
+     "max": 7921,
+     "mean": 2060.25
+    }
+   },
+   "cap40_reading": {
+    "len": {
+     "n": 827,
+     "p50": 27,
+     "p90": 40,
+     "p99": 40,
+     "max": 40,
+     "mean": 25.92
+    },
+    "empty_lists": 8,
+    "coverage": {
+     "n": 412,
+     "of": 474,
+     "pct": 86.92
+    },
+    "coverage_by_action": {
+     "click": {
+      "n": 359,
+      "of": 420,
+      "pct": 85.48
+     },
+     "long_press": {
+      "n": 1,
+      "of": 1,
+      "pct": 100.0
+     },
+     "type_text": {
+      "n": 52,
+      "of": 53,
+      "pct": 98.11
+     }
+    },
+    "target_el_idx_kept": {
+     "n": 375,
+     "of": 474,
+     "pct": 79.11
+    },
+    "target_el_centre_idx_kept": {
+     "n": 372,
+     "of": 474,
+     "pct": 78.48
+    },
+    "gold_cases": {
+     "idx": {
+      "n": 375,
+      "of": 474,
+      "pct": 79.11
+     },
+     "centre": {
+      "n": 14,
+      "of": 474,
+      "pct": 2.95
+     },
+     "none": {
+      "n": 85,
+      "of": 474,
+      "pct": 17.93
+     }
+    },
+    "supervised_but_centre_outside_gold": {
+     "n": 16,
+     "of": 474,
+     "pct": 3.38
+    },
+    "creditable_kept_but_no_supervision": {
+     "n": 26,
+     "of": 474,
+     "pct": 5.49
+    },
+    "creditable_kept_but_non_creditable_supervised": {
+     "n": 13,
+     "of": 474,
+     "pct": 2.74
+    },
+    "kept_elements_unlabelled": {
+     "n": 2634,
+     "of": 21439,
+     "pct": 12.29
+    },
+    "rows_with_repeated_option_text": {
+     "n": 630,
+     "of": 827,
+     "pct": 76.18
+    },
+    "gold_element_unlabelled": {
+     "n": 64,
+     "of": 474,
+     "pct": 13.5
+    },
+    "gold_option_text_not_unique": {
+     "n": 92,
+     "of": 474,
+     "pct": 19.41
+    },
+    "state_tokens": {
+     "n": 827,
+     "p50": 733,
+     "p90": 1083,
+     "p99": 1260,
+     "max": 1394,
+     "mean": 718.08
+    },
+    "target_el_question_tokens": {
+     "n": 819,
+     "p50": 165,
+     "p90": 274,
+     "p99": 440,
+     "max": 629,
+     "mean": 168.38
+    },
+    "state_chars": {
+     "n": 827,
+     "p50": 1785,
+     "p90": 2635,
+     "p99": 3016,
+     "max": 3217,
+     "mean": 1737.35
+    }
+   },
+   "cap40_interactive_first": {
+    "len": {
+     "n": 827,
+     "p50": 27,
+     "p90": 40,
+     "p99": 40,
+     "max": 40,
+     "mean": 25.92
+    },
+    "empty_lists": 8,
+    "coverage": {
+     "n": 412,
+     "of": 474,
+     "pct": 86.92
+    },
+    "coverage_by_action": {
+     "click": {
+      "n": 360,
+      "of": 420,
+      "pct": 85.71
+     },
+     "long_press": {
+      "n": 1,
+      "of": 1,
+      "pct": 100.0
+     },
+     "type_text": {
+      "n": 51,
+      "of": 53,
+      "pct": 96.23
+     }
+    },
+    "target_el_idx_kept": {
+     "n": 371,
+     "of": 474,
+     "pct": 78.27
+    },
+    "target_el_centre_idx_kept": {
+     "n": 365,
+     "of": 474,
+     "pct": 77.0
+    },
+    "gold_cases": {
+     "idx": {
+      "n": 371,
+      "of": 474,
+      "pct": 78.27
+     },
+     "centre": {
+      "n": 15,
+      "of": 474,
+      "pct": 3.16
+     },
+     "none": {
+      "n": 88,
+      "of": 474,
+      "pct": 18.57
+     }
+    },
+    "supervised_but_centre_outside_gold": {
+     "n": 16,
+     "of": 474,
+     "pct": 3.38
+    },
+    "creditable_kept_but_no_supervision": {
+     "n": 31,
+     "of": 474,
+     "pct": 6.54
+    },
+    "creditable_kept_but_non_creditable_supervised": {
+     "n": 11,
+     "of": 474,
+     "pct": 2.32
+    },
+    "kept_elements_unlabelled": {
+     "n": 2759,
+     "of": 21439,
+     "pct": 12.87
+    },
+    "rows_with_repeated_option_text": {
+     "n": 622,
+     "of": 827,
+     "pct": 75.21
+    },
+    "gold_element_unlabelled": {
+     "n": 67,
+     "of": 474,
+     "pct": 14.14
+    },
+    "gold_option_text_not_unique": {
+     "n": 90,
+     "of": 474,
+     "pct": 18.99
+    },
+    "state_tokens": {
+     "n": 827,
+     "p50": 733,
+     "p90": 1094,
+     "p99": 1260,
+     "max": 1326,
+     "mean": 720.06
+    },
+    "target_el_question_tokens": {
+     "n": 819,
+     "p50": 156,
+     "p90": 271,
+     "p99": 430,
+     "max": 502,
+     "mean": 164.77
+    },
+    "state_chars": {
+     "n": 827,
+     "p50": 1785,
+     "p90": 2674,
+     "p99": 3028,
+     "max": 3217,
+     "mean": 1755.45
+    }
+   }
+  }
+ },
+ "chosen_rule": "cap40_reading"
+}

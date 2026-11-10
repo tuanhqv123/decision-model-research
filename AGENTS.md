@@ -90,6 +90,32 @@ Topic list (each maps to a file under `notes/`):
   - **Caveat to surface honestly:** calibration ↔ risk-gating tradeoff; multimodal adds calibration not accuracy on this benchmark.
 
 ### Program log (keep this in sync — every background run/result goes here)
+- **2026-11-10 (4th) — FIRST PAIRED ANDROIDWORLD RESULT UNDER THE OFFICIAL PROTOCOL (one seed; no claim).**
+  B0′ (E2, overlay hidden) and R1 s0 (contract v1) both ran all 116 tasks on the same host and instances.
+  Pre-registered analysis (`paired_sr.py`, frozen in `da5d3eb8`): **R1 12.2% (14/115) vs B0′ 7.0% (8/115)**,
+  w = 9 / l = 3, sign test p = 0.146 (104-task sensitivity: 12.6% vs 5.8%, p = 0.065). Amendment A1 fires
+  (|w−l| = 6, exactly the bar) → seeds 1–2 online (chain8). §4 needs three seeds; nothing is claimed yet.
+  Mechanism as predicted for repeats (first-encounter repeat 41.2% vs 65.8%), not for typing (+0.9 pts).
+  **Post-hoc: the gain is mostly termination** — 7/9 wins are tasks B0′ finished but never declared done; R1
+  declares done 2.4x as often and is right less often (17% vs 24%). Q10: a same-host replay is not
+  deterministic (6/20 trajectories diverge, 0/20 outcomes flip, upper bound 16.1%). Also: B0′'s 12 previously
+  hidden tasks hold 2 of its 8 successes; `run_arm.sh` now counts scored episodes from the index (a killed
+  partial episode had read as scored). `benchmarks/results/2026-11-10-stage1/`.
+- **2026-11-10 (3rd) — H11: EVERY "116-TASK" ANDROIDWORLD RUN SO FAR SCORED 104 TASKS.**
+  `awenv/runner._slug` cut task names at 24 characters (docstring: "collision-free"), so 6 groups of tasks shared
+  an episode id (e.g. `SimpleCalendarAddOneEvent` / `…Tomorrow` / `…RelativeDay` / `…InTwoWeeks`) and resumption
+  skipped the later members as already finished — silently, with a normal report each chunk. Computed over the
+  116-task table: 12 shadowed tasks (Recipe 7, SimpleCalendar 4, AudioRecorder 1; complexity 1.2–6.0), identical to
+  the 12 missing from the 2026-11-08/09 run (its "104/116 finished" was this, not infra), B0-overlay, B0′ and Q11.
+  **Consequence: every AndroidWorld rate quoted "on 116 tasks" (incl. 15/80, 15/104, 12/80) is on 104 tasks, with
+  12 multi-step tasks never attempted; any 116-task claim must be restated.** Fixed with TDD (`_slug` no longer
+  truncates; `plan_episodes` refuses duplicate ids; preflight plans the container's real task table and requires
+  116 ids / 116 tasks). Harness packages v2f / v4 = v2 / v3 + this fix only. Runs are completed by task name
+  (`hostscripts/make_completion_cfg.py`), not re-run. `run_arm.sh` (unversioned until now) also counted abandoned
+  partial episodes as finished; fixed and moved into `benchmarks/aw/hostscripts/`. Board: `docs/research/EXEC-2026-11-10.md`.
+  Also decided the same day: R1 is NOT moved to the second emulator (paired with B0′ ⇒ same host); the two hosts'
+  images were proven byte-identical (layer-list and config hashes), the host itself is unmeasured — a 20-task
+  host-equivalence check runs before the second emulator carries any paired arm.
 - **2026-11-10 (2nd) — ANDROIDWORLD IS THE SINGLE PRIMARY BENCHMARK; CONTRACT AUDIT; FIVE HARNESS DEVIATIONS.**
   Decision record: `notes/decision-2026-11-10-androidworld-primary.md`. Evidence (every line from upstream
   `android_world@55ddaf5`, our code, or parsed data files): `docs/research/2026-11-10-AUDIT-androidworld-contract.md`.
@@ -619,8 +645,9 @@ any new phase.** If a proposed action matches the "how it happened" column, stop
 | M12 | **Built a post-processor on a metric that was already refuted.** Proposed a `p(status)` threshold gate after it had been measured monotone-harmful at every τ. | Did not check the negative-results list first. | **Read the recorded negatives before proposing a fix.** If the literature or our own record already contradicts it, the proposal must beat that result or be reported as contradicted. |
 | M13 | **Cited a DERIVED number as if the paper reported it.** AGENTS.md and the paper stated "MAI-UI-2B 92.3% per-step after SFT, 93.1% after RL" and built a "28-point per-step gap" on it. | MAI-UI publishes **no per-step metric at all**. The numbers were produced by *us* inverting `P(task)=p^n` on its task-success figures, with n=10 assumed — then cited as `[maiui2026, Tab. 9]`. The 92.3 string in the paper is an unrelated MMBench-GUI cell. Our own raw capture `references/raw/maiui2026-androidworld-table9.txt` disproved it the whole time. | **A derived number must always be labelled derived, and never carries a table citation to the source it was derived FROM.** Separate "what the paper reports" from "what we computed from it" in every sentence. And test your own assumption before building on it: `P(task)=p^n` predicts 2.84% at 8 steps while we measured 18.8% — a 6.6x refutation that lived in our own artifacts. |
 | M14 | **Let a derived assumption stand as a prediction.** Used `P(task)=p^n` to "retro-explain" a 1/8 result and to reassure that a harness bug could not have mattered. | Step independence is false: GUI steps are strongly dependent, and easy screens have far lower error than the 64% average. The 6.6x discrepancy was measurable and unremarked. | **Test the assumption with your own data before reasoning from it.** If a model predicts something we can measure, measure it. A refuted premise invalidates every conclusion drawn from it, including the comforting ones. |
+| M15 | **Tested an invariant on hand-picked inputs, not on the real population.** Episode-id uniqueness was tested on 3 unrelated short task names; the real 116 contain 6 groups sharing their first 24 characters, and 12 tasks were silently never run in any 116-task run. | The function's docstring said "collision-free" and the test agreed with the docstring, not with the data. | **Test every invariant over the actual population it must hold for** (here: all 116 registry names), and make the system refuse a violation at plan time rather than absorb it at resume time. A count that never moves (104/116 three runs in a row) is a finding, not noise. |
 
-**The three meta-rules behind all twelve:**
+**The three meta-rules behind all of them:**
 
 1. **Measurement beats assertion.** Every claim in this repo must be reproducible from a file that is on disk.
    If it cannot be, it is a hypothesis and must be labelled one.
@@ -724,7 +751,7 @@ check_record.py            158/158
 verify_paper.py            69 assertions, exit 0
 verify_audit_objections.py ALL OBJECTIONS CLOSED
 verify_compound_accuracy.py ALL CHECKS PASS
-benchmarks/aw/tests        176 passed, 43 skipped
+benchmarks/aw/tests        245 passed, 43 skipped
 ```
 <!-- GATES:END -->
 Dated program-log entries below describe what was true **on their date** and quote the counts of that moment

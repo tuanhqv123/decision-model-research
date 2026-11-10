@@ -1,0 +1,29 @@
+{
+ "set": "all",
+ "episodes": 115,
+ "executed_steps": 1904,
+ "no_effect_pooled": 0.6318,
+ "no_effect_pooled_ci": [
+  0.5401,
+  0.71
+ ],
+ "no_effect_episode_median": 0.6667,
+ "first_encounter_repeat": 0.6584,
+ "first_encounter_repeat_ci": [
+  0.5931,
+  0.7328
+ ],
+ "first_encounter_n": 243,
+ "auroc_conf_effect": 0.5441,
+ "auroc_conf_effect_ci": [
+  0.4759,
+  0.6113
+ ],
+ "typing_share": 0.0203,
+ "a2bis_pass": {
+  "no_effect_median>=0.35": true,
+  "first_encounter_repeat>=0.50": true,
+  "auroc<0.65": true,
+  "typing<=0.05": true
+ }
+}

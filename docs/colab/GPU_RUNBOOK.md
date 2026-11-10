@@ -84,3 +84,22 @@ GPU options greyed out / CPU-only even on **web UI** because the account is **no
 - **d1-2B training:** grad-ckpt cuts peak 17.1→8.2GB/sample; the backward MUST run inside `state_attention` (gate:
   `test_gradckpt.py`, rel grad diff 6e-4). 4090 ≈ 2.2 samples/s (micro 2, ~2.5k tokens/sample).
 - **Checkpoint:** `save_pretrained` rewrites config.json with a wrong auto_map → keep the release's config.json.
+
+## 2026-11-10 — remote process control (learned twice in one day)
+- **Never `pgrep -f` / `pkill -f` a pattern over `ssh host '...'`**: the remote `bash -c` carries the pattern in its
+  own command line, so it matches itself and the kill takes out your shell (and anything after it in that command).
+  List with `ps -eo pid,args | grep "[s]tage1_chain2"` (the bracket stops the grep matching itself), check the PID's
+  command line, then `kill <pid>`.
+- **`ssh host 'A && B & ...'` hangs the ssh client**: the backgrounded `A && B` subshell keeps the ssh channel open even
+  when `B`'s own output is redirected. Start detached jobs as one simple command:
+  `ssh host 'setsid nohup bash script.sh > log 2>&1 < /dev/null &'`.
+  Third time (20:39): a preamble `cd .. && mv .. && kill .. && setsid nohup bash chain.sh .. &` — the `&` binds to
+  the whole `&&` list, so the preamble and the launch went to the background together and the ssh client hung for
+  the job's lifetime (setsid still protected the job). **Preamble in one ssh call, launch alone in the next.**
+  Worse, the leftover `bash -c "cd ~/aw && cp run_arm.sh …"` stayed alive as chain7's parent, and its command line
+  contains `run_arm.sh`, so chain5's `ps -eo args | grep "[r]un_arm.sh"` ("is a run going?") matched it: chain5 waited
+  on it, it waited on chain7, chain7 waited on chain5 — a deadlock, 8 min lost before the verified kill. A
+  "process running?" test by command-line substring matches any shell that merely mentions the name.
+- **docker image IDs are not comparable across docker versions**: docker 29 with the containerd snapshotter reports
+  the manifest digest, docker 28 with overlay2 the config digest. To prove two hosts run the same image, compare
+  `sha256(json .RootFS.Layers)` and `sha256(json .Config)`.

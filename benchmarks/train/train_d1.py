@@ -27,8 +27,8 @@ import torch
 import torch.nn.functional as F
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ac_common import (DEFAULT_CONTRACT, AppMemory, TrajMemory, build_questions, build_state,  # noqa: E402
-                       gold_answers, write_contract)
+from ac_common import (CONTRACTS, DEFAULT_CONTRACT, AppMemory, TrajMemory, build_questions,  # noqa: E402
+                       build_state, element_inputs, gold_answers, gold_answers_v2, write_contract)
 
 # Run-wide settings that every sample must agree on. `contract` names the question set (ac_common.CONTRACTS)
 # and is stamped on every saved checkpoint as contract.json, which the server requires.
@@ -68,6 +68,21 @@ def check_cand_cap(track):
             f"is a lower bound, not a measurement. Set D1_MAX_CANDS>={MIN_CAND_CAP} (or 0 for no "
             f"cap) and see docs/research/DATA-SPEC-2026-11-09.md §8."
         )
+
+def check_args(a):
+    """Refuse, before any model is loaded, a run whose flags the contract does not define."""
+    if a.contract not in CONTRACTS:
+        raise SystemExit(f"--contract {a.contract!r} is not one of {sorted(CONTRACTS)}")
+    if not CONTRACTS[a.contract].get("elements"):
+        return
+    if a.track != "VA":
+        raise SystemExit(f"--contract {a.contract} is trained on the VA track only (--track VA), not {a.track!r}")
+    if a.eval_every:
+        raise SystemExit("--eval-every scores the AC-v2 398 test rows, which carry no AndroidWorld element list; "
+                         f"evaluate {a.contract} with eval_d1.py --val --val-set validation_v2 --contract {a.contract}")
+    if a.traj_k:
+        raise SystemExit(f"--traj-k adds trajectory lines that a {a.contract} state does not have")
+
 
 OBJECTIVE = "ce"          # "ce" (baseline) | "brier" (proper score) | "joint" (ce + lambda*brier)
 BRIER_LAMBDA = 0.5        # only used by "joint"
@@ -130,6 +145,9 @@ AUX_STATE = {"aux_instr": "Step to perform: {}", "aux_label": "Find the element:
 def make_sample(rec, data, track, memory, rng):
     if isinstance(rec, str):
         rec = json.loads(rec)
+    spec = CONTRACTS[RUN["contract"]]
+    if spec.get("elements"):
+        return make_sample_elements(rec, data, track, spec)
     if "kind" in rec:  # auxiliary grounding sample (make_aux.py): same box question as the decision's target_box
         t, W, H = rec["target"], rec["W"], rec["H"]
         qs = {"target_box": build_questions("V", contract=RUN["contract"])["target_box"]}
@@ -152,6 +170,24 @@ def make_sample(rec, data, track, memory, rng):
     gold = gold_answers(rec, track, cands, state)
     img = load_image(f"{data}/{rec['img']}")
     return state, qs, gold, img
+
+
+def make_sample_elements(rec, data, track, spec):
+    """Contract v2 (R2): state, questions and gold from the row's AndroidWorld element list (`rec["elements"]`,
+    compact_*_v2.jsonl), through `ac_common.element_inputs` / `build_questions` — the functions `d1_api` calls
+    on the harness's elements. No app memory, trajectory or app-intent line: the served v2 state has none, so
+    `memory` is not an argument here. Anything v2 does not define is refused rather than approximated."""
+    if "kind" in rec:
+        raise ValueError("an auxiliary box sample has no question under an element contract (v2 has no target_box)")
+    if track != "VA":
+        raise ValueError(f"contract {RUN['contract']!r} is trained on the VA track only, not {track!r}")
+    if "elements" not in rec:
+        raise ValueError(f"contract {RUN['contract']!r} needs rows with an `elements` list (compact_*_v2.jsonl)")
+    state, kept, keep_idx = element_inputs(rec["goal"], rec.get("history"), rec["elements"], rec["W"], rec["H"],
+                                           spec["element_rule"])
+    qs = build_questions("VA", kept, contract=RUN["contract"])
+    gold, _ = gold_answers_v2(rec, kept, keep_idx, state)
+    return state, qs, gold, load_image(f"{data}/{rec['img']}")
 
 
 def load_image(path, width=None):
@@ -454,6 +490,7 @@ def main():
                     help="loss weight for the is_done noul readout (default 0.5)")
     a = ap.parse_args()
 
+    check_args(a)
     check_cand_cap(a.track)
     W_LOSS["is_done"] = float(a.task_complete_weight)
     for kv in filter(None, a.loss_weights.split(",")):
@@ -466,11 +503,10 @@ def main():
     torch.manual_seed(a.seed)
     if a.mem_frac:
         torch.cuda.set_per_process_memory_fraction(a.mem_frac)
-    from ac_common import CONTRACTS
-    if a.contract not in CONTRACTS:
-        raise SystemExit(f"--contract {a.contract!r} is not one of {sorted(CONTRACTS)}")
     RUN["contract"], RUN["track"] = a.contract, a.track
-    print(f"[contract] {a.contract} tracks={tracks_of(a.track)}", flush=True)
+    print(f"[contract] {a.contract} tracks={tracks_of(a.track)}"
+          + (f" element_rule={CONTRACTS[a.contract]['element_rule']}" if CONTRACTS[a.contract].get("elements")
+             else ""), flush=True)
     os.makedirs(a.out, exist_ok=True)
     json.dump(vars(a), open(f"{a.out}/args.json", "w"), indent=1)
     t0 = time.time()
@@ -487,7 +523,8 @@ def main():
     recs = load_records(a.data, a.train_set, a.limit, a.seed)
     si, sn = map(int, a.shard.split("/"))
     recs = recs[si::sn]
-    memory = None if a.no_memory else build_memory(a.data)
+    # An element contract's state has no memory line (the server never adds one), so none is built.
+    memory = None if (a.no_memory or CONTRACTS[a.contract].get("elements")) else build_memory(a.data)
     if a.traj_k:
         TRAJ["mem"], TRAJ["k"] = build_traj_memory(a.data), a.traj_k
         print(f"[traj] procedural memory over {len(TRAJ['mem'].items)} train episodes, k={a.traj_k}", flush=True)

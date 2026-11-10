@@ -19,8 +19,9 @@ import numpy as np
 import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ac_common import (DEFAULT_CONTRACT, FROM_OPTION, SPATIAL, build_questions, build_state,  # noqa: E402
-                       pick_candidates, read_contract)
+from ac_common import (CONTRACTS, DEFAULT_CONTRACT, FROM_OPTION, SPATIAL, build_questions,  # noqa: E402
+                       build_state, chosen_element, element_centre, element_inputs, pick_candidates,
+                       read_contract)
 from run_acv2 import score_row  # noqa: E402
 
 
@@ -38,10 +39,37 @@ def val_row(rec, data):
     """A validation decision in the eval-row shape: the a11y 'tree' is just the gold element (score_row's
     smallest-node lookup then returns it), candidates are the stored ones."""
     tree = [{"bbox_pixels": rec["target"], "text": None, "content_description": None}] if rec["target"] else []
-    return {"episode_id": rec["ep"], "step": rec["step"], "goal": rec["goal"], "previous_actions": rec["history"],
-            "screenshot": os.path.join(data, rec["img"]), "screenshot_width": rec["W"],
-            "screenshot_height": rec["H"], "action": dict(rec["action"]), "accessibility_tree": tree,
-            "cands": rec["cands"]}
+    row = {"episode_id": rec["ep"], "step": rec["step"], "goal": rec["goal"], "previous_actions": rec["history"],
+           "screenshot": os.path.join(data, rec["img"]), "screenshot_width": rec["W"],
+           "screenshot_height": rec["H"], "action": dict(rec["action"]), "accessibility_tree": tree,
+           "cands": rec["cands"]}
+    if "elements" in rec:  # R2 corpus (compact_*_v2.jsonl): the AndroidWorld element list contract v2 reads
+        row["elements"] = rec["elements"]
+    return row
+
+
+def resolve_track(contract, track):
+    """The track to evaluate: an element contract (v2) exists on VA only, so VA is its default and V is refused;
+    every other contract keeps the old default V."""
+    if CONTRACTS[contract].get("elements"):
+        if track not in (None, "VA"):
+            raise SystemExit(f"contract {contract!r} is defined on the VA track only, not {track!r}")
+        return "VA"
+    return track or "V"
+
+
+def element_rule_for(ckpt, contract):
+    """The element rule the checkpoint was TRAINED with (its contract.json), for an element contract; else None.
+    No contract.json, or one naming another contract -> refused: the element list depends on the rule."""
+    if not CONTRACTS[contract].get("elements"):
+        return None
+    try:
+        doc = read_contract(ckpt)
+    except FileNotFoundError:
+        raise SystemExit(f"contract {contract!r} needs the checkpoint's contract.json for its element_rule ({ckpt})")
+    if doc["name"] != contract:
+        raise SystemExit(f"--contract {contract} but {ckpt} was trained on contract {doc['name']!r}")
+    return doc["element_rule"]
 
 
 def load_rows(path, shots, data, val=False, limit=0, val_set="validation"):
@@ -55,9 +83,19 @@ def load_rows(path, shots, data, val=False, limit=0, val_set="validation"):
 
 
 @torch.no_grad()
-def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=DEFAULT_CONTRACT):
-    """Serve every row through model.system_one_batch and score it. Returns (records, summary)."""
+def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=DEFAULT_CONTRACT, element_rule=None):
+    """Serve every row through model.system_one_batch and score it. Returns (records, summary).
+
+    Element contract (v2): every row must carry `elements` (the R2 validation file); the state and questions are
+    built by `ac_common.element_inputs` / `build_questions` exactly as in training, and the point is the chosen
+    element's centre. `element_rule` = the checkpoint's stamped rule (default: the contract's)."""
     from train_d1 import load_image
+    elements_contract = bool(CONTRACTS[contract].get("elements"))
+    if elements_contract:
+        if track != "VA":
+            raise ValueError(f"contract {contract!r} is evaluated on the VA track only, not {track!r}")
+        element_rule = element_rule or CONTRACTS[contract]["element_rule"]
+        return _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image)
     out, t_start = [], time.time()
     for b0 in range(0, len(rows), batch):
         chunk = rows[b0:b0 + batch]
@@ -133,6 +171,62 @@ def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=
     return out, summarize(out, track, time.time() - t_start)
 
 
+def _value(at, ans):
+    if at == "scroll":
+        return ans["scroll_dir"]["choice"]
+    if at == "open_app":
+        return ans["app_name"].get("text") or ""
+    if at == "type_text":
+        return ans["type_text"].get("text") or ""
+    if at == "status":
+        return "successful"
+    return None
+
+
+def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image):
+    out, t_start = [], time.time()
+    for b0 in range(0, len(rows), batch):
+        chunk = rows[b0:b0 + batch]
+        reqs, metas = [], []
+        for r in chunk:
+            if not r.get("elements"):
+                raise ValueError(f"contract {contract!r} evaluates rows that carry the AndroidWorld element list "
+                                 "(--val --val-set validation_v2); this row has none (the AC-v2 398 test rows carry "
+                                 f"none): episode {r.get('episode_id')} step {r.get('step')}")
+            W, H = r["screenshot_width"], r["screenshot_height"]
+            state, kept, keep_idx = element_inputs(r["goal"], r.get("previous_actions") or [], r["elements"], W, H,
+                                                   element_rule)
+            reqs.append((state, build_questions("VA", kept, contract=contract), [load_image(r["screenshot"])]))
+            metas.append((r, kept, keep_idx))
+        t0 = time.time()
+        res = model.system_one_batch(reqs)
+        lat = (time.time() - t0) * 1000 / len(chunk)
+        for (r, kept, keep_idx), rs in zip(metas, res):
+            ans = rs["answers"]
+            at = FROM_OPTION[ans["action"]["choice"]]
+            probs = ans["action"]["probabilities"]
+            conf = float(ans["action"].get("confidence") or max(probs.values()))
+            value = _value(at, ans)
+            el_id, e = chosen_element(ans, kept)
+            el_pt = element_centre(e) if e is not None else None
+            pt = el_pt if at in SPATIAL else None  # the leaderboard scorer reads no point for non-spatial actions
+            correct, grounding = score_row(r, at, value, pt)
+            rec = {"episode_id": r["episode_id"], "step": r["step"], "gold": r["action"], "pred": at,
+                   "value": value, "pt": pt, "box_pt": None, "el_pt": el_pt, "conf": conf, "probs": probs,
+                   "found": None, "box_conf": None,
+                   "el_conf": (ans.get("target_el") or {}).get("confidence"),
+                   "el_idx": el_id, "aw_index": keep_idx[el_id - 1] if el_id is not None else None,
+                   "n_elements": len(kept), "element_rule": element_rule,
+                   "box_only_pt": None, "is_done": None,
+                   "correct": bool(correct), "grounding": grounding, "latency_ms": lat}
+            if save_readouts:
+                rec["readouts"] = ans
+            out.append(rec)
+    summ = summarize(out, "VA", time.time() - t_start)
+    summ["contract"], summ["element_rule"] = contract, element_rule
+    return out, summ
+
+
 def summarize(out, track, secs):
     n = len(out)
     types = sorted(set(o["gold"]["action_type"] for o in out))
@@ -156,7 +250,8 @@ def main():
     ap.add_argument("--rows", default="evalset/500_steps_filtered.json")
     ap.add_argument("--shots", default="evalset/images")
     ap.add_argument("--data", default="acdata", help="acdata dir (app memory from the TRAIN split)")
-    ap.add_argument("--track", default="V", choices=["V", "VA"])
+    ap.add_argument("--track", default=None, choices=["V", "VA"],
+                    help="default V; an element contract (v2) is VA only and defaults to it")
     ap.add_argument("--no-memory", action="store_true")
     ap.add_argument("--traj-k", type=int, default=0)
     ap.add_argument("--tag", required=True)
@@ -176,12 +271,16 @@ def main():
     model.engine.calibration = None  # raw readouts, as trained
     rows = load_rows(a.rows, a.shots, a.data, a.val, a.limit, a.val_set)
     contract = a.contract or (read_contract(a.ckpt)["name"] if os.path.isdir(a.ckpt) else DEFAULT_CONTRACT)
-    print(f"[contract] {contract}", flush=True)
-    memory = None if a.no_memory else build_memory(a.data)
+    a.track = resolve_track(contract, a.track)
+    rule = element_rule_for(a.ckpt, contract)
+    print(f"[contract] {contract}" + (f" element_rule={rule}" if rule else ""), flush=True)
+    # An element contract's state has no memory line (training and serving add none).
+    memory = None if (a.no_memory or rule) else build_memory(a.data)
     if a.traj_k:
         from train_d1 import TRAJ, build_traj_memory
         TRAJ["mem"], TRAJ["k"] = build_traj_memory(a.data), a.traj_k
-    out, summ = run_eval(model, rows, a.track, memory, a.batch, a.save_readouts, contract=contract)
+    out, summ = run_eval(model, rows, a.track, memory, a.batch, a.save_readouts, contract=contract,
+                         element_rule=rule)
     summ["tag"] = a.tag
     summ["contract"] = contract
     os.makedirs(a.out, exist_ok=True)
