@@ -105,3 +105,33 @@ On the confirmation set (tasks not in `inspected_tasks.txt`) the frozen scripts 
 - typing ≤ 5% of decisions.
 Inspected-set values for reference: 47.2%; 68.2% (CI 55–80); 0.591 (CI 0.48–0.69); 2.0%.
 The same clustered statistics are the mechanism metrics for R1 vs B0′ (A2 item 2).
+
+## 9. Amendment A3 — 2026-11-10 ~19:25 UTC (R1 s0 is running; no R1 episode outcome has been opened or computed)
+
+**Why.** H11 (EXEC-2026-11-10, 18:30): `runner._slug` cut task names at 24 characters, so 12 tasks shared an episode
+id with a shorter-named task and every 116-task run skipped them — B0-overlay and B0′ included. §4's "same 116
+instances" therefore held for 104 tasks only. Disclosed: B0′'s interim result on its 104 tasks (6/103) was computed
+before this amendment; it is B0′ data only and no R1 outcome was seen.
+
+**(1) Arms as run.** B0′ = its 104-task main run (harness v2) **plus** a completion run of every suite task with no
+scored episode in its run directory (`hostscripts/make_completion_cfg.py`; today the 12 shadowed tasks), same
+checkpoint, contract, server and host, harness **v2f = v2 + the id fix only**. R1 s0 = all 116 tasks, harness
+**v4 = v3 + the id fix only** (v3 = v2 + generative-arm trace fields, no behaviour change). Whole-tree diffs of
+v2f / v4 against their parents show only `awenv/runner.py` (+ its test).
+
+**(2) Primary analysis (unchanged rule, now pinned to code).** `benchmarks/aw/paired_sr.py`, committed with this
+amendment and not to be edited after the first R1 result is read: official SR per arm with excluded list,
+task-completion vs answer-only split (`hostscripts/aw116_answer_only.txt`, 25 tasks, derived from the registry) and
+Wilson interval; w / l on tasks scored in both arms (success = official score > 0.5); exact two-sided sign test;
+A1 gate |w − l| ≥ 6.
+
+**(3) Sensitivity (new).** The same analysis on the 104 tasks outside the 12 shadowed ones (the set both arms ran
+under the pre-fix harnesses' instance plan). If the primary and the sensitivity set disagree on the A1 decision or
+on the sign of w − l, both are reported and nothing is claimed.
+
+**(4) Mechanism metrics (A2 item 2, A2-bis).** The frozen scripts in `benchmarks/results/2026-11-10-b0-diagnosis/`
+are run unmodified on each arm's run directory (`AW_RUN_DIR=<run dir>`, with `HOME` pointed at a scratch directory
+so `export_steps.py`'s fixed output path cannot overwrite B0-overlay's export), then `clustered.py --set all`.
+
+**(5) Q12 (B0-overlay vs B0′)** is reported on the 104 tasks both ran; the overlay arm is not re-run (its harness
+predates H10 and cannot be rebuilt with only the id fix).

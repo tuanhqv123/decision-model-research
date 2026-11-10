@@ -357,3 +357,17 @@ def test_loop_is_recorded_but_not_overridden_by_default():
     assert records[2]["stuck_event"] is True
     assert records[2]["action_executed"]["action_type"] == "click"
     assert "loop_break" not in records[2]["scaffolding"]
+
+
+# ---------------------------------------------------------------- generative control arm (Q1) trace fields
+def test_generative_parse_failure_keeps_its_raw_text_and_token_count():
+    """A parse failure must be auditable: the raw generated text, the parse error and the number of
+    generated tokens reach the trace (they were dropped by `_raw_of`)."""
+    env = FakeEnv()
+    model = FakeModel([{"action": "", "raw": "{\"action_type\": \"click\", \"x\": [499,366]}",
+                        "parse_error": "missing_point", "tokens_generated": 17}])
+    rec = AgentCore(model, env).step("g", i=0)
+    assert rec["invalid_action"] is True
+    assert rec["action_raw"]["raw"].startswith("{\"action_type\"")
+    assert rec["action_raw"]["parse_error"] == "missing_point"
+    assert rec["action_raw"]["tokens_generated"] == 17

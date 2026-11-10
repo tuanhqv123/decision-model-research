@@ -188,6 +188,11 @@ def _raw_of(dec: Dict[str, Any]) -> Dict[str, Any]:
         "element": dec.get("element"),
         "box_confidence": dec.get("box_confidence"),
         "track": dec.get("track"),
+        # Generative control arm (Q1): the generated text, why it failed to parse, and its length.
+        # Absent (None) for the one-pass model, which generates nothing.
+        "raw": dec.get("raw"),
+        "parse_error": dec.get("parse_error"),
+        "tokens_generated": dec.get("tokens_generated"),
     }
 
 

@@ -1,0 +1,82 @@
+# Stage 1 (2026-11-10): B0′ and R1 s0 on the 116 AndroidWorld tasks, official protocol
+
+Pre-registration: `docs/research/PRE-REG-2026-11-10-contract-v1.md` (§4, A1, A2, A2-bis, A3). Board:
+`docs/research/EXEC-2026-11-10.md`. Every number below is produced by the commands listed, from the files in this
+directory.
+
+## Files
+
+| File | What | How it was made |
+|---|---|---|
+| `b0prime_results.jsonl` | 116 result lines, one per task, B0′ | last `"type": "result"` line of every non-abandoned `episodes/*.jsonl` in B0′'s run directory (104-task main run, harness v2, plus the 12-task completion, harness v2f; same checkpoint, contract, server, emulator host) |
+| `b0prime_export.json` | step-level export, 116 episodes / 2,019 steps | frozen `benchmarks/results/2026-11-10-b0-diagnosis/export_steps.py` (md5 `9ef41501…`), unmodified, on the emulator host: `HOME=<scratch> AW_RUN_DIR=<absolute run dir> ~/vllm-env/bin/python3 export_steps.py` — absolute path because the script `expanduser`s `AW_RUN_DIR` and `HOME` is redirected (A3 item 4) |
+| `b0prime_clustered_all.json` | A2-bis episode-clustered mechanism metrics | `python3 clustered.py b0prime_export.json --set all --inspected inspected_tasks.txt` (frozen script, same directory as above) |
+| `r1s0_results.jsonl` | 116 result lines, R1 seed 0 (`v1_s0`, contract v1) | same extraction; 104-task main run + 12-task completion (the container died at 104), harness v4, B0′'s emulator host; every preflight health line of the run names `v1_s0` (12/12) |
+| `r1s0_export.json`, `r1s0_clustered_all.json` | R1 s0 step export (116 episodes / 1,369 steps) and A2-bis metrics | as for B0′ |
+| `paired_sr_s0.md`, `paired_sr_s0.json` | **the pre-registered analysis** | `python3 benchmarks/aw/paired_sr.py r1s0_results.jsonl b0prime_results.jsonl --seed-label s0 [--json]`; `paired_sr.py`, the task lists and `awenv/metrics.py` are byte-identical to the frozen commit `da5d3eb8` |
+| `posthoc.py`, `posthoc.txt` | **post-hoc, not pre-registered**: outcome buckets, w/l tasks, first-encounter split | `python3 posthoc.py` |
+
+## B0′ (E2, contract e2, overlay hidden), all 116 tasks
+
+`python3 benchmarks/aw/paired_sr.py`'s `arm_summary` on `b0prime_results.jsonl`:
+
+| set | official SR | full successes | Wilson 95% | SR task-completion | SR answer-only | excluded |
+|---|---|---|---|---|---|---|
+| 116 | 7.0% | 8/115 | [3.6, 13.1] | 8.9% (n=90) | 0.0% (n=25) | SimpleSmsReplyMostRecent (setup error) |
+| 104 non-shadowed | 5.8% | 6/103 | [2.7, 12.1] | 7.7% (n=78) | 0.0% (n=25) | same |
+| 12 shadowed by H11 | 16.7% | 2/12 | [4.7, 44.8] | 16.7% (n=12) | — | — |
+
+The 12 tasks the 24-character episode-id cut hid from every earlier run hold 2 of B0′'s 8 successes
+(`AudioRecorderRecordAudioWithFileName`, `RecipeDeleteMultipleRecipesWithConstraint`).
+
+Mechanism (A2-bis, `--set all`, 115 episodes, 1,904 executed steps): no-effect pooled 63.2% [54.0, 71.0], per-episode
+median 66.7%; first-encounter repeat 65.8% [59.3, 73.3] (n = 243); AUROC(confidence → effect) 0.544 [0.476, 0.611];
+typing 2.0% of decisions.
+
+## R1 seed 0 vs B0′ — pre-registered (§4, A1, A3)
+
+| set | R1 s0 | B0′ | w (R1 only) | l (B0′ only) | both succeed | exact sign test p | A1: seeds 1–2 online |
+|---|---|---|---|---|---|---|---|
+| primary, 116 | **12.2%** 14/115 [7.4, 19.4] | 7.0% 8/115 [3.6, 13.1] | 9 | 3 | 5 | 0.146 | **yes** (\|w−l\| = 6, exactly the bar) |
+| A3 sensitivity, 104 | 12.6% 13/103 [7.5, 20.4] | 5.8% 6/103 [2.7, 12.1] | 9 | 2 | 4 | 0.065 | yes (7) |
+
+Task-completion split: R1 15.6% vs 8.9% (n=90); answer-only 0/25 in both. Excluded in both: SimpleSmsReplyMostRecent.
+The two sets agree on the A1 decision (script) and on the sign of w − l (checked by hand: A3(3) names both, the
+frozen script tests only the first). **No claim**: §4 needs three seeds (pooled p < 0.05 and all seeds moving SR the
+same way). Q10 (same-host replay of E2 on 20 tasks) measured 0/20 outcome flips but with a 16.1% upper bound, so
+run-to-run noise of a few tasks over 116 is not excluded.
+
+**Mechanism (A2 item 2, frozen scripts, episode-clustered, all tasks).** Prediction written before the run: if
+out-of-distribution history is a cause, R1 lowers the fixed-point rate and raises typing; within 5 / 1 points = no.
+
+| metric | R1 s0 | B0′ | verdict vs prediction |
+|---|---|---|---|
+| first-encounter repeat | **41.2%** [32.8, 50.2] (n=199) | 65.8% [59.3, 73.3] (n=243) | lowered by 24.6 pts — **as predicted** |
+| typing share of decisions | 2.9% (40/1,369) | 2.0% (41/2,019) | +0.9 pts — **unchanged** (within 1 pt; same absolute count) |
+| no-effect, per-episode median | 25.0% | 66.7% | — |
+| no-effect, pooled | 60.9% [49.7, 70.3] | 63.2% [54.0, 71.0] | — |
+| AUROC(confidence → effect) | 0.675 [0.587, 0.756] | 0.544 [0.476, 0.611] | — |
+
+**Post-hoc (not pre-registered; `posthoc.txt`).** The SR gain is mostly *termination*: 7 of R1's 9 wins are tasks
+B0′ had already put in the right state but never declared done (Wi-Fi / Bluetooth / brightness and their Verify
+variants, 3–6 steps); all 3 losses are R1 declaring done early. R1 declares done 81 times (14 correct, 17.3%) vs
+B0′ 34 (8 correct, 23.5%); 36 tasks move from timeout to premature done (both fail). Median steps 6 vs 11. The
+repeat drop is not only termination: at first encounters R1 chooses `status` 9.5% (B0′ 0.4%) and a different action
+49.2% (B0′ 33.7%). R1 never chose `navigate_back` (B0′ 35 times), although contract v1 offers it.
+
+## Run-to-run noise (Q10), host equivalence, and the overlay (Q12) — `replay_agreement.txt`
+
+`benchmarks/aw/replay_agreement.py` (tests: `tests/test_replay_agreement.py`) compares two runs on the tasks scored
+in both: outcome flips, declared-done differences, and semantic trajectories (action type, element hit, text,
+direction, app — not raw pixels, not step counts). Excluded episodes are set aside, as in `paired_sr.py`.
+
+| pair | tasks | outcome flips | done diffs | divergent trajectories |
+|---|---|---|---|---|
+| B0′ vs Q10 (same host, same weights) | 20 | 0 [0, 16.1%] | 0 | 6 [14.5, 51.9%] |
+| B0′ vs host check (other emulator host) | 20 | 0 [0, 16.1%] | 0 | 10 [29.9, 70.1%] |
+| B0-overlay vs B0′ (Q12) | 94 | 1 [0.2, 5.8%] | 8 | **80 [76.5, 90.9%]**, first divergence at step 1 on almost all |
+
+The pointer-location overlay (H10) changes the model's input from the first touch on, and with it nearly every
+trajectory; outcomes barely move (1 flip in 94). So B0-overlay's step-level diagnosis describes a different input
+than the official one, while its outcome numbers are close to B0′'s. 10 tasks set aside: B0-overlay's 9 dead-a11y
+setup errors and SimpleSmsReplyMostRecent (both arms).

@@ -127,6 +127,25 @@ def server_candidates(elements: List[Dict[str, Any]], width: int, height: int) -
     return pick_candidates(nodes, max(int(width), 1), max(int(height), 1))
 
 
+def _element_contract(dec: Dict[str, Any]) -> bool:
+    from ac_common import CONTRACTS
+
+    return bool(CONTRACTS.get(str(dec.get("contract") or ""), {}).get("elements"))
+
+
+def server_elements(elements: List[Dict[str, Any]], width: int, height: int,
+                    rule: Optional[str]) -> Optional[Dict[str, Dict[str, Any]]]:
+    """Contract v2's numbered list, {id: {"label", "bbox": {"center"}}}, built by the SAME function the
+    server calls (`ac_common.select_elements`), or None when the rule is not one ac_common knows."""
+    from ac_common import ELEMENT_RULES, element_centre, element_label, select_elements
+
+    if rule not in ELEMENT_RULES:
+        return None
+    kept, _ = select_elements(elements or [], max(int(width), 1), max(int(height), 1), rule)
+    return {str(i): {"idx": i, "label": element_label(e), "bbox": {"center": element_centre(e)}}
+            for i, e in enumerate(kept, 1)}
+
+
 def element_points(dec: Dict[str, Any], sent: Optional[List[Dict[str, Any]]],
                    width: int, height: int) -> Tuple[List[Tuple[int, List[float]]], Optional[str]]:
     """[(rank, point)] of the `target_el` candidates by descending probability, and a note.
@@ -139,7 +158,14 @@ def element_points(dec: Dict[str, Any], sent: Optional[List[Dict[str, Any]]],
     probs = (((dec.get("readouts") or {}).get("target_el")) or {}).get("probabilities")
     if not probs:
         return [], None
-    cands = {str(c["idx"]): c for c in server_candidates(sent, width, height)}
+    if _element_contract(dec):
+        # Contract v2: the server numbered the elements with `ac_common.select_elements` under the rule it
+        # names in the response; rebuild exactly that list. An unknown rule is never guessed.
+        cands = server_elements(sent, width, height, dec.get("element_rule"))
+        if cands is None:
+            return [], "candidates_mismatch"
+    else:
+        cands = {str(c["idx"]): c for c in server_candidates(sent, width, height)}
     chosen = dec.get("element") or {}
     if chosen.get("idx") is not None:
         c = cands.get(str(chosen["idx"]))

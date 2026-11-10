@@ -5,6 +5,8 @@ point is the bookkeeping a 116-task run depends on — skip-if-done, reset-befor
 a pairing key that survives an agent switch, and a crash that is recorded instead of
 ending the run.
 """
+import os
+
 import pytest
 
 from awenv.recorder import Recorder
@@ -238,6 +240,40 @@ def test_episode_ids_are_unique_across_tasks():
     specs = plan_episodes(tasks, seed=30, agent="d1_sft")
     ids = [s.episode_id for s in specs]
     assert len(set(ids)) == len(ids)
+
+
+def _official_116():
+    import yaml
+
+    path = os.path.join(os.path.dirname(__file__), "..", "configs", "aw116_appint.yaml")
+    with open(path, "r", encoding="utf-8") as fp:
+        return yaml.safe_load(fp)["suite"]["tasks"]
+
+
+def test_episode_ids_are_unique_over_the_full_androidworld_suite():
+    """All 116 official tasks get 116 distinct ids.
+
+    `_slug` cut names at 24 characters, so `SimpleCalendarAddOneEvent` and
+    `SimpleCalendarAddOneEventTomorrow` shared one id, and resumption skipped the second as
+    already finished. Six such groups hid 12 tasks from every 116-task run until 2026-11-10.
+    The test above could not see it: its three names share no long prefix.
+    """
+    names = _official_116()
+    assert len(names) == 116
+    ids = [s.episode_id for s in plan_episodes([(n, 0) for n in names], seed=30, agent="d1_sft")]
+    assert len(set(ids)) == 116
+
+
+def test_task_names_sharing_a_long_prefix_get_different_ids():
+    specs = plan_episodes([("SimpleCalendarAddOneEvent", 0), ("SimpleCalendarAddOneEventTomorrow", 0)],
+                          seed=30, agent="d1_sft")
+    assert specs[0].episode_id != specs[1].episode_id
+
+
+def test_plan_refuses_duplicate_episode_ids():
+    """A collision must fail when the plan is built, not be skipped silently at resume time."""
+    with pytest.raises(ValueError, match="duplicate episode id"):
+        plan_episodes([("MarkorCreateNote", 0), ("MarkorCreateNote", 0)], seed=30, agent="d1_sft")
 
 
 def test_finished_episode_is_skipped_on_rerun(tmp_path):
@@ -546,29 +582,10 @@ def test_a_failing_reset_does_not_end_the_suite(tmp_path):
     assert all(e["setup_error"] is None for e in rec.episodes())
 
 
-def test_a_persistently_failing_reset_is_recorded_not_raised(tmp_path):
-    """If reset never succeeds the episode is a setup failure, but the rest of the suite runs."""
-
-    class DeadResetEnv(FakeEnv):
-        def reset(self):
-            raise RuntimeError("Could not get a11y tree.")
-
-    rec = Recorder(str(tmp_path), "run1", config={"protocol": "aw-main-v1"})
-    runner = Runner(
-        recorder=rec,
-        env_factory=lambda: DeadResetEnv(),
-        agent_factory=lambda e: FakeAgent(),
-        task_factory=lambda spec: FakeTask("ClockStopWatchRunning", spec.task_idx),
-    )
-
-    out = runner.run([_spec(task_idx=0), _spec(task_idx=1)], step_budget=4)
-
-    assert out["attempted"] == 2
-    eps = rec.episodes()
-    assert len(eps) == 2
-    assert eps[0]["setup_error"].startswith("reset: RuntimeError")
-    assert eps[0]["success"] is False
-    assert eps[0]["timeout"] is False
+# A persistently failing reset used to be RECORDED as a setup error so "the rest of the suite runs". B0
+# (2026-11-10) showed the cost: nine tasks excluded from the denominator and skipped by every resume.
+# The rule is now the opposite — see test_a11y_failure_at_reset_aborts_the_chunk_without_a_result; the
+# rest of the suite still runs, in the next round, after the container restart.
 
 
 def test_a_raising_checker_marks_the_episode_unscored_not_a_timeout(tmp_path):
@@ -753,3 +770,49 @@ def test_numpy_scalar_checker_results_are_scores(tmp_path):
         ep = rec.episodes()[0]
         assert ep["unscored"] is False, type(raw)
         assert ep["task_score"] == want
+
+
+# ---------------------------------------------------------------- infra failure at reset (B0, 2026-11-10)
+# Nine consecutive tasks of B0 never ran: the a11y forwarder died, `env.reset()` raised
+# "Could not get a11y tree." three times, and each episode was FINISHED with a setup_error — so it was
+# excluded from the official denominator and, having a result line, skipped by every later resume.
+# A device failure is not a task outcome: the chunk must stop WITHOUT a result line, so the next
+# round (container restart + preflight) runs the same task again.
+from awenv.runner import InfraAbort  # noqa: E402
+
+
+class A11yDeadEnv(FakeEnv):
+    def reset(self):
+        self.resets += 1
+        raise RuntimeError("Could not get a11y tree.")
+
+
+def test_a11y_failure_at_reset_aborts_the_chunk_without_a_result(tmp_path, monkeypatch):
+    monkeypatch.setattr("awenv.runner.time.sleep", lambda s: None)
+    runner, rec, task, env = _runner(tmp_path, env=A11yDeadEnv())
+    with pytest.raises(InfraAbort):
+        runner.run([_spec(task_idx=0), _spec(task_idx=1)], step_budget=5)
+    assert rec.episodes() == []                       # no result line: the task will be re-run
+    assert not rec.has_result(_spec(task_idx=0).episode_id)
+    assert env.resets == 3                            # the retries were spent, then the chunk stopped
+
+
+def test_a_task_whose_own_setup_raises_is_still_recorded(tmp_path):
+    class BadTask(FakeTask):
+        def initialize(self, env):
+            raise ValueError("no such table: map_markers")
+    runner, rec, task, env = _runner(tmp_path, task=BadTask("ExpenseDeleteDuplicates", 0))
+    runner.run([_spec()], step_budget=5)
+    ep = rec.episodes()[0]
+    assert "no such table" in ep["setup_error"]       # a task-level failure stays a recorded outcome
+
+
+def test_episode_sums_generated_tokens_from_its_steps(tmp_path):
+    class GenAgent(FakeAgent):
+        def step(self, goal, i):
+            r = super().step(goal, i)
+            r["action_raw"]["tokens_generated"] = 12
+            return r
+    runner, rec, task, env = _runner(tmp_path, agent=GenAgent(n_steps=3))
+    runner.run([_spec()], step_budget=10)
+    assert rec.episodes()[0]["tokens_generated"] == 36

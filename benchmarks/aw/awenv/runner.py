@@ -15,6 +15,16 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 DEFAULT_PROTOCOL = "aw-main-v1"
 
 
+class InfraAbort(RuntimeError):
+    """The device could not be reset: stop the chunk WITHOUT recording a result for this episode.
+
+    A dead accessibility forwarder is not a task outcome. Recording it as a setup error excluded nine
+    consecutive B0 tasks from the official denominator and, because a result line existed, every later
+    resume skipped them (2026-11-10). With no result line the next round (container restart +
+    preflight) runs the same task again.
+    """
+
+
 @dataclass
 class EpisodeSpec:
     task_name: str
@@ -30,10 +40,18 @@ class EpisodeSpec:
         return "%s|%d|%d" % (self.task_name, self.task_idx, self.seed)
 
 
-def _slug(name: str, limit: int = 24) -> str:
-    """A readable, collision-free token for the episode id."""
+def _slug(name: str) -> str:
+    """The episode-id token: the whole task name, lower-cased, never truncated.
+
+    Until 2026-11-10 this cut names at 24 characters and called the result "collision-free". It
+    was not: `SimpleCalendarAddOneEvent` and `SimpleCalendarAddOneEventTomorrow` both became
+    `simplecalendaraddoneeven`, so the second task shared the first one's id and resumption
+    skipped it as already finished. Six such groups hid 12 of the 116 tasks from every 116-task
+    run. Names of 24 characters or fewer get the same token as before, so their existing results
+    still resume; a longer name now gets its full token. `plan_episodes` refuses any duplicate.
+    """
     keep = [c if (c.isalnum() or c == "-") else "-" for c in str(name)]
-    return "".join(keep).strip("-")[:limit].lower() or "task"
+    return "".join(keep).strip("-").lower() or "task"
 
 
 def plan_episodes(
@@ -58,6 +76,14 @@ def plan_episodes(
                 instance_params=(instance_params or {}).get(key, {"task_idx": int(idx)}),
             )
         )
+    # Resumption treats an id with a result as finished, so two episodes sharing an id means the
+    # second is silently never run. Fail here, where it is visible, instead.
+    seen: Dict[str, str] = {}
+    for spec in specs:
+        if spec.episode_id in seen:
+            raise ValueError("duplicate episode id %r for %s|%d (already used by %s)"
+                             % (spec.episode_id, spec.task_name, spec.task_idx, seen[spec.episode_id]))
+        seen[spec.episode_id] = "%s|%d" % (spec.task_name, spec.task_idx)
     return specs
 
 
@@ -215,6 +241,8 @@ class Runner:
                         env_crash = True
                         break
                     time.sleep(2.0 * (_attempt + 1))
+            if setup_error and setup_error.startswith("reset:"):
+                raise InfraAbort("%s (episode %s left unscored for a re-run)" % (setup_error, spec.episode_id))
             goal = goal_of(spec, task) if goal_of else getattr(task, "goal", "")
 
             while not setup_error and i < step_budget:
@@ -301,7 +329,8 @@ class Runner:
                     len(steps) >= step_budget or wall_clock_exceeded),
                 "wall_clock_exceeded": wall_clock_exceeded,
                 "latency": _latency(steps),
-                "tokens_generated": 0,
+                # 0 for the one-pass model by construction; the generative arm reports its own count.
+                "tokens_generated": sum(int((s.get("action_raw") or {}).get("tokens_generated") or 0) for s in steps),
                 "task_name": spec.task_name,
                 "task_idx": spec.task_idx,
                 # The goal is the task's identity: without it in the record there is no way to
