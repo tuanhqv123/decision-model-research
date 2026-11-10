@@ -30,16 +30,53 @@ ACTIONS = {
     "scroll": "Scroll a view in a direction",
     "wait": "Pause to let the UI load or update",
     "navigate_back": "Press the system Back button",
+    "navigate_home": "Go to the device home screen",
     "open_app": "Launch an app by its name",
     "terminate": "End the task: the goal is already achieved on this screen",
 }
+# THE single source of the action vocabulary — the 9 names as they appear in the corpus.
+# `navigate_home` is present in the raw corpus (29 rows) and was absent from every compact_*
+# derivative — do not drop it again (DATA-SPEC §5).
+ACTION_VOCAB = ("click", "type_text", "long_press", "scroll", "wait", "navigate_back",
+                "open_app", "navigate_home", "status")
 # eval naming <-> option name
 TO_OPTION = {"click": "click", "type_text": "write", "long_press": "long_press", "scroll": "scroll",
-             "wait": "wait", "navigate_back": "navigate_back", "open_app": "open_app", "status": "terminate"}
+             "wait": "wait", "navigate_back": "navigate_back", "navigate_home": "navigate_home",
+             "open_app": "open_app", "status": "terminate"}
 FROM_OPTION = {v: k for k, v in TO_OPTION.items()}
+# KNOWN INCONSISTENCY, NOT FIXED YET — read before changing these strings.
+#
+# `direction` is android_world's own vocabulary (`json_action.JSONAction.direction`) and names
+# where the VIEWPORT moves, not which way the finger swipes. Upstream `actuation.py:151-160`
+# swipes the finger from the screen centre to the top edge when `direction == 'down'`, so the
+# content is dragged up and LATTER list items come into view. Measured on the live device
+# 2026-11-10: from Settings, `down` replaced `Notifications / Battery / Storage` with
+# `Location / Safety & emergency / Passwords` — it advanced down the page.
+#
+# The descriptions below say "content moves down (swipe down)", which reads correctly as "the
+# viewport moves down" but invites the wrong mental model, and they are shipped as both the
+# training criteria and the serving prompt (`build_questions` is used by train_d1 AND d1_api).
+#
+# They are deliberately NOT rewritten here. The `episodic-s0` checkpoint was trained against
+# exactly these strings; editing them now makes the serving prompt differ from the training
+# prompt for a fixed set of weights, and the effect of that mismatch is unmeasured. Direction
+# accuracy on AC-v2 is already 16/19 (84%), so the current wording is evidently learnable —
+# it is a clarity defect, not a demonstrated cause of errors.
+# Fix it together with the next retrain, and re-measure `scroll_dir` accuracy on val before
+# claiming any gain.
 SCROLL = {"up": "content moves up (swipe up)", "down": "content moves down (swipe down)",
           "left": "content moves left", "right": "content moves right"}
 SPATIAL = ("click", "long_press", "type_text")
+
+
+def is_done_gold(is_terminal: bool) -> str:
+    """The `noul` gold for 'has the task already been completed on this screen?'.
+
+    Free label: every episode ends with exactly one terminal `status` row and no `status` appears
+    mid-trajectory (measured 13,740/13,740 and 0). So `step == n_steps` IS the label.
+    """
+    return "yes" if is_terminal else "no"
+
 
 
 # ----------------------------------------------------------------------------- a11y candidates
@@ -124,11 +161,26 @@ GOLD_KEEP = {"idx": None}  # set by the trainer so a candidate cap never drops t
 
 def build_state(goal, track, cands=None, apps=None, history=None, trajs=None, app_intent=None):
     """history = the earlier steps' instructions, as the AC-v2 harness gives them (row['previous_actions'];
-    GUI-Libra guilibra_plan.py 'Interaction History'). Part of the leaderboard protocol."""
+    GUI-Libra guilibra_plan.py 'Interaction History'). Part of the leaderboard protocol.
+
+    History entries are BARE ("click", "type_text Floor lamp"); the `Step N: ` prefix is added
+    HERE and nowhere else. The episodic rebuild used to write the prefix into the data as well,
+    so training rows rendered as `Step 1: Step 1: open_app IKEA` — 159,954 of 159,954 entries
+    (measured 2026-11-10). The `cur15k` corpus, which E2 was trained on, carries no prefix
+    (0 of 57,096), which is why the double prefix went unnoticed until `episodic-s0` scored
+    55.78%: that arm was trained on a different string than every eval and every serve.
+    """
     lines = [f"Goal: {goal}"]
     if history:
         lines.append("Previous actions:")
-        lines.extend(f"Step {i}: {h}" for i, h in enumerate(history, 1))
+        for i, h in enumerate(history, 1):
+            text = str(h)
+            # Tolerate data that already carries the prefix, so a re-mix of corpora cannot
+            # double it again. This is a repair for existing files, not a licence to add it.
+            if text.lower().lstrip().startswith("step "):
+                lines.append(text)
+            else:
+                lines.append(f"Step {i}: {text}")
     else:
         lines.append("Previous actions: none")
     if apps:
@@ -160,11 +212,77 @@ def build_state(goal, track, cands=None, apps=None, history=None, trajs=None, ap
     return "\n".join(lines)
 
 
-def build_questions(track, cands=None):
-    """Ordered dict of API-JSON questions. Order is fixed; train and eval share it."""
+# ----------------------------------------------------------------------------- contracts
+# A checkpoint is valid only with the questions it was trained on. Measured 2026-11-10: E2 was trained
+# with 8 action options and 5 questions; the serving code had since grown to 9 options and 6 questions
+# and sent them to every checkpoint. Each contract names the exact question set; `contract.json` in the
+# checkpoint directory says which one a checkpoint speaks, and the server refuses a checkpoint without it.
+CONTRACTS = {
+    # ckpt-E2-final / appint_full: the 2026-10-29 code
+    "e2": {"actions": ("click", "write", "long_press", "scroll", "wait", "navigate_back", "open_app",
+                       "terminate"), "is_done": False},
+    # episodic-s0 (2026-11-09): navigate_home + the withdrawn is_done readout
+    "episodic": {"actions": tuple(ACTIONS), "is_done": True},
+    # 2026-11-10 AndroidWorld contract: navigate_home kept (an AW action), is_done dropped (its label is
+    # a restatement of `action == status`, 137/137 rows — see 2026-11-10-episodic-s0-fails-prereg.md)
+    "v1": {"actions": tuple(ACTIONS), "is_done": False},
+}
+DEFAULT_CONTRACT = "v1"
+
+
+def write_contract(ckpt_dir, name, tracks=("V",)):
+    """Record, next to the weights, which question set and which tracks this checkpoint was trained on."""
+    if name not in CONTRACTS:
+        raise KeyError(name)
+    import json
+    with open(os.path.join(ckpt_dir, "contract.json"), "w") as fh:
+        json.dump({"name": name, "tracks": list(tracks),
+                   **{k: list(v) if isinstance(v, tuple) else v for k, v in CONTRACTS[name].items()}},
+                  fh, indent=1)
+
+
+def read_contract(ckpt_dir):
+    """The full contract document. Missing file -> FileNotFoundError: never guess a checkpoint's contract."""
+    import json
+    with open(os.path.join(ckpt_dir, "contract.json")) as fh:
+        doc = json.load(fh)
+    if doc.get("name") not in CONTRACTS:
+        raise KeyError(doc.get("name"))
+    doc.setdefault("tracks", ["V"])
+    return doc
+
+
+def load_contract(ckpt_dir):
+    return read_contract(ckpt_dir)["name"]
+
+
+def questions_for(doc, track, cands=None):
+    """Questions for a request against a checkpoint's contract; refuses a track it was never trained on."""
+    if track not in doc["tracks"]:
+        raise ValueError(f"track {track!r} was not trained for this checkpoint (trained: {doc['tracks']})")
+    return build_questions(track, cands, contract=doc["name"])
+
+
+def render_history_line(action):
+    """ONE history line for one executed action — used to build training history from gold actions and
+    serve-time history from executed actions, so the two can never drift apart again.
+
+    Bare action token plus the one argument the action carries (text / direction / app name); never
+    coordinates, outcomes or a `Step N:` prefix (`build_state` adds that).
+    """
+    at = (action or {}).get("action_type") or "wait"
+    at = {"input_text": "type_text"}.get(at, at)
+    arg = {"type_text": "text", "scroll": "direction", "open_app": "app_name"}.get(at)
+    val = str((action or {}).get(arg) or "").strip() if arg else ""
+    return f"{at} {val}" if val else at
+
+
+def build_questions(track, cands=None, contract=DEFAULT_CONTRACT):
+    """Ordered dict of API-JSON questions for `contract`. Order is fixed; train, eval and serve share it."""
+    spec = CONTRACTS[contract]
     q = {
         "action": {"type": "choice", "instructions": "The next UI action to perform to advance the task.",
-                   "criteria": dict(ACTIONS)},
+                   "criteria": {k: ACTIONS[k] for k in spec["actions"]}},
         "target_box": {"type": "box", "instructions": "The UI element the next action acts on, in the picture."},
     }
     if track == "VA":
@@ -174,6 +292,9 @@ def build_questions(track, cands=None):
                        "criteria": dict(SCROLL)}
     q["app_name"] = {"type": "text", "instructions": "The exact app name, if the next action launches an app."}
     q["type_text"] = {"type": "text", "instructions": "The exact text to type, if the next action enters text."}
+    if spec["is_done"]:
+        q["is_done"] = {"type": "noul",
+                        "instructions": "Has the task already been completed on this screen?"}
     return q
 
 
@@ -257,10 +378,19 @@ class TrajMemory(AppMemory):
 
 
 # ----------------------------------------------------------------------------- app intent
-# When a goal implies an app without naming it, the pointer read has nothing to copy. The fix is not to
-# retrain the read slot (it is a copy operation, verified: it emits "Markor"/"Joplin" it never saw) but to
-# put the app name into the state. This table is the single source of truth for train AND serve, so the
-# rendered string is identical on both paths.
+# LEAK WARNING. APP_INTENT is a HAND-WRITTEN key: goal-keyword -> app name. When it fires, build_state
+# appends "Application for this task: <app>" to the state, and the pointer read then copies the answer out
+# of the state. That makes open_app accuracy unmeasurable: the model is handed the answer.
+#
+# Measured, and why this stays OFF by default (ALLOW_APP_INTENT=False):
+#   - it fires on the goals that already name no app, which is exactly the 10.5% of open_app rows that
+#     require world knowledge;
+#   - "pick the nearest clickable node" already scores 61.9% without seeing the image, so any figure that
+#     improves when the answer is placed in the state is a lower bound on leakage, not a capability.
+# Set ALLOW_APP_INTENT=True only to reproduce the historical (disclosed) scaffolding runs. Never train a
+# headline number with it on.
+ALLOW_APP_INTENT = False
+
 APP_INTENT = {
     "settings": ["wifi", "wi-fi", "bluetooth", "brightness", "airplane mode", "volume", "flashlight"],
     "contacts": ["new contact", "contact for", "contact draft", "contact screen"],
@@ -303,6 +433,43 @@ def app_intent_for(goal):
 
 
 # ----------------------------------------------------------------------------- gold answers
+def launcher_icon_target(rec, cands):
+    """The gold element for an `open_app` executed on the home screen.
+
+    AndroidControl stores NO target bbox for `open_app` (measured: 986/986 rows have target=None), so the
+    icon tap has never been supervised. But when the row's screen IS the launcher and the candidate list
+    contains the app's own label, the element is not guessed — it is on screen, and this returns it.
+
+    Measured on 6 shards: of 611 launcher-visible open_app rows, the app label IS a candidate on 43.0%.
+    The other 57% are rows where the app was already foregrounded (the annotation artifact described in
+    DATA-SPEC §1), and there is nothing to select.
+
+    Returns the candidate dict, or None. Never invents a bbox.
+    """
+    t = rec.get("target")
+    if t:
+        return None
+    app = (rec.get("action") or {}).get("app_name") or ""
+    app = app.strip().lower()
+    if not app or not cands:
+        return None
+    if not is_launcher_screen(rec):
+        return None
+    for c in cands:
+        if app in (c.get("label") or "").lower():
+            return c
+    return None
+
+
+def is_launcher_screen(rec):
+    """True when this row's screen was the launcher. The rebuilt corpus keeps the flag (`on_launcher`);
+    the raw corpus carries the package names, so both are accepted."""
+    if rec.get("on_launcher") is not None:
+        return bool(rec["on_launcher"])
+    pkgs = {(n.get("package_name") or "") for n in (rec.get("nodes") or [])}
+    return any("launcher" in p for p in pkgs)
+
+
 def gold_answers(rec, track, cands, state):
     """Supervision for one record: {question: target}. Box target = edges in [0,1] of the gold element."""
     a = rec["action"]
@@ -316,14 +483,22 @@ def gold_answers(rec, track, cands, state):
             c = gold_candidate(cands, t, a.get("x"), a.get("y"))
             if c is not None:
                 g["target_el"] = str(c["idx"])
+    if at == "open_app" and track == "VA":
+        # No stored bbox on `open_app`, but a launcher icon IS an element on screen. Supervise the
+        # selection when the app's label is a candidate — that teaches "find the icon", which is a
+        # vision problem, instead of handing the model the name through APP_INTENT.
+        ic = launcher_icon_target(rec, cands)
+        if ic is not None:
+            g["target_el"] = str(ic["idx"])
+            b = ic["bbox"]
+            g["target_box"] = (b["y_min"] / H, b["y_max"] / H, b["x_min"] / W, b["x_max"] / W)
     if at == "scroll":
         g["scroll_dir"] = a["direction"]
     span = find_span(state, a.get("app_name")) if at == "open_app" else None
-    if at == "open_app" and span is None and a.get("app_name"):
-        # The app name is not literally in the state, so the pointer read has nothing to copy. Two options:
-        # drop the supervision (what this code did, and the model then copied the goal noun instead of the
-        # app: "Turn wifi on" -> app_name="wifi"), or append the name to the state so the read has a target.
-        # We append, because the served state can carry the same line (see build_state apps= / APP_INTENT).
+    if at == "open_app" and span is None and a.get("app_name") and ALLOW_APP_INTENT:
+        # Same leak as build_state above, on the gold side. Guarded by the same switch: with the switch
+        # off, an app name that is not in the state has NO read supervision, which is the honest state of
+        # affairs (the pointer genuinely has nothing to copy).
         app = a["app_name"]
         rec["_app_hint"] = app
         state = state + "\nApplication for this task: " + app
@@ -331,8 +506,14 @@ def gold_answers(rec, track, cands, state):
         rec["state_with_app_hint"] = state
     g["app_name"] = span if span is not None else ("nothing" if at != "open_app" else None)
     g["type_text"] = find_span(state, a.get("text")) if at == "type_text" else "nothing"
+    # is_done: free label from the corpus invariant (status is always the final row, never mid-trajectory).
+    g["is_done"] = is_done_gold(rec.get("step") is not None
+                                and rec.get("n_steps") is not None
+                                and rec["step"] == rec["n_steps"])
     if g["app_name"] is None:
         del g["app_name"]  # gold not copyable from the state: no read supervision
     if g["type_text"] is None:
-        del g["type_text"]
+        # NOT deleted: a non-copyable string is the case a pointer read cannot serve, and deleting it
+        # teaches the model nothing about when to escalate (DATA-SPEC §4). Label it instead.
+        g["type_text"] = "escalate"
     return g

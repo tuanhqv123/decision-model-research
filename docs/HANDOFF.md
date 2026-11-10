@@ -136,9 +136,9 @@ The d1-2B fine-tune on **AndroidControl (offline, AC-v2, 398-step protocol)** is
 
 **STRATEGIC PIVOT (2026-11-02, confirmed by literature):** AC-v2 offline is **plateaued**. Its box-scoring has a **grading artifact** — box-rejected clicks that still reach the intended outcome are real, but the published **1/5–1/3** figure is measured on **web** widgets; on **native Android** (the AC-v2 setting) it is **~1%**, so the artifact is *small here and is not the main justification* (see §3.1). The pivot rests instead on (i) no coordinate headroom, (ii) calibration-under-ambiguity being the differentiator, (iii) outcome-based scoring being the honest metric — and online ambiguity is where calibration is actually worth something. **The value direction = the online AndroidWorld/AndroidLab loop**, with a self-written harness scored by the benchmarks' own env/tasks/checkers.
 
-**Machine decision made (2026-11-02):** run the AndroidWorld **emulator on `Model_Training_Server`** (RTX 4090, **has KVM** → native emulator speed) in an **isolated, resource-capped Docker container**. Model inference (d1-2B) on **VKong RTX-4090** (~$2.80 credit, ~$0.41/h). The busy **5090** is left alone; **s4090-1x-100 has NO KVM** (skip for emulator).
+**Machine decision made (2026-11-02):** run the AndroidWorld **emulator on `GPU_HOST_A`** (RTX 4090, **has KVM** → native emulator speed) in an **isolated, resource-capped Docker container**. Model inference (d1-2B) on **[cloud-gpu] RTX-4090** (~$2.80 credit, ~$0.41/h). The busy **5090** is left alone; **GPU_HOST_B has NO KVM** (skip for emulator).
 
-**Holding all VKong credit ($2.80) unspent** until the direction is confirmed and the emulator is proven. The grounding-fix goal (`mvz1om18-1r2d8c`) is **PAUSED** — it was invalidated by the new measurement (see §3.3).
+**Holding all [cloud-gpu] credit ($2.80) unspent** until the direction is confirmed and the emulator is proven. The grounding-fix goal (`mvz1om18-1r2d8c`) is **PAUSED** — it was invalidated by the new measurement (see §3.3).
 
 **2026-11-05 — harness core built and tested; two baseline numbers corrected.** The AndroidWorld harness now has a verified core in `benchmarks/aw/awenv/`: layered liveness probe, no-silent-fallback action adapter, denominator-carrying metrics, JSONL+SQLite trajectory recorder, paired-bootstrap reporting — **110 tests pass, 35 skipped** as of 2026-11-07 (the skips are AndroidWorld-only and never faked). Approved execution plan: `~/.commandcode/plans/androidworld-benchmark-harness.md`.
 
@@ -336,23 +336,23 @@ AndroidWorld emulator uses `-gpu off` + hardware acceleration. **KVM is required
 
 | Host | GPU | KVM? | Free disk | Load | Verdict |
 |---|---|---|---|---|---|
-| **Model_Training_Server** | RTX 4090 (24GB) | ✅ `/dev/kvm`, 32× vmx | 137GB | 0.18 | 🏆 **USE for emulator** |
-| **prd-survey-x1-5090** | RTX 5090 (32GB) | ✅ `/dev/kvm`, 32× vmx | — | 0.00 but **live prod** | leave alone (busy) |
-| **s4090-1x-100** | RTX 4090 (24GB) | ❌ **no /dev/kvm, 0× vmx** | 72GB | 0.07 | ❌ skip for emulator |
+| **GPU_HOST_A** | RTX 4090 (24GB) | ✅ `/dev/kvm`, 32× vmx | 137GB | 0.18 | 🏆 **USE for emulator** |
+| **GPU_HOST_C** | RTX 5090 (32GB) | ✅ `/dev/kvm`, 32× vmx | — | 0.00 but **live prod** | leave alone (busy) |
+| **GPU_HOST_B** | RTX 4090 (24GB) | ❌ **no /dev/kvm, 0× vmx** | 72GB | 0.07 | ❌ skip for emulator |
 
-Both `Model_Training_Server` and `s4090-1x-100` are **RTX 4090 boxes**, but **only `Model_Training_Server` has KVM**. Emulator goes there.
+Both `GPU_HOST_A` and `GPU_HOST_B` are **RTX 4090 boxes**, but **only `GPU_HOST_A` has KVM**. Emulator goes there.
 
 ### Resource split
-- **Emulator** = `Model_Training_Server` CPU + KVM (its RTX 4090 GPU is **not** needed for the emulator) + RAM (62GB total, ~51GB available). AndroidWorld is "lightweight footprint (2GB memory, 8GB disk)" for the Python harness; emulator ~2GB each; **32GB RAM ≈ 3 parallel emulators**.
-- **Model inference (d1-2B)** = either **VKong RTX-4090** (~$2.80 credit, $0.41/h, ~108ms/step) called over the network, OR `Model_Training_Server`'s GPU (~21GB free) inside the same isolated container.
+- **Emulator** = `GPU_HOST_A` CPU + KVM (its RTX 4090 GPU is **not** needed for the emulator) + RAM (62GB total, ~51GB available). AndroidWorld is "lightweight footprint (2GB memory, 8GB disk)" for the Python harness; emulator ~2GB each; **32GB RAM ≈ 3 parallel emulators**.
+- **Model inference (d1-2B)** = either **[cloud-gpu] RTX-4090** (~$2.80 credit, $0.41/h, ~108ms/step) called over the network, OR `GPU_HOST_A`'s GPU (~21GB free) inside the same isolated container.
 - **Caps:** run the container isolated with `--cpus` / `--memory` so prod services are not disturbed.
 
 ### Server environment (verified 2026-11-02)
-- `Model_Training_Server`: python 3.10/3.11 (conda `imagelearner`), **docker 28.2.2 + compose 2.37.1**, KVM, 137GB free disk. **No `adb`/`emulator`/`/opt/android` yet** — needs the Android emulator + SDK installed (Docker image `android_world` provides it).
-- **prod services on `Model_Training_Server`** (do not disturb): postgres ×3, grafana, prometheus, loki, ocr-tunnel, cf-tunnel, vtraks-worker, celery `gpu-4090` workers, imagelearner, streamlit :4200.
-- **⚠️ LIVE PROD ISSUE:** the container `display-tracking-syngenta-display-tracking-syngenta-1` on `Model_Training_Server` is **`Restarting (1)` / crash-looping**. Documented restore one-liner lives in `docs/compute/STOPPED_CONTAINERS.md` (was previously stopped/started manually to free the 4090). **Do NOT touch without user OK.**
+- `GPU_HOST_A`: python 3.10/3.11 (conda `imagelearner`), **docker 28.2.2 + compose 2.37.1**, KVM, 137GB free disk. **No `adb`/`emulator`/`/opt/android` yet** — needs the Android emulator + SDK installed (Docker image `android_world` provides it).
+- **prod services on `GPU_HOST_A`** (do not disturb): postgres ×3, grafana, prometheus, loki, ocr-tunnel, cf-tunnel, [service], celery `gpu-4090` workers, imagelearner, streamlit :4200.
+- **⚠️ LIVE PROD ISSUE:** the container `display-tracking-[service]` on `GPU_HOST_A` is **`Restarting (1)` / crash-looping**. Documented restore one-liner lives in `docs/compute/STOPPED_CONTAINERS.md` (was previously stopped/started manually to free the 4090). **Do NOT touch without user OK.**
 
-### VKong (verified, credit held)
+### [cloud-gpu] (verified, credit held)
 - Credit = **$2.80**. RTX-4090 = **$0.41/h** (cap $0.60, Vietnam). Storage `acv2-a` 6.7GB (has `data858.tar` 2.5GB cached). `armB`/`vkong.yaml`+`run.sh` = the exact groundB template. Full earlier-style run ~$1.97, smoke ~$0.07, calibration ~$0.07 → fits $2.80.
 - **No credit spent. Holding $2.80 unspent** until emulator is proven + direction confirmed.
 
@@ -435,7 +435,7 @@ Reproducible from saved eval data:
 | `benchmarks/calib_metrics.py`, `cascade.py` | calibration / risk-gate harness. |
 | `benchmarks/results/` | all result files (date-stamped). |
 | `docs/compute/GPU_RUNBOOK.md` | compute runbook. |
-| `docs/compute/STOPPED_CONTAINERS.md` | how to restore stop/started prod containers (incl. syngenta). |
+| `docs/compute/STOPPED_CONTAINERS.md` | how to restore stop/started prod containers (incl. [service]). |
 | `docs/compute/D1_API_SERVER.md` | how to serve d1 via `serving/d1_api.py` + SSH tunnel. |
 | `references/ledger.md`, `references/bib.bib` | citation ledger (lossless) + BibTeX (108 entries). |
 
@@ -480,7 +480,7 @@ should re-verify, not because it is all outstanding.
 - **End-to-end latency is dominated by the environment, not the model.** AndroidWorld's `transition_pause` (default 1.0 s) plus emulator I/O dwarf the 103–108 ms forward pass, so a zero-token win will look small per task. Report model p50/p95 **and** ms/step end-to-end separately; never present the model number as the task-speedup.
 - **A silent harness is worse than none.** The nightly regression (8 tasks, ~5 min) is not optional once Gate B holds — the whole point is that a harness which fails quietly produces retractable numbers, and this project has already retracted two.
 - **Emulator setup risk:** the `android_world` Docker path is **experimental** ("has only been tested on linux devices with KVM enabled" — we have KVM ✅). Apps install is one-time but may be slow.
-- **prod safety:** running a container on `Model_Training_Server` while it hosts postgres/grafana/celery — must cap resources. The **crash-looping `syngenta` container** is an existing issue.
+- **prod safety:** running a container on `GPU_HOST_A` while it hosts postgres/grafana/celery — must cap resources. The **crash-looping `[service]` container** is an existing issue.
 - **Latency claim:** must be **measured** on the same machine (d1-2B ~108ms/step on 4090; use p50/p95) before claiming any advantage.
 - **License:** LFM Open License v1.0 is source-available, not OSI — read full terms before releasing fine-tuned weights.
 - **Scope risk (scoop):** THX-01 + TypedBench shipped Oct 2026; our moats are the on-device venue (Q3) + breakdown-regime study (Q1). Move on the mechanism experiments first.
@@ -489,8 +489,8 @@ should re-verify, not because it is all outstanding.
 
 ## 12. Environment / tooling
 
-- Working dir: `/Users/macbookpro/Workspace/research`. Mac = control channel.
-- SSH aliases: `prd-survey-x1-5090`, `Model_Training_Server` (4090, KVM — **the emulator host**), `s4090-1x-100` (4090, NO KVM), `s5090-2x-compute-LLM` (DO NOT TOUCH). Keys in `/Users/macbookpro/Workspace/keys/keys/`.
-- VKong: `armB/vkong.yaml` + `armB/run.sh` (validated template); credit $2.80 held.
+- Working dir: `~/Workspace/research`. Mac = control channel.
+- SSH aliases: `GPU_HOST_C`, `GPU_HOST_A` (4090, KVM — **the emulator host**), `GPU_HOST_B` (4090, NO KVM), `HOST_EMU` (DO NOT TOUCH). Keys in `~/Workspace/keys/keys/`.
+- [cloud-gpu]: `armB/vkong.yaml` + `armB/run.sh` (validated template); credit $2.80 held.
 - Scorers differential-tested against `eval_official.py` (312/312 & 398/398 → 0 mismatches). VERIFICATION GATE is hard.
 - Feynman tools (web_search / literature DB) for free literature verification — the pivot was validated this way.

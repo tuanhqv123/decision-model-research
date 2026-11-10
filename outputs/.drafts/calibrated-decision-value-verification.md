@@ -464,10 +464,10 @@ External sources fetched and read against the draft's claims during this pass:
 7. *Learning When to Ask for Help* (arXiv:2305.16502) — https://arxiv.org/abs/2305.16502 — confirms ICRA 2024 and "+0.38 … with only a 0.3 expert interaction rate … Habitat … simulated human expert".
 8. TypedBench (arXiv:2610.11392) — https://arxiv.org/abs/2610.11392 — confirms "realised cost under asymmetric cost matrices", seven generators / nine suites; **abstract says nothing about tickets or GUI** (basis for W20).
 
-Internal artifacts inspected directly (all local to `/Users/macbookpro/Workspace/research`):
+Internal artifacts inspected directly (all local to `~/Workspace/research`):
 `benchmarks/results/2026-11-03-stage0/{error_budget,gate_test938,gate_test705,score_fusion,class_bias,grounding_audit}.json`,
 `…/paired_705_vs_938.txt`, `benchmarks/results/2026-10-29-evals/{E2-938-V,E2-705-V,E2-val}.jsonl`,
-`backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl`,
+`backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl`,
 `backup-2026-11-06/offline/e2-pure-hist.jsonl`, `backup-2026-10-29/ckpt-groundB/eval-step1406-V.jsonl`,
 `backup-2026-11-06/gate_runs/aw_runs_20261106/{pure8,fallback8}/index.db`,
 `backup-2026-11-06/reports/aw_reports.tgz`, `benchmarks/results/d12bax-acv2-d12bax-2026-10-28.jsonl`,

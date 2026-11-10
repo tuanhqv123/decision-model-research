@@ -19,7 +19,7 @@ Read this, then write `docs/research/R4-candidate-interface-postmortem.md`. You 
    rows, same episode/step keys). How many rows does each get right, how many are VA-only / V-only, and is the
    union materially better than either? Report the exact counts and a McNemar p.
 2. **Was interface B given a fair shot?** E3-300 is **300 steps**; the V baseline is **938 steps**. Check
-   `backup-2026-10-29/prd-survey-x1-5090/acwork/runs/E3-cur24k-mix/args.json` and the E3 artifacts for the actual
+   `backup-2026-10-29/GPU_HOST_C/acwork/runs/E3-cur24k-mix/args.json` and the E3 artifacts for the actual
    schedule, lr, data, and steps. State plainly whether the comparison is confounded by training budget.
 3. **Where exactly does the element head fail?** In E3-300-VA, among rows where `el_pt` exists, how often is the
    chosen candidate's bbox the SAME as the gold target bbox, how often is it a parent/child of it, and how often

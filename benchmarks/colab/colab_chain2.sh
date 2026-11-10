@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Chain part 2: tar upload to root, extract, smoke 10 steps.
 set -u
-cd /Users/macbookpro/Workspace/research
+cd ~/Workspace/research
 S=d12b
 log() { echo "=== [$1] ==="; }
 

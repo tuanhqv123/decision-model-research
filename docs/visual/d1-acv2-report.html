@@ -314,7 +314,7 @@ a{color:var(--accent)}
     <ul>
       <li>Ban đầu chạy <b>toàn bộ 88k</b> với cơ chế sync weights giữa 3 máy mà chưa chắt lọc data và chưa có overfit test. Bạn chỉ ra đúng; mình dừng sau ~25 phút.</li>
       <li>LR 3e-5 phá grounding. Overfit test bắt được trước khi tốn giờ GPU.</li>
-      <li>Hub sync làm đầy disk Model_Training_Server (máy có DB prod) trong thời gian ngắn. Đã dọn ngay và chuyển hub đi.</li>
+      <li>Hub sync làm đầy disk GPU_HOST_A (máy có DB prod) trong thời gian ngắn. Đã dọn ngay và chuyển hub đi.</li>
       <li>Một lệnh launch treo dẫn tới chạy trùng job trên 5090. Giới hạn VRAM làm job trùng tự dừng, process prod không bị ảnh hưởng.</li>
       <li>Báo 64,82 trước khi tự kiểm toán. Con số đó có dùng gợi ý tên app ngoài protocol; số đúng là 64,32.</li>
     </ul>

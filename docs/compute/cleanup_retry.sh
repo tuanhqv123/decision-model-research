@@ -3,8 +3,8 @@
 BK=~/Workspace/research/backup-2026-10-29; LOG=$BK/deadline.log
 exec >> $LOG 2>&1
 echo "=== retry started $(date)"
-for h in prd-survey-x1-5090 s4090-1x-100; do
-  EXTRA=""; [ $h != prd-survey-x1-5090 ] && EXTRA="--exclude acdata/imgs --exclude acdata/records"
+for h in GPU_HOST_C GPU_HOST_B; do
+  EXTRA=""; [ $h != GPU_HOST_C ] && EXTRA="--exclude acdata/imgs --exclude acdata/records"
   r=1
   for i in $(seq 1 10); do
     rsync -a --partial --timeout=120 -e "ssh -o ServerAliveInterval=15 -o ServerAliveCountMax=8" \
@@ -24,5 +24,5 @@ for h in prd-survey-x1-5090 s4090-1x-100; do
     echo "$h: backup still FAILING after 10 tries -> NOT wiped"
   fi
 done
-ssh -n s4090-1x-100 'docker ps --filter name=syngenta --format "{{.Names}} {{.Status}}"'
+ssh -n GPU_HOST_B 'docker ps --filter name=[service] --format "{{.Names}} {{.Status}}"'
 echo "=== retry finished $(date)"

@@ -261,6 +261,40 @@ def _latency_block(steps: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def official_sr(episodes: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """AndroidWorld's own success rate, computed the way `suite_utils` computes it.
+
+    Per episode: the float `score` (`agent_successful`, 0.5 = partial credit). An episode whose task
+    raised — setup error, unscored checker, crashed device — has no score: upstream records `NaN`
+    (`suite_utils.py:544-558`) and its pandas `mean()` skips it. SR is the mean over task templates
+    of each template's mean score (`suite_utils.py:684-716`). Records written before 2026-11-10 carry
+    only `success`; they are read as 1.0 / 0.0.
+    """
+    per: Dict[str, List[float]] = {}
+    excluded: List[str] = []
+    for e in episodes:
+        name = e.get("task_name") or e.get("episode_id") or "?"
+        if e.get("setup_error") or e.get("unscored") or e.get("env_crash"):
+            excluded.append(name)
+            continue
+        score = e.get("score")
+        if score is None:
+            if "success" not in e:
+                excluded.append(name)
+                continue
+            score = 1.0 if e.get("success") else 0.0
+        per.setdefault(name, []).append(float(score))
+    per_task = {k: sum(v) / len(v) for k, v in per.items()}
+    excluded = sorted(set(excluded) - set(per_task))
+    return {
+        "sr": (sum(per_task.values()) / len(per_task)) if per_task else None,
+        "n_tasks_scored": len(per_task),
+        "n_tasks_excluded": len(excluded),
+        "excluded": excluded,
+        "per_task": per_task,
+    }
+
+
 def summarize(
     episodes: Sequence[Dict[str, Any]],
     steps: Sequence[Dict[str, Any]],
@@ -279,6 +313,7 @@ def summarize(
     return {
         "protocol_note": "proxy metrics are labelled; ASR is not SR",
         "task": {
+            "official": official_sr(episodes),
             "sr": sr.as_dict(),
             "sr_wilson95": [lo, hi],
             "sr_all": cov["sr_all"],

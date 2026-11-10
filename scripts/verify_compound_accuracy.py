@@ -105,14 +105,37 @@ def main():
         check("%s end-to-end delta = +%.1f pp" % (fam, want_pp), abs(got_pp - want_pp) < 0.06,
               "+%.2f" % got_pp)
     d_ps = 100.0 * (per_step(0.491, 10) - per_step(0.451, 10))
-    check("2B RL is worth +0.8 per-step points", abs(d_ps - 0.8) < 0.06, "+%.2f" % d_ps)
+    check("the DERIVED 2B per-step delta is +0.8 (reported, not claimed as a gap)", abs(d_ps - 0.8) < 0.06,
+          "+%.2f" % d_ps)
 
     print()
     print("=" * 78)
-    print("5. the '28 points' gap between us and MAI-UI-2B-SFT")
+    print("5. THE INDEPENDENCE ASSUMPTION IS REFUTED BY OUR OWN MEASUREMENT (paper 5.12.1.1)")
     print("=" * 78)
-    gap = 100.0 * per_step(0.451, 10) - 100.0 * OURS_PER_STEP
-    check("gap = 28 per-step points", abs(gap - 28.2) < 0.4, "%.2f" % gap)
+    # The product rule predicts a task rate; we measured one. The prediction is wrong by ~6.6x.
+    predicted_8 = 100.0 * OURS_PER_STEP ** 8
+    measured = 18.8
+    check("product rule predicts 2.84%% at 8 steps", abs(predicted_8 - 2.84) < 0.02, "%.2f%%" % predicted_8)
+    check("our MEASURED task rate is 18.8%%", measured == 18.8, "%.1f%%" % measured)
+    ratio = measured / predicted_8
+    check("measured/predicted = 6.6x -> assumption FALSE", abs(ratio - 6.64) < 0.1, "%.2fx" % ratio)
+    implied_8 = 100.0 * (measured / 100.0) ** (1 / 8.0)
+    implied_10 = 100.0 * (measured / 100.0) ** (1 / 10.0)
+    check("inverting our own 18.8%% at n=8 implies 81.1%% per-step", abs(implied_8 - 81.1) < 0.2,
+          "%.1f%%" % implied_8)
+    check("inverting our own 18.8%% at n=10 implies 84.6%% per-step", abs(implied_10 - 84.6) < 0.2,
+          "%.1f%%" % implied_10)
+    check("neither matches our measured 64.07%% -> per-step and task rates are NOT interchangeable",
+          abs(implied_10 - 100 * OURS_PER_STEP) > 15, "%.1f vs 64.07" % implied_10)
+    # The strongest single refutation: the homogeneous non-typing subset, 14/66 at median 12 steps.
+    pred_12 = 100.0 * OURS_PER_STEP ** 12
+    check("product rule predicts 0.479%% at n=12", abs(pred_12 - 0.479) < 0.005, "%.4f%%" % pred_12)
+    r12 = 21.2 / pred_12
+    check("non-typing 21.2%% vs predicted -> 44x", abs(r12 - 44.3) < 0.5, "%.1fx" % r12)
+    pred_125 = 100.0 * OURS_PER_STEP ** 12.5
+    check("product rule predicts 0.383%% at n=12.5", abs(pred_125 - 0.383) < 0.005, "%.4f%%" % pred_125)
+    r125 = 21.2 / pred_125
+    check("at observed median 12.5 -> 55x", abs(r125 - 55.4) < 0.6, "%.1fx" % r125)
 
     print()
     print("=" * 78)
@@ -131,7 +154,9 @@ def main():
     sec_flat = re.sub(r"\s+", " ", sec)
     for fig in ("10.8% over 5 steps", "2.8% over 8", "1.2% over 10", "0.1% over 15",
                 "**45.1%**", "**92.3%**", "93.1%", "95.7%", "96.6%", "97.4%", "88.8%",
-                "+4.0 points", "+0.8 per-step", "28 points of per-step"):
+                "+4.0 points", "derived, not reported", "6.6x",
+                "independence assumption is false", "81.1%", "84.6%",
+                "0.479%", "44\u00d7", "0.383%", "55\u00d7", "21.2%"):
         check("§5.12.1 states %r" % fig, fig in sec_flat)
 
     print()

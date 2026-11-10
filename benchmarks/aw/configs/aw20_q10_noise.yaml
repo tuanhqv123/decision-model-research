@@ -1,0 +1,44 @@
+# Q10 — noise floor (plan Stage 1.2). Re-runs 20 tasks of B0' with identical checkpoint, contract,
+# seed and instances. The 20 tasks are the first 20 by sha256("q10-noise-" + task_name): fixed before
+# any B0' result existed, not chosen by outcome. Flip rate = share of tasks whose score differs from B0'.
+protocol: aw-main-v1
+agent: d1_e2_b0prime_rep
+checkpoint: ckpt-E2-final
+model:
+  url: http://172.17.0.1:8701
+  token: tok  # localhost-only API behind an SSH tunnel; not a secret
+  track: V
+  return_readouts: true
+  done_threshold: 0.0
+environment:
+  url: http://127.0.0.1:5000
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+  emulator_setup: false
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  step_budgets_file: /tmp/budgets.json
+  tasks:
+  - SimpleSmsReply
+  - BrowserMultiply
+  - SimpleDrawProCreateDrawing
+  - CameraTakePhoto
+  - SimpleCalendarEventsInNextWeek
+  - AudioRecorderRecordAudio
+  - MarkorMoveNote
+  - SimpleCalendarLocationOfEvent
+  - ExpenseAddMultipleFromGallery
+  - SystemCopyToClipboard
+  - RecipeAddMultipleRecipes
+  - SystemBrightnessMaxVerify
+  - SaveCopyOfReceiptTaskEval
+  - VlcCreateTwoPlaylists
+  - RetroPlayingQueue
+  - NotesRecipeIngredientCount
+  - SystemBrightnessMax
+  - RecipeDeleteDuplicateRecipes
+  - RecipeDeleteMultipleRecipes
+  - RecipeDeleteSingleRecipe

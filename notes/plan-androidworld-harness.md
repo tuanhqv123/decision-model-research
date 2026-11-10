@@ -49,5 +49,5 @@ pays the emulator and the 1 s settle pause, so the whole-task speedup will be sm
 and d1 on the SAME machine; report p50/p95 model ms, ms per step end to end, wall time per task, tokens per task, peak GPU memory.
 
 ## Open items
-- Hardware for emulators: servers 5090 and Model_Training_Server have /dev/kvm (s4090-1x-100 does not); user has a PC with 32 GB RAM and GTX 1070 (OS/CPU/virtualisation unknown); installing emulators on the 5090 prod host needs the user's OK.
+- Hardware for emulators: servers 5090 and GPU_HOST_A have /dev/kvm (GPU_HOST_B does not); user has a PC with 32 GB RAM and GTX 1070 (OS/CPU/virtualisation unknown); installing emulators on the 5090 prod host needs the user's OK.
 - d1 on Pascal (1070): Triton kernel / bf16 support unverified.

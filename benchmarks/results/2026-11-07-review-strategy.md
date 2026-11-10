@@ -580,7 +580,7 @@ Local artifacts (no URL): `docs/research/PLAN-2026-11-07-better.md`, `docs/HANDO
     }
   ],
   "changedFiles": [
-    "/Users/macbookpro/.pi/agent/sessions/--Users-macbookpro-Workspace-research--/subagent-artifacts/outputs/d7e2bc21-145a-41c3-90cd-0d56b24d0bee/benchmarks/results/2026-11-07-review-strategy.md"
+    "~/.pi/agent/sessions/--Users-[user]-Workspace-research--/subagent-artifacts/outputs/d7e2bc21-145a-41c3-90cd-0d56b24d0bee/benchmarks/results/2026-11-07-review-strategy.md"
   ],
   "testsAddedOrUpdated": [],
   "commandsRun": [

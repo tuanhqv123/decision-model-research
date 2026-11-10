@@ -6,8 +6,8 @@ This script takes the artifacts and rebuilds the table, so a reader (or a review
 claims survive contact with the data and which are marked as reported-in-run.
 
     python3 benchmarks/repro_manifest.py \
-        --test backup-2026-10-29/s4090-1x-100/acwork/runs/E2-cur15k-V/eval-step938-V.jsonl \
-        --val  backup-2026-10-29/Model_Training_Server/acwork/runs/E2-val/eval-E2final-V-val.jsonl
+        --test backup-2026-10-29/GPU_HOST_B/acwork/runs/E2-cur15k-V/eval-step938-V.jsonl \
+        --val  backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-val/eval-E2final-V-val.jsonl
 
 Exit code is 0 when every *checkable* claim matches, 1 when one does not, and the table names the
 claim either way. A claim whose artifact does not exist is reported as MISSING-ARTIFACT rather than

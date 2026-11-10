@@ -47,9 +47,9 @@ def score(path):
 
 def main():
     # E2's pure artifact lives outside seed_evals (it is the project baseline).
-    e2 = os.path.join(ROOT, "backup-2026-10-29", "Model_Training_Server", "acwork", "runs",
+    e2 = os.path.join(ROOT, "backup-2026-10-29", "GPU_HOST_A", "acwork", "runs",
                       "E2-nomem", "eval-E2nomem-V.jsonl")
-    alt = os.path.join(ROOT, "backup-2026-10-29", "Model_Training_Server", "acwork", "runs",
+    alt = os.path.join(ROOT, "backup-2026-10-29", "GPU_HOST_A", "acwork", "runs",
                        "E2-nomem", "eval-E2final-nomem-V.jsonl")
     e2 = e2 if os.path.exists(e2) else alt
 

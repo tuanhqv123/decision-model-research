@@ -7,7 +7,7 @@ Read these files:
 - benchmarks/results/2026-11-07-what-the-arm-bought.md
 
 Then re-derive, yourself, using bash/python on the local prediction JSONLs:
-- backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl  (255/398)
+- backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl  (255/398)
 - backup-2026-10-29/ckpt-groundB/eval-step1406-V.jsonl  (258/398)
 - benchmarks/results/2026-11-07-arm/eval-arm20test-V.jsonl  (242/398)
 - benchmarks/results/2026-10-29-evals/E2-705-V.jsonl  (244/398)

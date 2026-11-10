@@ -12,7 +12,7 @@ You are a verifier. Your job is to find errors, not to agree. Read and run code.
 4. `benchmarks/results/2026-11-07-why-grounding-plateaus.md`
 5. `benchmarks/results/2026-11-07-candidate-supervision-{train,val}.jsonl`
 6. `benchmarks/data/acv2/500_steps_filtered.json` (398 eval rows with `accessibility_tree`)
-7. `backup-2026-10-29/prd-survey-x1-5090/acwork/acdata/compact_cur15k.jsonl` (15k training rows)
+7. `backup-2026-10-29/GPU_HOST_C/acwork/acdata/compact_cur15k.jsonl` (15k training rows)
 
 ## Verify these specific claims, with your own code
 

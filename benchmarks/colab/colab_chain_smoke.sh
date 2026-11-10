@@ -2,7 +2,7 @@
 # One-shot Colab chain: create T4 session, upload data+script, verify, smoke test 10 steps.
 # Every step logged; aborts on first failure.
 set -u
-cd /Users/macbookpro/Workspace/research
+cd ~/Workspace/research
 S=d12b
 log() { echo "=== [$1] ===" ; }
 

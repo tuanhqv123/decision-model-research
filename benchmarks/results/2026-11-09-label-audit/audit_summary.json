@@ -1,0 +1,816 @@
+{
+  "audit": "A4 structural label audit",
+  "train_file": "backup-2026-10-29/GPU_HOST_C/acwork/acdata/compact_cur15k.jsonl",
+  "val_file": "backup-2026-10-29/GPU_HOST_C/acwork/acdata/compact_validation.jsonl",
+  "rows": 15000,
+  "episodes": 9005,
+  "val_rows": 827,
+  "val_episodes": 137,
+  "action_mix": {
+    "click": 7913,
+    "status": 3300,
+    "scroll": 1350,
+    "open_app": 1050,
+    "navigate_back": 750,
+    "type_text": 450,
+    "wait": 150,
+    "long_press": 37
+  },
+  "action_mix_pct": {
+    "click": 52.75,
+    "status": 22.0,
+    "scroll": 9.0,
+    "open_app": 7.0,
+    "navigate_back": 5.0,
+    "type_text": 3.0,
+    "wait": 1.0,
+    "long_press": 0.25
+  },
+  "val_action_mix": {
+    "click": 420,
+    "status": 137,
+    "scroll": 86,
+    "wait": 56,
+    "type_text": 53,
+    "open_app": 45,
+    "navigate_back": 29,
+    "long_press": 1
+  },
+  "rows_missing_target": 6600,
+  "rows_with_zero_candidates": 35,
+  "rows_with_zero_candidates_by_type": {
+    "scroll": 7,
+    "open_app": 2,
+    "status": 14,
+    "wait": 9,
+    "navigate_back": 3
+  },
+  "coordinate_sanity": {
+    "per_action_type": {
+      "status": {
+        "rows": 3300,
+        "gold_out_of_bounds": 0,
+        "zero_area_target": 0,
+        "inverted": 0,
+        "missing_target": 3300
+      },
+      "wait": {
+        "rows": 150,
+        "gold_out_of_bounds": 0,
+        "zero_area_target": 0,
+        "inverted": 0,
+        "missing_target": 150
+      },
+      "open_app": {
+        "rows": 1050,
+        "gold_out_of_bounds": 0,
+        "zero_area_target": 0,
+        "inverted": 0,
+        "missing_target": 1050
+      },
+      "scroll": {
+        "rows": 1350,
+        "gold_out_of_bounds": 0,
+        "zero_area_target": 0,
+        "inverted": 0,
+        "missing_target": 1350
+      },
+      "click": {
+        "rows": 7913,
+        "gold_out_of_bounds": 1,
+        "zero_area_target": 8,
+        "inverted": 0,
+        "missing_target": 0
+      },
+      "navigate_back": {
+        "rows": 750,
+        "gold_out_of_bounds": 0,
+        "zero_area_target": 0,
+        "inverted": 0,
+        "missing_target": 750
+      },
+      "type_text": {
+        "rows": 450,
+        "gold_out_of_bounds": 0,
+        "zero_area_target": 0,
+        "inverted": 0,
+        "missing_target": 0
+      },
+      "long_press": {
+        "rows": 37,
+        "gold_out_of_bounds": 0,
+        "zero_area_target": 0,
+        "inverted": 0,
+        "missing_target": 0
+      }
+    },
+    "totals": {
+      "gold_point_out_of_bounds": 1,
+      "target_zero_area": 8,
+      "target_inverted_x": 0,
+      "target_inverted_y": 0,
+      "gold_equals_zero_zero": 0
+    },
+    "target_bbox_area_by_type": {
+      "click": {
+        "n": 7913,
+        "p10": 4332.6,
+        "median": 24318.0,
+        "p90": 131095.2,
+        "mean": 52092.9,
+        "min": 0.0,
+        "max": 893025.0
+      },
+      "type_text": {
+        "n": 450,
+        "p10": 54428.7,
+        "median": 96390.0,
+        "p90": 132094.2,
+        "mean": 128020.7,
+        "min": 2968.0,
+        "max": 4163040.0
+      },
+      "long_press": {
+        "n": 37,
+        "p10": 5476.0,
+        "median": 37736.0,
+        "p90": 96558.0,
+        "mean": 58967.8,
+        "min": 3969.0,
+        "max": 370360.0
+      }
+    },
+    "examples": [
+      {
+        "ep": 9590,
+        "step": 1,
+        "type": "click",
+        "flag": "target_zero_area"
+      },
+      {
+        "ep": 15351,
+        "step": 0,
+        "type": "click",
+        "flag": "target_zero_area"
+      },
+      {
+        "ep": 6015,
+        "step": 1,
+        "type": "click",
+        "flag": "target_zero_area"
+      },
+      {
+        "ep": 2629,
+        "step": 1,
+        "type": "click",
+        "flag": "target_zero_area"
+      },
+      {
+        "ep": 13756,
+        "step": 5,
+        "type": "click",
+        "flag": "target_zero_area"
+      },
+      {
+        "ep": 14325,
+        "step": 0,
+        "type": "click",
+        "flag": "target_zero_area"
+      },
+      {
+        "ep": 18062,
+        "step": 1,
+        "type": "click",
+        "flag": "gold_out_of_bounds",
+        "x": 1106,
+        "y": 472,
+        "W": 1080,
+        "H": 2400
+      },
+      {
+        "ep": 5222,
+        "step": 7,
+        "type": "click",
+        "flag": "target_zero_area"
+      },
+      {
+        "ep": 15542,
+        "step": 0,
+        "type": "click",
+        "flag": "target_zero_area"
+      }
+    ]
+  },
+  "gold_in_candidate": {
+    "click": {
+      "rows": 7913,
+      "rows_with_no_candidates": 0,
+      "gold_point_inside_some_candidate": 7913,
+      "gold_point_inside_some_candidate_pct": 100.0,
+      "gold_point_inside_some_candidate_ci95": [
+        99.95,
+        100.0
+      ],
+      "unscoreable_gold_point": 0,
+      "gold_candidate_returns_None": 166,
+      "gold_candidate_returns_None_pct": 2.1,
+      "gold_candidate_exact_bbox_match": 6423,
+      "gold_candidate_smallest_centre_in_target": 1324,
+      "examples_unscoreable_point": []
+    },
+    "long_press": {
+      "rows": 37,
+      "rows_with_no_candidates": 0,
+      "gold_point_inside_some_candidate": 37,
+      "gold_point_inside_some_candidate_pct": 100.0,
+      "gold_point_inside_some_candidate_ci95": [
+        90.59,
+        100.0
+      ],
+      "unscoreable_gold_point": 0,
+      "gold_candidate_returns_None": 2,
+      "gold_candidate_returns_None_pct": 5.41,
+      "gold_candidate_exact_bbox_match": 25,
+      "gold_candidate_smallest_centre_in_target": 10,
+      "examples_unscoreable_point": []
+    },
+    "type_text": {
+      "rows": 450,
+      "rows_with_no_candidates": 0,
+      "gold_point_inside_some_candidate": 449,
+      "gold_point_inside_some_candidate_pct": 99.78,
+      "gold_point_inside_some_candidate_ci95": [
+        98.75,
+        99.96
+      ],
+      "unscoreable_gold_point": 1,
+      "gold_candidate_returns_None": 1,
+      "gold_candidate_returns_None_pct": 0.22,
+      "gold_candidate_exact_bbox_match": 443,
+      "gold_candidate_smallest_centre_in_target": 6,
+      "examples_unscoreable_point": [
+        {
+          "ep": 9122,
+          "step": 8,
+          "x": 540.0,
+          "y": 1279.0,
+          "n_cands": 44
+        }
+      ]
+    }
+  },
+  "type_text": {
+    "rows": 450,
+    "target_present": 450,
+    "target_missing": 0,
+    "gold_point_inside_target": 450,
+    "gold_point_outside_target": 0,
+    "target_equals_no_candidate_bbox": 7,
+    "text_empty": 0,
+    "text_empty_pct": 0.0,
+    "text_copyable_from_goal_or_history": 450,
+    "text_not_copyable_from_goal_or_history": 0,
+    "editable_join": {
+      "available": true,
+      "type_text_records_in_corpus": 5459,
+      "compact_type_text_rows_matched": 450,
+      "compact_type_text_rows_missing": 0,
+      "join_seconds": 19.1,
+      "target_bbox_matches_multiple_nodes": 105,
+      "target_bbox_matches_no_node": 0,
+      "any_matching_node_is_editable": 435,
+      "no_matching_node_is_editable": 15,
+      "first_matching_node_is_editable": 341,
+      "any_matching_node_is_focused": 435,
+      "no_matching_node_is_focused": 15,
+      "any_matching_node_class_contains_EditText": 367,
+      "preprocess_path_focused_editable": 433,
+      "preprocess_path_last_click_fallback": 17,
+      "class_name_histogram_editable_preferred": {
+        "android.widget.EditText": 367,
+        "android.widget.AutoCompleteTextView": 60,
+        "android.widget.MultiAutoCompleteTextView": 6,
+        "android.widget.TextView": 5,
+        "android.view.View": 5,
+        "android.view.ViewGroup": 2,
+        "android.widget.RelativeLayout": 1,
+        "android.widget.Button": 1,
+        "android.widget.FrameLayout": 1,
+        "androidx.recyclerview.widget.RecyclerView": 1,
+        "android.widget.ImageView": 1
+      }
+    },
+    "examples": [
+      {
+        "ep": 15957,
+        "step": 2,
+        "x": 508.0,
+        "y": 201.5
+      },
+      {
+        "ep": 17933,
+        "step": 6,
+        "x": 537.5,
+        "y": 526.0
+      },
+      {
+        "ep": 17367,
+        "step": 1,
+        "x": 529.5,
+        "y": 1625.0
+      },
+      {
+        "ep": 7532,
+        "step": 2,
+        "x": 539.0,
+        "y": 220.0
+      },
+      {
+        "ep": 18689,
+        "step": 1,
+        "x": 638.5,
+        "y": 206.0
+      },
+      {
+        "ep": 14014,
+        "step": 2,
+        "x": 482.0,
+        "y": 201.5
+      },
+      {
+        "ep": 11894,
+        "step": 3,
+        "x": 571.5,
+        "y": 526.0
+      },
+      {
+        "ep": 2753,
+        "step": 3,
+        "x": 542.0,
+        "y": 507.5
+      },
+      {
+        "ep": 7478,
+        "step": 7,
+        "x": 537.5,
+        "y": 526.0
+      },
+      {
+        "ep": 12792,
+        "step": 3,
+        "x": 540.0,
+        "y": 843.0
+      },
+      {
+        "ep": 7927,
+        "step": 2,
+        "x": 638.5,
+        "y": 206.0
+      },
+      {
+        "ep": 12811,
+        "step": 2,
+        "x": 633.0,
+        "y": 209.0
+      },
+      {
+        "ep": 5997,
+        "step": 2,
+        "x": 539.0,
+        "y": 220.0
+      },
+      {
+        "ep": 15391,
+        "step": 4,
+        "x": 592.5,
+        "y": 247.0
+      },
+      {
+        "ep": 654,
+        "step": 6,
+        "x": 540.0,
+        "y": 434.5
+      }
+    ],
+    "gold_point_inside_target_pct": 100.0
+  },
+  "duplicates_leakage": {
+    "train_exact_duplicate_rows": 0,
+    "train_exact_duplicate_examples": [],
+    "train_distinct_images": 15000,
+    "train_images_with_single_action_type": 15000,
+    "train_images_with_conflicting_action_types": 0,
+    "train_images_with_conflicting_action_types_pct": 0.0,
+    "conflicting_image_examples": [],
+    "val_exact_duplicate_rows": 0,
+    "val_distinct_images": 827,
+    "train_val_shared_episodes": 0,
+    "train_val_shared_images_LEAKAGE": 0,
+    "train_val_shared_image_examples": []
+  },
+  "ambiguity_proxy": {
+    "click": {
+      "rows": 7913,
+      "rows_with_element_supervision": 7747,
+      "rows_with_duplicate_gold_label_on_screen": 1104,
+      "rows_with_duplicate_gold_label_on_screen_pct": 14.25,
+      "examples": [
+        {
+          "ep": 1846,
+          "step": 2,
+          "label": "Blank document",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 13575,
+          "step": 4,
+          "label": "Traffic",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 11769,
+          "step": 0,
+          "label": "Search here",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 6188,
+          "step": 1,
+          "label": "Health",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 14353,
+          "step": 0,
+          "label": "Removed from wishlist",
+          "n_same_label_on_screen": 6
+        },
+        {
+          "ep": 10335,
+          "step": 10,
+          "label": "Save",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 8463,
+          "step": 4,
+          "label": "2022",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 9694,
+          "step": 0,
+          "label": "GO TO CART ADD TO CART",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 18291,
+          "step": 9,
+          "label": "Report Category",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 19068,
+          "step": 14,
+          "label": "All",
+          "n_same_label_on_screen": 2
+        }
+      ]
+    },
+    "long_press": {
+      "rows": 37,
+      "rows_with_element_supervision": 35,
+      "rows_with_duplicate_gold_label_on_screen": 3,
+      "rows_with_duplicate_gold_label_on_screen_pct": 8.57,
+      "examples": [
+        {
+          "ep": 11348,
+          "step": 2,
+          "label": "Philadelphia",
+          "n_same_label_on_screen": 3
+        },
+        {
+          "ep": 4713,
+          "step": 0,
+          "label": "Naomi Rousseau",
+          "n_same_label_on_screen": 3
+        },
+        {
+          "ep": 839,
+          "step": 0,
+          "label": "Im doing good what about you?",
+          "n_same_label_on_screen": 2
+        }
+      ]
+    },
+    "type_text": {
+      "rows": 450,
+      "rows_with_element_supervision": 449,
+      "rows_with_duplicate_gold_label_on_screen": 36,
+      "rows_with_duplicate_gold_label_on_screen_pct": 8.02,
+      "examples": [
+        {
+          "ep": 2323,
+          "step": 2,
+          "label": "Berlin",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 18367,
+          "step": 3,
+          "label": "Rest",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 998,
+          "step": 3,
+          "label": "Wednesday at 11:06 AM",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 10766,
+          "step": 2,
+          "label": "Search contacts",
+          "n_same_label_on_screen": 3
+        },
+        {
+          "ep": 13860,
+          "step": 3,
+          "label": "Text",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 1963,
+          "step": 2,
+          "label": "Search Urban Ladder",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 18539,
+          "step": 3,
+          "label": "Search",
+          "n_same_label_on_screen": 3
+        },
+        {
+          "ep": 8385,
+          "step": 4,
+          "label": "Search",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 12043,
+          "step": 4,
+          "label": "Search",
+          "n_same_label_on_screen": 2
+        },
+        {
+          "ep": 14175,
+          "step": 4,
+          "label": "XYZ",
+          "n_same_label_on_screen": 2
+        }
+      ]
+    }
+  },
+  "history": {
+    "rows": 15000,
+    "history_longer_than_step_impossible": 0,
+    "step0_with_nonempty_history": 0,
+    "rows_with_empty_history": 2635,
+    "rows_with_empty_history_pct": 17.57,
+    "rows_with_blank_history_slots": 102,
+    "blank_history_slots_total": 107,
+    "episodes": 9005,
+    "episodes_with_contiguous_steps_0_to_max": 1367,
+    "episodes_with_step_gaps_after_subsampling": 7638,
+    "gap_examples": [
+      {
+        "ep": 5158,
+        "max_step": 4,
+        "missing": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "ep": 12731,
+        "max_step": 15,
+        "missing": [
+          1,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ]
+      },
+      {
+        "ep": 3486,
+        "max_step": 2,
+        "missing": [
+          0
+        ]
+      },
+      {
+        "ep": 233,
+        "max_step": 5,
+        "missing": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "ep": 8505,
+        "max_step": 5,
+        "missing": [
+          0,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "ep": 1023,
+        "max_step": 5,
+        "missing": [
+          0,
+          1,
+          3,
+          4
+        ]
+      },
+      {
+        "ep": 8722,
+        "max_step": 1,
+        "missing": [
+          0
+        ]
+      },
+      {
+        "ep": 12140,
+        "max_step": 3,
+        "missing": [
+          1,
+          2
+        ]
+      },
+      {
+        "ep": 7186,
+        "max_step": 4,
+        "missing": [
+          0,
+          1,
+          2
+        ]
+      },
+      {
+        "ep": 7946,
+        "max_step": 4,
+        "missing": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "status": {
+    "status_rows": 3300,
+    "at_last_step_present_in_cur15k": 3300,
+    "mid_episode_within_cur15k": 0,
+    "mid_episode_examples": [],
+    "episode_n_steps_known": 3300,
+    "at_true_terminal_step_n_steps": 3300,
+    "not_at_true_terminal_step": 0,
+    "not_at_true_terminal_examples": [],
+    "goal_status_values": [
+      "successful"
+    ]
+  },
+  "images": {
+    "sample_size": 2000,
+    "seed": 0,
+    "sample_missing": 0,
+    "sample_missing_pct": 0.0,
+    "sample_missing_ci95": [
+      0.0,
+      0.19
+    ],
+    "full_row_scan_missing": 0,
+    "full_row_scan_missing_pct": 0.0,
+    "full_row_scan_distinct_paths": 15000,
+    "missing_examples": []
+  },
+  "flagged_rows": {
+    "total_flagged_rows": 288,
+    "total_flagged_rows_pct": 1.92,
+    "flag_counts": {
+      "no_scoreable_element_target": 169,
+      "blank_history_slot": 102,
+      "type_text_target_not_editable": 15,
+      "target_zero_area": 8,
+      "gold_point_in_no_candidate": 1,
+      "gold_point_out_of_bounds": 1
+    },
+    "csv": "/tmp/a4audit/flagged_rows.csv",
+    "clean_rows": 14712,
+    "clean_rows_pct": 98.08,
+    "clean_rows_ci95": [
+      97.85,
+      98.29
+    ],
+    "per_action_type": {
+      "click": {
+        "rows": 7913,
+        "flagged": 235,
+        "flagged_pct": 2.97,
+        "clean_pct": 97.03
+      },
+      "long_press": {
+        "rows": 37,
+        "flagged": 2,
+        "flagged_pct": 5.41,
+        "clean_pct": 94.59
+      },
+      "navigate_back": {
+        "rows": 750,
+        "flagged": 0,
+        "flagged_pct": 0.0,
+        "clean_pct": 100.0
+      },
+      "open_app": {
+        "rows": 1050,
+        "flagged": 2,
+        "flagged_pct": 0.19,
+        "clean_pct": 99.81
+      },
+      "scroll": {
+        "rows": 1350,
+        "flagged": 10,
+        "flagged_pct": 0.74,
+        "clean_pct": 99.26
+      },
+      "status": {
+        "rows": 3300,
+        "flagged": 22,
+        "flagged_pct": 0.67,
+        "clean_pct": 99.33
+      },
+      "type_text": {
+        "rows": 450,
+        "flagged": 16,
+        "flagged_pct": 3.56,
+        "clean_pct": 96.44
+      },
+      "wait": {
+        "rows": 150,
+        "flagged": 1,
+        "flagged_pct": 0.67,
+        "clean_pct": 99.33
+      }
+    }
+  },
+  "sampling_protocol": {
+    "p=10.0% +/-4.0pp 95%": {
+      "n_uncorrected": 217,
+      "n_fpc_15000": 214,
+      "worst_case_z2_0.25": 601
+    },
+    "p=10.0% +/-3.0pp 95%": {
+      "n_uncorrected": 385,
+      "n_fpc_15000": 376,
+      "worst_case_z2_0.25": 1068
+    },
+    "p=10.0% +/-2.0pp 95%": {
+      "n_uncorrected": 865,
+      "n_fpc_15000": 818,
+      "worst_case_z2_0.25": 2401
+    },
+    "p=37.63% +/-4.0pp 95%": {
+      "n_uncorrected": 564,
+      "n_fpc_15000": 544,
+      "worst_case_z2_0.25": 601
+    },
+    "p=37.63% +/-3.0pp 95%": {
+      "n_uncorrected": 1002,
+      "n_fpc_15000": 940,
+      "worst_case_z2_0.25": 1068
+    },
+    "p=37.63% +/-2.0pp 95%": {
+      "n_uncorrected": 2254,
+      "n_fpc_15000": 1960,
+      "worst_case_z2_0.25": 2401
+    },
+    "_notes": "The textbook worst case p=0.5 dominates: 601 rows buys +/-4pp at 95% regardless of the true rate. Using p=0.5 is the safe planning choice because the true rate is what we are trying to discover."
+  },
+  "runtime_seconds": 34.8
+}

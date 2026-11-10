@@ -34,18 +34,18 @@ SPATIAL = {"click", "long_press", "type_text"}
 
 # Only genuinely distinct runs: same-run steps and superset datasets are excluded from the "independent" set.
 RUNS = {
-    "E2pure":     "backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl",
-    "E2mem":      "backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-mem-V.jsonl",
+    "E2pure":     "backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl",
+    "E2mem":      "backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-mem-V.jsonl",
     "gndB1406":   "backup-2026-10-29/ckpt-groundB/eval-step1406-V.jsonl",
-    "cont500":    "backup-2026-10-29/s4090-1x-100/acwork/runs/E2c-cont-cur8kB/eval-step500-V.jsonl",
-    "cur24k900":  "backup-2026-10-29/prd-survey-x1-5090/acwork/runs/R2b-V-cur24k/eval-step900-V.jsonl",
+    "cont500":    "backup-2026-10-29/GPU_HOST_B/acwork/runs/E2c-cont-cur8kB/eval-step500-V.jsonl",
+    "cur24k900":  "backup-2026-10-29/GPU_HOST_C/acwork/runs/R2b-V-cur24k/eval-step900-V.jsonl",
     "E2_705":     "benchmarks/results/2026-10-29-evals/E2-705-V.jsonl",
     "arm20":      "benchmarks/results/2026-11-07-arm/eval-arm20test-V.jsonl",
 }
 # Near-duplicates kept only for the "everything on disk" bound, never for the independence claim:
 NEAR_DUP = {
-    "cont250":   "backup-2026-10-29/s4090-1x-100/acwork/runs/E2c-cont-cur8kB/eval-step250-V.jsonl",
-    "cur24k1500":"backup-2026-10-29/prd-survey-x1-5090/acwork/runs/R2b-V-cur24k/eval-step1500-V.jsonl",
+    "cont250":   "backup-2026-10-29/GPU_HOST_B/acwork/runs/E2c-cont-cur8kB/eval-step250-V.jsonl",
+    "cur24k1500":"backup-2026-10-29/GPU_HOST_C/acwork/runs/R2b-V-cur24k/eval-step1500-V.jsonl",
     "gndB1056":  "backup-2026-10-29/ckpt-groundB/eval-step1056-V.jsonl",
 }
 

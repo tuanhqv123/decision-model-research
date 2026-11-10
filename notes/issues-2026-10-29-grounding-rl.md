@@ -1,4 +1,4 @@
-# ISSUES & Findings — phiên 2026-10-29 (grounding gap, noise/CI, eval-set verify, trend mem/RL/CoT, compute VKong)
+# ISSUES & Findings — phiên 2026-10-29 (grounding gap, noise/CI, eval-set verify, trend mem/RL/CoT, compute [cloud-gpu])
 
 
 > **Correction (2026-11-07).** Every "64.32" below is the pre-audit figure. No artifact yields 256/398:
@@ -122,27 +122,27 @@ Phân tích 223 spatial rows (có toạ độ) của run E2-938:
 
 ---
 
-## E. Compute: VKong (vkong.tli-tech.com) — đã probe giá
+## E. Compute: [cloud-gpu] (vkong.tli-tech.com) — đã probe giá
 
-### Issue E1 — Nền tảng: VKong = cloud GPU theo giờ, $5 credit có sẵn
+### Issue E1 — Nền tảng: [cloud-gpu] = cloud GPU theo giờ, $5 credit có sẵn
 - CLI `vkong` đã cài (v0.10.36), đã login user `tuanhqv123`, **$5.00 credit, 0/2 machines**.
 - Config trong `vkong.yaml` (type task/service, gpu, max_price, image, start, min_cpu_cores, min_ram_gb).
 - **Xem giá mà không rent:** dùng `vkong dev` (in GPU+price, exit, không rent) KHÔNG phản ánh GPU thật
   (luôn Modal L4 $1.75/h). **Cách đúng:** `vkong run` in giá trước khi rent → ấn 'n'/không auto-approve.
 - **Giá thật RTX-4090 = $0.44/h** (24GB, 63GB RAM, 8 core, Poland). → **$5 credit đủ smoke + thử nghiệm.**
 
-### Issue E2 — Dữ liệu cần upload lên VKong
+### Issue E2 — Dữ liệu cần upload lên [cloud-gpu]
 | Dữ liệu | Vị trí | Size |
 |---|---|---|
 | Eval set | benchmarks/data/acv2/500_steps_filtered.json | 33MB |
 | Screenshots | benchmarks/data/acv2_shots/images | **6.4GB** |
-| Train data (backup E2) | backup-2026-10-29/prd-survey-x1-5090/acwork | **26GB** |
+| Train data (backup E2) | backup-2026-10-29/GPU_HOST_C/acwork | **26GB** |
 
 → Đủ disk (mình đặt `disk_gb: 10` nhưng 26GB backup >10 → cần đặt `disk_gb` đủ, hoặc chỉ copy data
-crumpled cần thiết: ảnh train + compact_train.jsonl. **Phải tính cẩn thận, VKong tính tiền storage.)**
+crumpled cần thiết: ảnh train + compact_train.jsonl. **Phải tính cẩn thận, [cloud-gpu] tính tiền storage.)**
 
 ### Issue E3 — RỦI RO: d1-2B là multimodal, cần ảnh + HF download (~4GB)
-- Đảm bảo vỏ máy có internet (VKong có) + đủ disk cho HF weights (d1-2B ~4GB).
+- Đảm bảo vỏ máy có internet ([cloud-gpu] có) + đủ disk cho HF weights (d1-2B ~4GB).
 
 ---
 
@@ -166,8 +166,8 @@ crumpled cần thiết: ảnh train + compact_train.jsonl. **Phải tính cẩn 
 1. **Đọc `pointer.py`/`slots.py` + test**: d1-2B có sample stochastic không → quyết định RL thật hay
    dense-reward SFT. (Miễn phí, trên Mac.)
 2. **Chọn chiến lược grounding**: RL + dense 2D-Gaussian reward (Magma-R1) — đường chính.
-3. **Prepare data + script** trên Mac trước khi rent VKong (đúng nguyên tắc "không tốn tiền vô dụng").
-4. **Smoke VKong**: subset ~500 mẫu, RTX-4090 ~$0.44/h, đo time/step + VRAM + grounding có nhích không.
+3. **Prepare data + script** trên Mac trước khi rent [cloud-gpu] (đúng nguyên tắc "không tốn tiền vô dụng").
+4. **Smoke [cloud-gpu]**: subset ~500 mẫu, RTX-4090 ~$0.44/h, đo time/step + VRAM + grounding có nhích không.
 5. Nếu smoke tốt → full; không → dừng, đổi hướng.
 
 ---
@@ -204,7 +204,7 @@ crumpled cần thiết: ảnh train + compact_train.jsonl. **Phải tính cẩn 
 - Arm B: A + grounding phụ 7.5k (mô tả bước → box, nhãn element → box; sample riêng để tránh lộ đáp án), cur15k+aux7k.
 - Gate fail-fast trên máy: test_hitloss, parity, aux. Kết quả cuối chấm bằng eval_rl.py chính thức + validation.
 
-## K. Lần chạy VKong đầu thất bại (2026-10-29 15:43–16:02) và cách làm kỹ hơn
+## K. Lần chạy [cloud-gpu] đầu thất bại (2026-10-29 15:43–16:02) và cách làm kỹ hơn
 - Lỗi: image `ubuntu:22.04` không có gcc → Triton (kernel conv của d1) không biên dịch được → chết ở gate parity, SAU
   ~15 phút trích ảnh. Tốn $0,21. Trên server cũ có sẵn gcc nên chưa từng gặp.
 - Bài học: chưa từng chạy thử TRONG môi trường thuê. Đã sửa: `init.sh` cài build-essential + gate Triton ngay trong setup;

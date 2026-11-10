@@ -21,6 +21,7 @@ EMITTABLE = (
     "scroll",
     "open_app",
     "navigate_back",
+    "navigate_home",
     "wait",
     "status",
 )
@@ -130,14 +131,37 @@ def map_decision(
     dec: Dict[str, Any],
     allow_app_fallback: bool = False,
     goal: str = "",
+    done_threshold: float = 0.0,
 ) -> MappedAction:
     """Map a decision dict to AndroidWorld actions, flagging anything not faithful.
 
-    ``dec`` fields: action, point, text, app_name, direction.
+    ``dec`` fields: action, point, text, app_name, direction, and optionally is_done
+    (the p(task complete) readout).
+
+    ``done_threshold = 0.0`` (the default) DISABLES the is_done gate, which is the correct
+    configuration. Upstream lets the agent decide `done`; gating it is a protocol deviation,
+    and the signal it was gated on turned out to be null — see
+    benchmarks/results/2026-11-10-episodic-s0-fails-prereg.md. Measured on 824 validation
+    rows: `step == n_steps` and `action == status` are the SAME 137 rows, so `is_done` is a
+    copy of the action label (AUROC 0.960 including terminal rows, `auroc_nonterm` not
+    computable because there are 0 positives among the 687 non-status rows, risk 0.670 at 50%
+    coverage). A non-zero threshold re-enables a deviation whose signal does not exist.
     """
     action = (dec.get("action") or "").strip().lower()
 
     if action == "status":
+        # Kept for a deliberately controlled experiment, never as the default. The readout
+        # cannot separate "finished" from "not finished" on this corpus: refusing a `status`
+        # on `is_done` is refusing it on a restatement of the action label, and the threshold
+        # therefore has no operating point that is better than not gating at all.
+        p_done = dec.get("is_done")
+        if done_threshold > 0.0 and p_done is not None and float(p_done) < done_threshold:
+            return MappedAction(
+                actions=[{"action_type": "wait"}],
+                invalid=False,
+                scaffolding=["status_blocked_by_is_done:%.3f" % float(p_done)],
+                reason="is_done_below_threshold",
+            )
         return MappedAction(actions=[], done=True)
 
     if action not in EMITTABLE:
@@ -172,10 +196,22 @@ def map_decision(
                 invalid=True,
                 reason="text_missing",
             )
+        # ONE action, not two. Upstream `actuation.py:77-110` shows `input_text`
+        # already clicks the focus point itself (`action.x/y` -> click_action),
+        # sleeps 1s, optionally clears, types, and presses ENTER. Emitting a
+        # separate `click` first therefore tapped the field twice, which on some
+        # screens (Markor's filename dialog) closes or re-selects the widget.
+        # `clear_text=True` is required: without it typed text is APPENDED to
+        # whatever the field already held.
         return MappedAction(
             actions=[
-                {"action_type": "click", "x": pt[0], "y": pt[1]},
-                {"action_type": "input_text", "text": text},
+                {
+                    "action_type": "input_text",
+                    "x": pt[0],
+                    "y": pt[1],
+                    "text": text,
+                    "clear_text": True,
+                }
             ]
         )
 

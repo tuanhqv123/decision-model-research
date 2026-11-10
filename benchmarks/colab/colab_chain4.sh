@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Chain 4: create T4 session, VM pulls public data, smoke 10 steps — one uninterrupted chain.
 set -u
-cd /Users/macbookpro/Workspace/research
+cd ~/Workspace/research
 S=d12b
 log() { echo "=== [$1] ==="; }
 

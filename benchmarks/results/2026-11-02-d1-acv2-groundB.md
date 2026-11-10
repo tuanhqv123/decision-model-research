@@ -31,7 +31,7 @@
 
 ## Artifacts
 - Checkpoint: `backup-2026-10-29/ckpt-groundB/ckpt` (model.safetensors 3,836,417,920 bytes, matches E2 size).
-- Training ran on VKong RTX-4090 (~$0.38/h); images (858px) cached in storage `acv2-a` (data858.tar, 2.5GB).
+- Training ran on [cloud-gpu] RTX-4090 (~$0.38/h); images (858px) cached in storage `acv2-a` (data858.tar, 2.5GB).
 - Loss-change code + gates (hit loss parity, sample grounding) live in `benchmarks/train/`.
 
 <!-- Numbers corrected 2026-11-07 after the internal audit: 64.32/256 -> 64.07/255; 56.50 -> 56.05 pure. -->

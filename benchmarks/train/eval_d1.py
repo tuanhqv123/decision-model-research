@@ -19,7 +19,8 @@ import numpy as np
 import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ac_common import FROM_OPTION, SPATIAL, build_questions, build_state, pick_candidates  # noqa: E402
+from ac_common import (DEFAULT_CONTRACT, FROM_OPTION, SPATIAL, build_questions, build_state,  # noqa: E402
+                       pick_candidates, read_contract)
 from run_acv2 import score_row  # noqa: E402
 
 
@@ -43,9 +44,9 @@ def val_row(rec, data):
             "cands": rec["cands"]}
 
 
-def load_rows(path, shots, data, val=False, limit=0):
+def load_rows(path, shots, data, val=False, limit=0, val_set="validation"):
     if val:
-        rows = [val_row(json.loads(l), data) for l in open(f"{data}/compact_validation.jsonl")]
+        rows = [val_row(json.loads(l), data) for l in open(f"{data}/compact_{val_set}.jsonl")]
     else:
         rows = json.load(open(path))
         for r in rows:
@@ -54,7 +55,7 @@ def load_rows(path, shots, data, val=False, limit=0):
 
 
 @torch.no_grad()
-def run_eval(model, rows, track, memory, batch=8, save_readouts=False):
+def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=DEFAULT_CONTRACT):
     """Serve every row through model.system_one_batch and score it. Returns (records, summary)."""
     from train_d1 import load_image
     out, t_start = [], time.time()
@@ -72,7 +73,7 @@ def run_eval(model, rows, track, memory, batch=8, save_readouts=False):
             from train_d1 import TRAJ
             trajs = TRAJ["mem"].query_trajs(r["goal"], TRAJ["k"]) if TRAJ["k"] else None
             state = build_state(r["goal"], tr, cands, apps, r.get("previous_actions") or [], trajs)
-            reqs.append((state, build_questions(tr, cands), [load_image(r["screenshot"])]))
+            reqs.append((state, build_questions(tr, cands, contract=contract), [load_image(r["screenshot"])]))
             metas.append((r, cands))
         t0 = time.time()
         res = model.system_one_batch(reqs)
@@ -104,12 +105,24 @@ def run_eval(model, rows, track, memory, batch=8, save_readouts=False):
             if at not in SPATIAL:  # the leaderboard scorer (eval_rl.py) reads no point for non-spatial actions
                 pt = None
             correct, grounding = score_row(r, at, value, pt)
+            # is_done: the independent p(task complete). Recorded for every row so the AUROC can be
+            # computed, and so the non-terminal AUROC can be separated from the terminal one.
+            is_done_p = None
+            try:
+                d = ans.get("is_done")
+                if isinstance(d, dict):
+                    is_done_p = float(d.get("noul"))
+                elif d is not None:
+                    is_done_p = float(d)
+            except (TypeError, ValueError):
+                is_done_p = None
             rec = {"episode_id": r["episode_id"], "step": r["step"], "gold": r["action"], "pred": at,
                    "value": value, "pt": pt, "box_pt": box_pt, "el_pt": el_pt, "conf": conf, "probs": probs,
                    "found": ans["target_box"].get("found"), "box_conf": ans["target_box"].get("confidence"),
                    "el_conf": ans["target_el"].get("confidence") if cands is not None else None,
                    "el_idx": el_idx,
                    "box_only_pt": box_pt,
+                   "is_done": is_done_p,
                    "correct": bool(correct), "grounding": grounding, "latency_ms": lat}
             if save_readouts:
                 # stage 2 needs every slot, including the one a post-processor switches TO
@@ -151,6 +164,8 @@ def main():
     ap.add_argument("--batch", type=int, default=16)
     ap.add_argument("--out", default="results")
     ap.add_argument("--val", action="store_true", help="the train-time validation split (calibration), not test")
+    ap.add_argument("--val-set", default="validation", help="compact_<name>.jsonl used with --val")
+    ap.add_argument("--contract", default="", help="question set; default = the checkpoint's contract.json")
     ap.add_argument("--save-readouts", action="store_true", help="keep every slot readout per row (stage 2)")
     a = ap.parse_args()
 
@@ -159,13 +174,16 @@ def main():
     rev = None if os.path.isdir(a.ckpt) else BASE_REV
     model = AutoModel.from_pretrained(a.ckpt, trust_remote_code=True, dtype=torch.bfloat16, revision=rev).cuda()
     model.engine.calibration = None  # raw readouts, as trained
-    rows = load_rows(a.rows, a.shots, a.data, a.val, a.limit)
+    rows = load_rows(a.rows, a.shots, a.data, a.val, a.limit, a.val_set)
+    contract = a.contract or (read_contract(a.ckpt)["name"] if os.path.isdir(a.ckpt) else DEFAULT_CONTRACT)
+    print(f"[contract] {contract}", flush=True)
     memory = None if a.no_memory else build_memory(a.data)
     if a.traj_k:
         from train_d1 import TRAJ, build_traj_memory
         TRAJ["mem"], TRAJ["k"] = build_traj_memory(a.data), a.traj_k
-    out, summ = run_eval(model, rows, a.track, memory, a.batch, a.save_readouts)
+    out, summ = run_eval(model, rows, a.track, memory, a.batch, a.save_readouts, contract=contract)
     summ["tag"] = a.tag
+    summ["contract"] = contract
     os.makedirs(a.out, exist_ok=True)
     path = f"{a.out}/eval-{a.tag}-{a.track}{'-val' if a.val else ''}.jsonl"
     with open(path, "w") as f:

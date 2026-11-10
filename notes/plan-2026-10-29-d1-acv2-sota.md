@@ -27,7 +27,7 @@ tokens). Primary bar: **Mem-W-8B 68.59**; secondary: GUI-Libra-8B 64.3 / Mem-W-4
 - App-name memory: TF-IDF retrieval of app names from TRAIN goals (leave-own-episode-out) — disclosed, ablatable.
 - Full FT, bf16 + torchao AdamW8bit (bf16 stochastic rounding), lr 1e-5 cosine, grad-ckpt.
 - **3-GPU local SGD (DiLoCo, outer lr 1):** 3 replicas on disjoint data shards, weights averaged every 300 steps
-  (`sync_avg.sh` hub on Model_Training_Server). ~1 epoch in ~4h instead of ~11h on one 4090.
+  (`sync_avg.sh` hub on GPU_HOST_A). ~1 epoch in ~4h instead of ~11h on one 4090.
 
 ## Pass conditions
 - P1: V-track step acc > 45.48 (Qwen3-VL-2B, same size class).

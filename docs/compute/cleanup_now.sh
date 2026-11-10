@@ -11,7 +11,7 @@ mkdir -p $BK
 exec >> $LOG 2>&1
 echo "=== manual cleanup started $(date) (all runs finished 05:12)"
 
-HOSTS="prd-survey-x1-5090 Model_Training_Server s4090-1x-100"
+HOSTS="GPU_HOST_C GPU_HOST_A GPU_HOST_B"
 for h in $HOSTS; do  # 1) stop our jobs (anchored: never matches this ssh's own shell)
   ssh -n -o ConnectTimeout=20 $h 'pkill -f "^train-venv/bin/python"; pkill -f "^bash sync_avg.sh"; sleep 2; echo "$(hostname): our procs left=$(pgrep -f "^train-venv/bin/python" | wc -l)"'
 done
@@ -19,7 +19,7 @@ done
 for h in $HOSTS; do  # 2) back up (venvs and the public GCS mirror are reproducible: dl_ac.sh / setup_env.sh)
   mkdir -p $BK/$h
   EXTRA=""
-  [ $h != prd-survey-x1-5090 ] && EXTRA="--exclude acdata/imgs --exclude acdata/records"  # copies of the 5090's
+  [ $h != GPU_HOST_C ] && EXTRA="--exclude acdata/imgs --exclude acdata/records"  # copies of the 5090's
   rsync -a --exclude train-venv --exclude vllm-venv --exclude __pycache__ --exclude ac_raw --exclude ac_raw2 --exclude "runs/E2-cur15k-V/best" --exclude "runs/E2c-cont-cur8kB/best" --exclude "runs/R2b-V-cur24k/best" --exclude "runs/E2-final-ckpt" $EXTRA \
     $h:acwork/ $BK/$h/acwork/
   r1=$?
@@ -40,5 +40,5 @@ for h in $HOSTS; do  # 3) wipe ours, only where the backup succeeded
 done
 
 # 4) restart what we stopped (docs/compute/STOPPED_CONTAINERS.md)
-ssh -n s4090-1x-100 'docker start syngenta-display-api-display-tracking-syngenta-1 >/dev/null; docker ps --filter name=syngenta --format "{{.Names}} {{.Status}}"; nvidia-smi --query-gpu=memory.used --format=csv,noheader'
+ssh -n GPU_HOST_B 'docker start [service] >/dev/null; docker ps --filter name=[service] --format "{{.Names}} {{.Status}}"; nvidia-smi --query-gpu=memory.used --format=csv,noheader'
 echo "=== deadline job finished $(date)"
