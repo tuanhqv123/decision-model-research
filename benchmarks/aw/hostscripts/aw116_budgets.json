@@ -1,0 +1,466 @@
+{
+ "AudioRecorderRecordAudio": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "AudioRecorderRecordAudioWithFileName": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "BrowserDraw": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "BrowserMaze": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "BrowserMultiply": {
+  "complexity": 2.2,
+  "max_steps": 22
+ },
+ "CameraTakePhoto": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "CameraTakeVideo": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "ClockStopWatchPausedVerify": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "ClockStopWatchRunning": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "ClockTimerEntry": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "ContactsAddContact": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "ContactsNewContactDraft": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "ExpenseAddMultiple": {
+  "complexity": 6.0,
+  "max_steps": 60
+ },
+ "ExpenseAddMultipleFromGallery": {
+  "complexity": 6.0,
+  "max_steps": 60
+ },
+ "ExpenseAddMultipleFromMarkor": {
+  "complexity": 6.0,
+  "max_steps": 60
+ },
+ "ExpenseAddSingle": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "ExpenseDeleteDuplicates": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "ExpenseDeleteDuplicates2": {
+  "complexity": 1.8,
+  "max_steps": 18
+ },
+ "ExpenseDeleteMultiple": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "ExpenseDeleteMultiple2": {
+  "complexity": 3.4,
+  "max_steps": 34
+ },
+ "ExpenseDeleteSingle": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "FilesDeleteFile": {
+  "complexity": 2.2,
+  "max_steps": 22
+ },
+ "FilesMoveFile": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "MarkorAddNoteHeader": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "MarkorChangeNoteContent": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "MarkorCreateFolder": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "MarkorCreateNote": {
+  "complexity": 1.6,
+  "max_steps": 16
+ },
+ "MarkorCreateNoteAndSms": {
+  "complexity": 1.8,
+  "max_steps": 18
+ },
+ "MarkorCreateNoteFromClipboard": {
+  "complexity": 1.4,
+  "max_steps": 14
+ },
+ "MarkorDeleteAllNotes": {
+  "complexity": 1.4,
+  "max_steps": 14
+ },
+ "MarkorDeleteNewestNote": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "MarkorDeleteNote": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "MarkorEditNote": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "MarkorMergeNotes": {
+  "complexity": 7.8,
+  "max_steps": 78
+ },
+ "MarkorMoveNote": {
+  "complexity": 1.4,
+  "max_steps": 14
+ },
+ "MarkorTranscribeReceipt": {
+  "complexity": 1.8,
+  "max_steps": 18
+ },
+ "MarkorTranscribeVideo": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "NotesIsTodo": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "NotesMeetingAttendeeCount": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "NotesRecipeIngredientCount": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "NotesTodoItemCount": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "OpenAppTaskEval": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "OsmAndFavorite": {
+  "complexity": 1.3,
+  "max_steps": 13
+ },
+ "OsmAndMarker": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "OsmAndTrack": {
+  "complexity": 12.0,
+  "max_steps": 120
+ },
+ "RecipeAddMultipleRecipes": {
+  "complexity": 6.0,
+  "max_steps": 60
+ },
+ "RecipeAddMultipleRecipesFromImage": {
+  "complexity": 6.0,
+  "max_steps": 60
+ },
+ "RecipeAddMultipleRecipesFromMarkor": {
+  "complexity": 6.0,
+  "max_steps": 60
+ },
+ "RecipeAddMultipleRecipesFromMarkor2": {
+  "complexity": 6.0,
+  "max_steps": 60
+ },
+ "RecipeAddSingleRecipe": {
+  "complexity": 2.4,
+  "max_steps": 24
+ },
+ "RecipeDeleteDuplicateRecipes": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "RecipeDeleteDuplicateRecipes2": {
+  "complexity": 2.4,
+  "max_steps": 24
+ },
+ "RecipeDeleteDuplicateRecipes3": {
+  "complexity": 3.4,
+  "max_steps": 34
+ },
+ "RecipeDeleteMultipleRecipes": {
+  "complexity": 2.4,
+  "max_steps": 24
+ },
+ "RecipeDeleteMultipleRecipesWithConstraint": {
+  "complexity": 4.0,
+  "max_steps": 40
+ },
+ "RecipeDeleteMultipleRecipesWithNoise": {
+  "complexity": 3.4,
+  "max_steps": 34
+ },
+ "RecipeDeleteSingleRecipe": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "RecipeDeleteSingleWithRecipeWithNoise": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "RetroCreatePlaylist": {
+  "complexity": 2.4,
+  "max_steps": 24
+ },
+ "RetroPlayingQueue": {
+  "complexity": 3.2,
+  "max_steps": 32
+ },
+ "RetroPlaylistDuration": {
+  "complexity": 3.0,
+  "max_steps": 30
+ },
+ "RetroSavePlaylist": {
+  "complexity": 5.0,
+  "max_steps": 50
+ },
+ "SaveCopyOfReceiptTaskEval": {
+  "complexity": 1.6,
+  "max_steps": 16
+ },
+ "SimpleCalendarAddOneEvent": {
+  "complexity": 3.4,
+  "max_steps": 34
+ },
+ "SimpleCalendarAddOneEventInTwoWeeks": {
+  "complexity": 3.4,
+  "max_steps": 34
+ },
+ "SimpleCalendarAddOneEventRelativeDay": {
+  "complexity": 3.4,
+  "max_steps": 34
+ },
+ "SimpleCalendarAddOneEventTomorrow": {
+  "complexity": 3.4,
+  "max_steps": 34
+ },
+ "SimpleCalendarAddRepeatingEvent": {
+  "complexity": 3.4,
+  "max_steps": 34
+ },
+ "SimpleCalendarAnyEventsOnDate": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SimpleCalendarDeleteEvents": {
+  "complexity": 1.4,
+  "max_steps": 14
+ },
+ "SimpleCalendarDeleteEventsOnRelativeDay": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "SimpleCalendarDeleteOneEvent": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "SimpleCalendarEventOnDateAtTime": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SimpleCalendarEventsInNextWeek": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SimpleCalendarEventsInTimeRange": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SimpleCalendarEventsOnDate": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SimpleCalendarFirstEventAfterStartTime": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SimpleCalendarLocationOfEvent": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SimpleCalendarNextEvent": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SimpleCalendarNextMeetingWithPerson": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SimpleDrawProCreateDrawing": {
+  "complexity": 1.8,
+  "max_steps": 18
+ },
+ "SimpleSmsReply": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "SimpleSmsReplyMostRecent": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "SimpleSmsResend": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "SimpleSmsSend": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "SimpleSmsSendClipboardContent": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "SimpleSmsSendReceivedAddress": {
+  "complexity": 1.8,
+  "max_steps": 18
+ },
+ "SportsTrackerActivitiesCountForWeek": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SportsTrackerActivitiesOnDate": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "SportsTrackerActivityDuration": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "SportsTrackerLongestDistanceActivity": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SportsTrackerTotalDistanceForCategoryOverInterval": {
+  "complexity": 2.2,
+  "max_steps": 22
+ },
+ "SportsTrackerTotalDurationForCategoryThisWeek": {
+  "complexity": 1.6,
+  "max_steps": 16
+ },
+ "SystemBluetoothTurnOff": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemBluetoothTurnOffVerify": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemBluetoothTurnOn": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemBluetoothTurnOnVerify": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemBrightnessMax": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemBrightnessMaxVerify": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemBrightnessMin": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemBrightnessMinVerify": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemCopyToClipboard": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemWifiTurnOff": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemWifiTurnOffVerify": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemWifiTurnOn": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "SystemWifiTurnOnVerify": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "TasksCompletedTasksForDate": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "TasksDueNextWeek": {
+  "complexity": 1.2,
+  "max_steps": 12
+ },
+ "TasksDueOnDate": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "TasksHighPriorityTasks": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "TasksHighPriorityTasksDueOnDate": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "TasksIncompleteTasksOnDate": {
+  "complexity": 1.0,
+  "max_steps": 10
+ },
+ "TurnOffWifiAndTurnOnBluetooth": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "TurnOnWifiAndOpenApp": {
+  "complexity": 2.0,
+  "max_steps": 20
+ },
+ "VlcCreatePlaylist": {
+  "complexity": 2.8,
+  "max_steps": 28
+ },
+ "VlcCreateTwoPlaylists": {
+  "complexity": 4.8,
+  "max_steps": 48
+ }
+}

@@ -97,7 +97,9 @@ Topic list (each maps to a file under `notes/`):
   (|w−l| = 6, exactly the bar) → seeds 1–2 online (chain8). §4 needs three seeds; nothing is claimed yet.
   Mechanism as predicted for repeats (first-encounter repeat 41.2% vs 65.8%), not for typing (+0.9 pts).
   **Post-hoc: the gain is mostly termination** — 7/9 wins are tasks B0′ finished but never declared done; R1
-  declares done 2.4x as often and is right less often (17% vs 24%). Q10: a same-host replay is not
+  declares done 2.4x as often and is right less often (17% vs 24%). **Q11 (no model, `status` at step 0) scores
+  6.6% (7/113): B0′'s 7.0% is indistinguishable from doing nothing, and beyond the 7 "state already holds" tasks both
+  arms solve exactly 7 — R1's gain is termination, not task skill.** Q10: a same-host replay is not
   deterministic (6/20 trajectories diverge, 0/20 outcomes flip, upper bound 16.1%). Also: B0′'s 12 previously
   hidden tasks hold 2 of its 8 successes; `run_arm.sh` now counts scored episodes from the index (a killed
   partial episode had read as scored). `benchmarks/results/2026-11-10-stage1/`.

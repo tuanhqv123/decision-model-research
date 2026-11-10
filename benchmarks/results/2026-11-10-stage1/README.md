@@ -80,3 +80,24 @@ The pointer-location overlay (H10) changes the model's input from the first touc
 trajectory; outcomes barely move (1 flip in 94). So B0-overlay's step-level diagnosis describes a different input
 than the official one, while its outcome numbers are close to B0′'s. 10 tasks set aside: B0-overlay's 9 dead-a11y
 setup errors and SimpleSmsReplyMostRecent (both arms).
+
+## Why the rate is low — post-hoc, not pre-registered (`posthoc2.py`, `posthoc2.txt`, Q11 floor `q11_status_now_results.jsonl`)
+
+**Q11, the floor:** a policy that only says `status` at step 0 (no model) scores **6.6% (7/113)**, Wilson [3.0, 12.2];
+3 tasks excluded. Its 7 tasks are ones whose end state already holds (Wi-Fi/Bluetooth/brightness "Verify" variants,
+`RecipeDeleteMultipleRecipesWithConstraint`). B0′ vs this floor: w = 7, l = 6 — **B0′ (7.0%) is not distinguishable
+from doing nothing**; R1 s0 vs the floor: w = 7, l = 0.
+
+| | successes | on floor tasks | **beyond the floor** |
+|---|---|---|---|
+| Q11 floor | 7 | 7 | 0 |
+| B0′ | 8 | 1 | **7** |
+| R1 s0 | 14 | 7 | **7** |
+
+So R1 s0's whole gain over B0′ is the 6 floor tasks B0′ did not declare done; **beyond the floor both do 7 tasks.**
+Success by step budget (task-completion tasks, successes/tasks): B0′ 4/25 · 3/36 · 1/18 · 0/11 for budgets 0–10 ·
+11–20 · 21–40 · 41+; R1 s0 11/25 · 2/36 · 1/18 · 0/11. Nothing above 20 steps succeeds except 2 tasks.
+Termination: R1 s0 declares done on 61/90 task-completion tasks (14 right, 47 wrong, wrong at a median 36% of the
+step budget) vs B0′ 22/90 (8 right, 14 wrong); a wrong done comes after a median 4 acting steps (R1) and a right one
+after 3 — the step count does not separate them. The 25 answer-only tasks score 0 for both (the model never emits an
+answer), a ceiling of 78.4%.
