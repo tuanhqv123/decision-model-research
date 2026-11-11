@@ -28,7 +28,7 @@ import torch.nn.functional as F
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ac_common import (CONTRACTS, DEFAULT_CONTRACT, AppMemory, TrajMemory, build_questions,  # noqa: E402
-                       build_state, element_inputs, gold_answers, gold_answers_v2, row_app_options,
+                       build_state, element_inputs, gold_answers, gold_answers_v2, length_buckets, row_app_options,
                        write_contract)
 
 # Run-wide settings that every sample must agree on. `contract` names the question set (ac_common.CONTRACTS)
@@ -477,6 +477,8 @@ def main():
     ap.add_argument("--steps", type=int, default=0, help="optimizer steps (0 = epochs)")
     ap.add_argument("--epochs", type=float, default=1.0)
     ap.add_argument("--micro", type=int, default=2)
+    ap.add_argument("--bucket", action="store_true",
+                    help="group each optimizer step's micro*accum samples by length into micro-batches (less padding)")
     ap.add_argument("--accum", type=int, default=16)
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--warmup", type=int, default=50)
@@ -573,12 +575,27 @@ def main():
     log = open(f"{a.out}/train.log", "a")
     agg, t_last = {}, time.time()
     for step in range(total):
-        for _ in range(a.accum):
-            if cursor + a.micro > len(order):
+        if a.bucket:
+            # The same per_step samples per optimizer step, grouped by length into micro-batches (`length_buckets`):
+            # every sample keeps weight 1/per_step, only the padding inside a micro-batch shrinks.
+            if cursor + per_step > len(order):
                 rng.shuffle(order)
                 cursor, epoch = 0, epoch + 1
-            samples = [make_sample(recs[k], a.data, a.track, memory, rng) for k in order[cursor:cursor + a.micro]]
-            cursor += a.micro
+            step_samples = [make_sample(recs[k], a.data, a.track, memory, rng) for k in order[cursor:cursor + per_step]]
+            cursor += per_step
+            micro_batches = [[step_samples[j] for j in g]
+                             for g in length_buckets([len(x[0]) for x in step_samples], a.micro)]
+        else:
+            micro_batches = None
+        for mb in range(a.accum):
+            if micro_batches is not None:
+                samples = micro_batches[mb]
+            else:
+                if cursor + a.micro > len(order):
+                    rng.shuffle(order)
+                    cursor, epoch = 0, epoch + 1
+                samples = [make_sample(recs[k], a.data, a.track, memory, rng) for k in order[cursor:cursor + a.micro]]
+                cursor += a.micro
             loss, stats = forward(model, eng, M, samples, backward_scale=1.0 / a.accum)
             stats["loss"] = [float(loss.detach())]
             for k, v in stats.items():
