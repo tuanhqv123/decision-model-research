@@ -21,6 +21,7 @@ D1_MEM_FRAC (cap on this process's GPU memory, protects the other services on th
 """
 import base64
 import io
+import json
 import os
 import sys
 import threading
@@ -33,7 +34,8 @@ from PIL import Image
 from pydantic import BaseModel
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ac_common import (CONTRACTS, FROM_OPTION, SPATIAL, app_intent_for, build_state, chosen_element,  # noqa: E402
+from ac_common import (decode_app_choice, restrict_first_step,  # noqa: E402  (v2a)
+                       CONTRACTS, FROM_OPTION, SPATIAL, app_intent_for, build_state, chosen_element,  # noqa: E402
                         element_centre, element_inputs, element_label, pick_candidates, questions_for,
                         read_contract)
 from train_d1 import load_image  # noqa: E402
@@ -43,6 +45,14 @@ MODEL_PATH = os.environ.get("D1_MODEL", "models/e2-final")
 # weights says which; a checkpoint without one is refused at startup rather than served a guess
 # (2026-11-10: E2, trained on 8 options + 5 questions, was being served 9 + 6).
 CONTRACT = read_contract(MODEL_PATH)
+# App-choice contracts (v2a): the app is chosen from AndroidWorld's launchable apps (`aw_apps.json`, written by
+# benchmarks/aw/hostscripts/make_aw_app_rows.py inside the emulator container). Refused at startup if missing.
+APPS = None
+if CONTRACTS[CONTRACT["name"]].get("app_choice"):
+    _apps_path = os.environ.get("D1_APPS") or os.path.join(MODEL_PATH, "aw_apps.json")
+    if not os.path.exists(_apps_path):
+        raise SystemExit(f"contract {CONTRACT['name']!r} chooses the app from a list; {_apps_path} is missing")
+    APPS = [x["name"] for x in json.load(open(_apps_path))]
 TOKEN = os.environ.get("D1_API_TOKEN", "")
 if os.environ.get("D1_MEM_FRAC"):
     torch.cuda.set_per_process_memory_fraction(float(os.environ["D1_MEM_FRAC"]))
@@ -128,8 +138,8 @@ def build_request(contract, goal, history, nodes, W, H, track):
         if track != "VA":
             raise ValueError(f"contract {contract['name']!r} is served on track 'VA' only, not {track!r}")
         state, kept, keep_idx = element_inputs(goal, history, nodes, W, H, contract["element_rule"])
-        return {"track": "VA", "state": state, "questions": questions_for(contract, "VA", kept), "cands": None,
-                "kept": kept, "keep_idx": keep_idx}
+        return {"track": "VA", "state": state, "questions": questions_for(contract, "VA", kept, apps=APPS),
+                "cands": None, "kept": kept, "keep_idx": keep_idx}
     cands = None
     if track == "VA":
         cands = pick_candidates(_normalise(nodes), W, H)
@@ -236,14 +246,21 @@ def _respond_elements(req, ans, built, W, H, model_ms, t_req):
     """The response of an element contract (v2): the point is the CHOSEN element's centre; there is no box."""
     probs = ans["action"]["probabilities"]
     action = FROM_OPTION[ans["action"]["choice"]]
-    conf = float(ans["action"].get("confidence") or max(probs.values()))
-    out = {"action": action, "confidence": conf, "probabilities": {FROM_OPTION[k]: float(v) for k, v in probs.items()},
+    by_action = {FROM_OPTION[k]: float(v) for k, v in probs.items()}
+    restricted = False
+    if APPS is not None:  # v2a: the first step of a task (empty history) may only launch an app or declare done
+        first = restrict_first_step(by_action, req.history)
+        restricted, action = first != action, first
+    conf = float(by_action.get(action) or max(by_action.values()))
+    out = {"action": action, "confidence": conf, "probabilities": by_action,
            "track": built["track"], "screen": [W, H], "contract": CONTRACT["name"],
-           "element_rule": CONTRACT["element_rule"], "n_elements": len(built["kept"])}
+           "element_rule": CONTRACT["element_rule"], "n_elements": len(built["kept"]),
+           "first_step_restricted": restricted}
     if action == "scroll":
         out["direction"] = ans["scroll_dir"]["choice"]
     elif action == "open_app":
-        out["app_name"] = ans["app_name"].get("text") or ""
+        out["app_name"] = (decode_app_choice(ans.get("app_name"), APPS) if APPS is not None
+                           else ans["app_name"].get("text") or "")
     elif action == "type_text":
         out["text"] = ans["type_text"].get("text") or ""
     el = ans.get("target_el") or {}   # absent only when no element survived the rule

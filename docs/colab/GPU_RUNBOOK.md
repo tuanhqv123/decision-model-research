@@ -79,7 +79,7 @@ GPU options greyed out / CPU-only even on **web UI** because the account is **no
 - **Disk:** GPU_HOST_A is ~96–98% full and hosts prod postgres → keep only its replica's transient sync
   files there; the local-SGD hub and checkpoints live on GPU_HOST_B. `vllm-venv` removed everywhere (unused).
 - **Server-to-server copies:** `ssh-add -t <sec> <keys>` on the Mac + `ssh -A`, never copy private keys to servers.
-  5090 ↔ 49.213.89.x moves ~3.8GB in ~1–2 min; both 4090s share [ip]/24.
+  5090 ↔ [ip] moves ~3.8GB in ~1–2 min; both 4090s share [ip]/24.
 - **RAM:** never load the full a11y records (8GB JSON) into Python on a prod host — use `compact_*.jsonl` (lazy strings).
 - **d1-2B training:** grad-ckpt cuts peak 17.1→8.2GB/sample; the backward MUST run inside `state_attention` (gate:
   `test_gradckpt.py`, rel grad diff 6e-4). 4090 ≈ 2.2 samples/s (micro 2, ~2.5k tokens/sample).

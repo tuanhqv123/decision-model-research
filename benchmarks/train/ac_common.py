@@ -415,10 +415,14 @@ CONTRACTS = {
     # (`target_el`), there is no `target_box`. VA only. `element_rule` is stamped on the checkpoint and
     # the server applies the stamped rule, so a later change of this default cannot reach old weights.
     "v2": {"actions": tuple(ACTIONS), "is_done": False, "elements": True, "element_rule": "cap40_reading"},
+    # 2026-11-11 v2a: v2 + the app is CHOSEN from a list of app names given with the request (AndroidWorld's
+    # launchable apps at serving; the gold app + distractors in training), instead of copied out of the goal.
+    "v2a": {"actions": tuple(ACTIONS), "is_done": False, "elements": True, "element_rule": "cap40_reading",
+            "app_choice": True},
 }
 DEFAULT_CONTRACT = "v1"
 # Contracts that exist for one track only (a v2 state is meaningless without the element list).
-CONTRACT_TRACKS = {"v2": ("VA",)}
+CONTRACT_TRACKS = {"v2": ("VA",), "v2a": ("VA",)}
 
 
 def write_contract(ckpt_dir, name, tracks=("V",)):
@@ -454,11 +458,11 @@ def load_contract(ckpt_dir):
     return read_contract(ckpt_dir)["name"]
 
 
-def questions_for(doc, track, cands=None):
+def questions_for(doc, track, cands=None, apps=None):
     """Questions for a request against a checkpoint's contract; refuses a track it was never trained on."""
     if track not in doc["tracks"]:
         raise ValueError(f"track {track!r} was not trained for this checkpoint (trained: {doc['tracks']})")
-    return build_questions(track, cands, contract=doc["name"])
+    return build_questions(track, cands, contract=doc["name"], apps=apps)
 
 
 def render_history_line(action):
@@ -475,14 +479,14 @@ def render_history_line(action):
     return f"{at} {val}" if val else at
 
 
-def build_questions(track, cands=None, contract=DEFAULT_CONTRACT):
+def build_questions(track, cands=None, contract=DEFAULT_CONTRACT, apps=None):
     """Ordered dict of API-JSON questions for `contract`. Order is fixed; train, eval and serve share it.
 
     Contract v2: `cands` is the KEPT canonical element list (`element_inputs`), and the element is chosen,
     not boxed — action, target_el, scroll_dir, app_name, type_text."""
     spec = CONTRACTS[contract]
     if spec.get("elements"):
-        return _build_questions_v2(track, cands, spec)
+        return _build_questions_v2(track, cands, spec, apps)
     q = {
         "action": {"type": "choice", "instructions": "The next UI action to perform to advance the task.",
                    "criteria": {k: ACTIONS[k] for k in spec["actions"]}},
@@ -501,7 +505,7 @@ def build_questions(track, cands=None, contract=DEFAULT_CONTRACT):
     return q
 
 
-def _build_questions_v2(track, kept, spec):
+def _build_questions_v2(track, kept, spec, apps=None):
     if track != "VA":
         raise ValueError(f"an element-list contract is asked on the VA track only, not {track!r}")
     q = {"action": {"type": "choice", "instructions": "The next UI action to perform to advance the task.",
@@ -511,9 +515,55 @@ def _build_questions_v2(track, kept, spec):
                           "criteria": option_texts(kept)}
     q["scroll_dir"] = {"type": "choice", "instructions": "The direction, if the next action is a scroll.",
                        "criteria": dict(SCROLL)}
-    q["app_name"] = {"type": "text", "instructions": "The exact app name, if the next action launches an app."}
+    if spec.get("app_choice"):
+        if not apps:
+            raise ValueError("contract with app_choice needs the list of app names (`apps`)")
+        q["app_name"] = {"type": "choice", "instructions": "The app to launch, if the next action launches an app.",
+                         "criteria": {str(i): name for i, name in enumerate(apps, 1)}}
+    else:
+        q["app_name"] = {"type": "text", "instructions": "The exact app name, if the next action launches an app."}
     q["type_text"] = {"type": "text", "instructions": "The exact text to type, if the next action enters text."}
     return q
+
+
+def app_options(gold, vocab, k=24, seed=""):
+    """The app names offered for one training row: the gold app (if any) plus k distractors from `vocab`,
+    in an order fixed by `seed` (same row -> same list, every epoch). Case-insensitive de-duplication."""
+    import random as _r
+    rng = _r.Random(str(seed))
+    gold_l = (gold or "").strip().lower()
+    pool = sorted({v for v in vocab if v and v.strip().lower() != gold_l}, key=str.lower)
+    picks = rng.sample(pool, min(k, len(pool)))
+    out = ([gold.strip()] if gold_l else []) + picks
+    rng.shuffle(out)
+    return out
+
+
+def row_app_options(rec, vocab, k=24):
+    """The app list one row is trained/evaluated with: its own `apps` (generator rows carry AndroidWorld's list),
+    else the gold app (open_app rows) plus k distractors, seeded by (episode, step)."""
+    if rec.get("apps"):
+        return list(rec["apps"])
+    a = rec.get("action") or {}
+    gold = a.get("app_name") if a.get("action_type") == "open_app" else None
+    return app_options(gold, vocab, k=k, seed="%s:%s" % (rec.get("ep"), rec.get("step")))
+
+
+def decode_app_choice(answer, apps):
+    """App name a `choice` answer names, or "" when the key is not a listed option."""
+    key = str((answer or {}).get("choice") or "")
+    return apps[int(key) - 1] if key.isdigit() and 1 <= int(key) <= len(apps) else ""
+
+
+FIRST_STEP_ACTIONS = ("open_app", "status")
+
+
+def restrict_first_step(probs, history):
+    """At the first step of a task (empty history) the agent may only launch an app or declare done: every
+    AndroidWorld task starts on the home screen, whose few icons rarely include the task's app. Later steps:
+    plain argmax. `probs` maps action names to probabilities."""
+    pool = probs if history else ({a: p for a, p in probs.items() if a in FIRST_STEP_ACTIONS} or probs)
+    return max(pool, key=pool.get)
 
 
 def find_span(state, text):
@@ -774,12 +824,20 @@ def gold_target_el_v2(rec, keep_idx, kept):
     return None, "none"
 
 
-def gold_answers_v2(rec, kept, keep_idx, state):
+def gold_answers_v2(rec, kept, keep_idx, state, apps=None, contract="v2"):
     """Supervision for one row under contract v2 -> (gold, target_el case). `kept`/`keep_idx` come from
     `element_inputs` on this row; the action, scroll, app and text golds are v1's (`gold_answers`)."""
     g = gold_answers(rec, "V", None, state)
     g.pop("target_box", None)
     g.pop("is_done", None)
+    if CONTRACTS[contract].get("app_choice"):
+        g.pop("app_name", None)
+        a = rec.get("action") or {}
+        if a.get("action_type") == "open_app" and apps:
+            want = (a.get("app_name") or "").strip().lower()
+            hit = [i for i, name in enumerate(apps, 1) if name.strip().lower() == want]
+            if hit:
+                g["app_name"] = str(hit[0])
     el, case = gold_target_el_v2(rec, keep_idx, kept)
     if el is not None:
         g["target_el"] = el

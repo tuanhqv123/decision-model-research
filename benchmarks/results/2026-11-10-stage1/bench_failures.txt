@@ -1,0 +1,41 @@
+== r1s0 task-completion episodes 90 failed 76
+  open_app: 128, empty name 15, long span (>3 words) 4: [('', 15), ('file task.html in Downloads in the file manager', 3), ('sdk_gphone_x86_64 storage area to the DCIM', 1)]
+  first open_app names the task's app (heuristic map): wrong in 31 of 88 task-completion episodes
+  clicks with no visible effect: 557/920 = 61%
+  action mix: {'click': '67.2%', 'open_app': '9.3%', 'scroll': '7.9%', 'wait': '6.7%', 'status': '5.9%', 'type_text': '2.9%'}
+  tasks that (heuristically) need typing 20; model typed at least once in 14; success 0
+   wrong or unnamed app                          23  e.g. ['BrowserDraw', 'BrowserMaze', 'BrowserMultiply', 'CameraTakePhoto']
+   said done early (<=half budget)               21  e.g. ['AudioRecorderRecordAudio', 'ExpenseDeleteDuplicates2', 'ExpenseDeleteDuplicates', 'ExpenseDeleteMultiple2']
+   said done late, wrong                         12  e.g. ['AudioRecorderRecordAudioWithFileName', 'MarkorCreateFolder', 'MarkorCreateNoteAndSms', 'MarkorDeleteNote']
+   ran out of steps, stuck in a no-effect loop   10  e.g. ['ExpenseAddMultiple', 'ExpenseAddSingle', 'MarkorCreateNoteFromClipboard', 'MarkorDeleteAllNotes']
+   never typed (task needs text)                  6  e.g. ['RetroCreatePlaylist', 'RetroPlaylistDuration', 'RetroSavePlaylist', 'SimpleSmsReply']
+   ran out of steps, moving                       4  e.g. ['MarkorAddNoteHeader', 'MarkorChangeNoteContent', 'OsmAndFavorite', 'OsmAndMarker']
+== r1s1 task-completion episodes 90 failed 73
+  open_app: 140, empty name 30, long span (>3 words) 4: [('', 30), ('Downloads in the file manager', 3), ('sdk_gphone_x86_64 storage area to the DCIM', 1)]
+  first open_app names the task's app (heuristic map): wrong in 31 of 88 task-completion episodes
+  clicks with no visible effect: 430/753 = 57%
+  action mix: {'click': '65.8%', 'open_app': '12.2%', 'wait': '8.6%', 'status': '8.0%', 'type_text': '3.4%', 'scroll': '1.8%', 'navigate_back': '0.1%'}
+  tasks that (heuristically) need typing 20; model typed at least once in 13; success 0
+   said done early (<=half budget)               26  e.g. ['AudioRecorderRecordAudioWithFileName', 'ExpenseDeleteDuplicates2', 'ExpenseDeleteDuplicates', 'ExpenseDeleteMultiple2']
+   wrong or unnamed app                          23  e.g. ['BrowserDraw', 'BrowserMaze', 'BrowserMultiply', 'CameraTakePhoto']
+   ran out of steps, stuck in a no-effect loop   12  e.g. ['ExpenseAddMultiple', 'ExpenseAddSingle', 'MarkorAddNoteHeader', 'MarkorChangeNoteContent']
+   never typed (task needs text)                  7  e.g. ['MarkorCreateFolder', 'MarkorMergeNotes', 'RetroCreatePlaylist', 'RetroPlaylistDuration']
+   said done late, wrong                          4  e.g. ['MarkorCreateNoteAndSms', 'RetroPlayingQueue', 'SimpleCalendarAddOneEventTomorrow', 'SimpleSmsSendReceivedAddress']
+   ran out of steps, moving                       1  e.g. ['SimpleDrawProCreateDrawing']
+== b0prime task-completion episodes 90 failed 82
+  open_app: 253, empty name 152, long span (>3 words) 0: [('', 152)]
+  first open_app names the task's app (heuristic map): wrong in 32 of 88 task-completion episodes
+  clicks with no visible effect: 906/1406 = 64%
+  action mix: {'click': '69.6%', 'open_app': '12.5%', 'scroll': '7.4%', 'wait': '5.0%', 'type_text': '2.0%', 'navigate_back': '1.7%', 'status': '1.7%'}
+  tasks that (heuristically) need typing 20; model typed at least once in 11; success 0
+   wrong or unnamed app                          30  e.g. ['BrowserDraw', 'BrowserMaze', 'BrowserMultiply', 'CameraTakePhoto']
+   ran out of steps, stuck in a no-effect loop   25  e.g. ['ExpenseAddMultiple', 'ExpenseAddSingle', 'ExpenseDeleteDuplicates', 'ExpenseDeleteMultiple2']
+   ran out of steps, moving                      10  e.g. ['AudioRecorderRecordAudio', 'MarkorChangeNoteContent', 'MarkorTranscribeReceipt', 'OpenAppTaskEval']
+   never typed (task needs text)                  9  e.g. ['MarkorAddNoteHeader', 'MarkorCreateFolder', 'MarkorMergeNotes', 'RetroCreatePlaylist']
+   said done early (<=half budget)                5  e.g. ['ExpenseDeleteDuplicates2', 'RecipeAddMultipleRecipes', 'RecipeAddSingleRecipe', 'RecipeDeleteMultipleRecipes']
+   said done late, wrong                          3  e.g. ['MarkorCreateNote', 'RecipeDeleteSingleWithRecipeWithNoise', 'SimpleSmsResend']
+
+open_app names AndroidWorld cannot resolve (adb_utils.get_adb_activity -> None): ['', 'Downloads in the file manager', 'Notifications', 'Podcasts', 'SMS Messenger', 'WiFi', 'bluetooth', 'brightness', 'clipboard', 'contact', 'file manager', 'file task.html in Downloads in the file manager', 'new contact', 'photo', 'sdk_gphone_x86_64 storage area to the DCIM', 'stopwatch', 'timer', 'video', 'wifi']
+r1s0     open_app 128, unresolvable 37 (29%); task-completion episodes where no open_app resolved 24, successes among them 8
+r1s1     open_app 140, unresolvable 50 (36%); task-completion episodes where no open_app resolved 25, successes among them 8
+b0prime  open_app 253, unresolvable 165 (65%); task-completion episodes where no open_app resolved 27, successes among them 2

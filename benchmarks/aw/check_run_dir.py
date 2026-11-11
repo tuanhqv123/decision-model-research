@@ -3,7 +3,7 @@
 
 Why this exists. On 2026-11-10 a chunk of the 116-task suite crashed at the 14th step of an
 episode with `sqlite3.OperationalError: attempt to write a readonly database`. The cause was
-ownership, not logic: `index.db` had been rebuilt by the HOST user (`aivision`, mode 644) while
+ownership, not logic: `index.db` had been rebuilt by the HOST user (`[user]`, mode 644) while
 the container runs as `root`. SQLite needs to create journal/WAL files next to the database, so
 a database the container can read is not enough — the DIRECTORY must be writable too, by the
 right uid. File mode `644` plus a different owner is the failure, and it only shows up when the

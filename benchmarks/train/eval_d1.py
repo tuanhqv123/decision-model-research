@@ -20,8 +20,8 @@ import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ac_common import (CONTRACTS, DEFAULT_CONTRACT, FROM_OPTION, SPATIAL, build_questions,  # noqa: E402
-                       build_state, chosen_element, element_centre, element_inputs, pick_candidates,
-                       read_contract)
+                       build_state, chosen_element, decode_app_choice, element_centre, element_inputs,
+                       pick_candidates, read_contract, row_app_options)
 from run_acv2 import score_row  # noqa: E402
 
 
@@ -42,9 +42,11 @@ def val_row(rec, data):
     row = {"episode_id": rec["ep"], "step": rec["step"], "goal": rec["goal"], "previous_actions": rec["history"],
            "screenshot": os.path.join(data, rec["img"]), "screenshot_width": rec["W"],
            "screenshot_height": rec["H"], "action": dict(rec["action"]), "accessibility_tree": tree,
-           "cands": rec["cands"]}
+           "cands": rec.get("cands")}
     if "elements" in rec:  # R2 corpus (compact_*_v2.jsonl): the AndroidWorld element list contract v2 reads
         row["elements"] = rec["elements"]
+    if rec.get("apps"):  # generator rows (compact_awgen_*.jsonl) carry AndroidWorld's app list
+        row["apps"] = rec["apps"]
     return row
 
 
@@ -83,7 +85,8 @@ def load_rows(path, shots, data, val=False, limit=0, val_set="validation"):
 
 
 @torch.no_grad()
-def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=DEFAULT_CONTRACT, element_rule=None):
+def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=DEFAULT_CONTRACT, element_rule=None,
+             app_vocab=None):
     """Serve every row through model.system_one_batch and score it. Returns (records, summary).
 
     Element contract (v2): every row must carry `elements` (the R2 validation file); the state and questions are
@@ -95,7 +98,8 @@ def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=
         if track != "VA":
             raise ValueError(f"contract {contract!r} is evaluated on the VA track only, not {track!r}")
         element_rule = element_rule or CONTRACTS[contract]["element_rule"]
-        return _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image)
+        return _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image,
+                                  app_vocab or [])
     out, t_start = [], time.time()
     for b0 in range(0, len(rows), batch):
         chunk = rows[b0:b0 + batch]
@@ -183,7 +187,8 @@ def _value(at, ans):
     return None
 
 
-def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image):
+def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image, app_vocab=()):
+    app_choice = bool(CONTRACTS[contract].get("app_choice"))
     out, t_start = [], time.time()
     for b0 in range(0, len(rows), batch):
         chunk = rows[b0:b0 + batch]
@@ -196,17 +201,20 @@ def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule
             W, H = r["screenshot_width"], r["screenshot_height"]
             state, kept, keep_idx = element_inputs(r["goal"], r.get("previous_actions") or [], r["elements"], W, H,
                                                    element_rule)
-            reqs.append((state, build_questions("VA", kept, contract=contract), [load_image(r["screenshot"])]))
-            metas.append((r, kept, keep_idx))
+            apps = (row_app_options({"ep": r["episode_id"], "step": r["step"], "action": r["action"],
+                                     "apps": r.get("apps")}, app_vocab) if app_choice else None)
+            reqs.append((state, build_questions("VA", kept, contract=contract, apps=apps),
+                         [load_image(r["screenshot"])]))
+            metas.append((r, kept, keep_idx, apps))
         t0 = time.time()
         res = model.system_one_batch(reqs)
         lat = (time.time() - t0) * 1000 / len(chunk)
-        for (r, kept, keep_idx), rs in zip(metas, res):
+        for (r, kept, keep_idx, apps), rs in zip(metas, res):
             ans = rs["answers"]
             at = FROM_OPTION[ans["action"]["choice"]]
             probs = ans["action"]["probabilities"]
             conf = float(ans["action"].get("confidence") or max(probs.values()))
-            value = _value(at, ans)
+            value = decode_app_choice(ans.get("app_name"), apps) if (app_choice and at == "open_app") else _value(at, ans)
             el_id, e = chosen_element(ans, kept)
             el_pt = element_centre(e) if e is not None else None
             pt = el_pt if at in SPATIAL else None  # the leaderboard scorer reads no point for non-spatial actions
@@ -279,8 +287,12 @@ def main():
     if a.traj_k:
         from train_d1 import TRAJ, build_traj_memory
         TRAJ["mem"], TRAJ["k"] = build_traj_memory(a.data), a.traj_k
+    vocab_path = os.path.join(a.ckpt, "app_vocab.json")
+    app_vocab = json.load(open(vocab_path)) if os.path.exists(vocab_path) else None
+    if CONTRACTS[contract].get("app_choice") and not app_vocab:
+        raise SystemExit(f"contract {contract!r} chooses the app from a list; {vocab_path} is missing")
     out, summ = run_eval(model, rows, a.track, memory, a.batch, a.save_readouts, contract=contract,
-                         element_rule=rule)
+                         element_rule=rule, app_vocab=app_vocab)
     summ["tag"] = a.tag
     summ["contract"] = contract
     os.makedirs(a.out, exist_ok=True)

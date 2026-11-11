@@ -28,11 +28,12 @@ import torch.nn.functional as F
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ac_common import (CONTRACTS, DEFAULT_CONTRACT, AppMemory, TrajMemory, build_questions,  # noqa: E402
-                       build_state, element_inputs, gold_answers, gold_answers_v2, write_contract)
+                       build_state, element_inputs, gold_answers, gold_answers_v2, row_app_options,
+                       write_contract)
 
 # Run-wide settings that every sample must agree on. `contract` names the question set (ac_common.CONTRACTS)
 # and is stamped on every saved checkpoint as contract.json, which the server requires.
-RUN = {"contract": DEFAULT_CONTRACT}
+RUN = {"contract": DEFAULT_CONTRACT, "app_vocab": []}
 
 
 def tracks_of(track):
@@ -185,9 +186,23 @@ def make_sample_elements(rec, data, track, spec):
         raise ValueError(f"contract {RUN['contract']!r} needs rows with an `elements` list (compact_*_v2.jsonl)")
     state, kept, keep_idx = element_inputs(rec["goal"], rec.get("history"), rec["elements"], rec["W"], rec["H"],
                                            spec["element_rule"])
-    qs = build_questions("VA", kept, contract=RUN["contract"])
-    gold, _ = gold_answers_v2(rec, kept, keep_idx, state)
+    apps = row_app_options(rec, RUN["app_vocab"]) if spec.get("app_choice") else None
+    qs = build_questions("VA", kept, contract=RUN["contract"], apps=apps)
+    gold, _ = gold_answers_v2(rec, kept, keep_idx, state, apps=apps, contract=RUN["contract"])
     return state, qs, gold, load_image(f"{data}/{rec['img']}")
+
+
+def app_vocab(recs, aw_apps_path):
+    """Distractor pool for app choice: every gold app name of the training rows + AndroidWorld's app names."""
+    names = set()
+    for line in recs:
+        if '"open_app"' in line:
+            a = json.loads(line).get("action") or {}
+            if a.get("action_type") == "open_app" and a.get("app_name"):
+                names.add(a["app_name"].strip())
+    if os.path.exists(aw_apps_path):
+        names |= {x["name"] for x in json.load(open(aw_apps_path))}
+    return sorted(names, key=str.lower)
 
 
 def load_image(path, width=None):
@@ -437,6 +452,9 @@ def sync_round(model, sync, k, log):
 def save(model, out, base_dir):
     os.makedirs(out, exist_ok=True)
     model.save_pretrained(out, safe_serialization=True)
+    if RUN.get("app_vocab"):  # app-choice contracts: the distractor pool travels with the weights (eval reads it)
+        with open(os.path.join(out, "app_vocab.json"), "w") as fh:
+            json.dump(RUN["app_vocab"], fh)
     os.remove(f"{out}/config.json")  # architecture unchanged: keep the release's own config (its auto_map/d1_* keys)
     for f in os.listdir(base_dir):  # remote code, tokenizer, processor, calibration
         src = os.path.realpath(f"{base_dir}/{f}")
@@ -521,6 +539,9 @@ def main():
           flush=True)
 
     recs = load_records(a.data, a.train_set, a.limit, a.seed)
+    if CONTRACTS[a.contract].get("app_choice"):
+        RUN["app_vocab"] = app_vocab(recs, f"{a.data}/aw_apps.json")
+        print(f"[apps] app-choice vocabulary: {len(RUN['app_vocab'])} names", flush=True)
     si, sn = map(int, a.shard.split("/"))
     recs = recs[si::sn]
     # An element contract's state has no memory line (the server never adds one), so none is built.

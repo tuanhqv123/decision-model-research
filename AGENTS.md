@@ -90,6 +90,60 @@ Topic list (each maps to a file under `notes/`):
   - **Caveat to surface honestly:** calibration ↔ risk-gating tradeoff; multimodal adds calibration not accuracy on this benchmark.
 
 ### Program log (keep this in sync — every background run/result goes here)
+- **2026-11-11 — WHY R1 IS AT 12–15%, AND THE FIX BEING TRAINED (v2a).** Diagnosis (`docs/research/2026-11-11-DIAGNOSIS-why-low.md`,
+  summary in Vietnamese `docs/research/2026-11-11-SUMMARY-vi.md`): 25 IR tasks need `answer` (absent); the app name was copied
+  from the goal, so 29–36% of R1's `open_app` names cannot be launched and 24–25 task-completion tasks never start; the model
+  predicts pixels, not elements (30–37% of clicks hit non-interactive elements); premature `status` (103/171 wrong val dones are
+  one step before the end). **v2a** (contract: element chosen from the AW element list, app chosen from the emulator's 33
+  launchable apps, first step restricted to open_app/status) trains on cur15k_v2 + 1,736 goal→app rows from AndroidWorld's own
+  generator (no task run; 19 templates held out); pre-registration `PRE-REG-2026-11-11-v2a.md`. **Record corrections:** raw
+  AndroidControl has no `status` action (ours, `preprocess_ac.py:126-128`); full AC train has 4,416 episodes (32%) of AW task
+  kinds (not ~22%); stored AC images are 720 px (an 858 run would upsample). R1 stopped at 2/3 seeds (operator) — no claim.
+  Data sources AMEX/AndroidLab/OS-Atlas examined from files and dropped. Infra: `sweep_infra.py`, `watchdog_runbench.sh`.
+- **2026-11-11 (prior-art sweep) — F10 IS FALSE, T-A LOSES "FIRST", AND THE T-C PREMISE IS A PUBLISHED THEOREM.**
+  Five read-only subagents swept the class the repo had not searched: **low-visibility work** — leaderboards, GitHub,
+  vendor grey literature, workshop/thesis/non-English papers, 2026 preprints with no citation count. Note:
+  `docs/research/2026-11-11-PRIORART-insignificant-sweep.md`; slices in `outputs/2026-11-11-priorart-{A..E}-*.md`.
+  (a) **F10 corrected.** The official AndroidWorld leaderboard was checked: **47 rows, zero decision models** (the
+  sheet's own taxonomy has only "Model" = one LLM call and "AI agent" = multi-call, so it cannot express our
+  artifact; Jev-Mobile was never submitted). But a typed decision model **has** been measured on the official
+  protocol: *When Faster Decisions Do Not Make Better Agents* (arXiv 2610.13092) reports AndroidWorld 116 tasks × 3
+  runs, **T3A 57.47 → 44.25** with a decision model (9 gains / 55 losses), FastAgent 50.00 → 31.90 (27/90);
+  decision latency −73.9…−81.5% but **per-task time −10.6% / +0.7%** (Table 8). So the "no standalone
+  decision-model result" sentence must be rewritten; what nobody ran is the **matched** (same family/size/rows/
+  harness) one-pass-vs-generation pair.
+  (b) **T-A loses "first" and half its hypothesis.** The same paper's Fig. 2b already plots the deficit by
+  AndroidWorld step budget, and the deficit is **12.5 / 15.3 pp even in the shortest stratum** — "keeps short-task
+  competence" is contradicted by the closest analogue; pre-register a **uniform deficit** as the expected outcome.
+  GUI-JEPA (2610.36877) already runs the matched offline comparison (0.50B decoder-free vs a self-SFT'd
+  Qwen2.5-VL-7B, 2.8–4.0× faster) and matches contract v3's shape (element-id choice, goal-span copy, one batched
+  pass); Liquid AI already demoed a zero-token d1 web agent.
+  (c) **T-C must be narrowed.** *Per-Step Conformal Calibration Does Not Transfer to Agent Trajectories*
+  (EMNLP 2026 main 1808) proves and quantifies it: nominal 10% → trajectory miscoverage 29.5% (T=3) to 83.5%
+  (T=15), mean 50.7%. Argus (NeurIPS 2026 D&B) independently reproduces threshold non-transfer (ρ +0.08
+  [−0.219, +0.373]) and *Last Step Matters* (EMNLP 2026 main 475) gives early-uncertainty AUROC < 0.60. Surviving
+  T-C residue: the **per-action no-effect** instantiation, AUROC on a held-out task split, labels from a
+  deterministic changed/no-change diff (VeriGUI trains a `NO_CHANGE` head from exactly those labels; CEB and
+  Outcome-Grounded fit gates from other verified labels). No coverage–risk curve or certificate exists **on
+  AndroidWorld**; VeriCUA has a decision-rate number (82% decided, 95.1% decided accuracy, FPR 7.7%).
+  (d) **Design constraints now citable.** SparkVLA (2608.16172, Table 3): an independent stop head caps at ≈80%
+  while `Stop` inside the candidate ranking reaches **96.65%** (SR 42.53 → 47.12) — contract v3 already wires
+  `status` inside the `action` choice, which is now a citation. StepReflect (2608.05587) learns a transition head
+  from **882 transitions, 41.4% negative → 82.16%**; A3RM needs positives oversampled ×4; a learned multi-feature
+  stopper is **≤ a scalar** on hard settings (LearnStop 2606.30852). Element track needs three additions it does not
+  have: a **BM25 baseline** (LEX, Findings EMNLP 2026: R@1 0.557 beats five dense encoders), label-type
+  stratification, and an **element-text-masked ablation** (22–38 R@1). Closest 3B one-call AndroidWorld baseline is
+  **AppVLM** (2502.06395): 37.8% (82/116, 3 seeds, 0.91 s/step) and Table 4 = AC-only 11.4 / AW-rollouts-only 22.4 /
+  both 37.8, i.e. our Task 9 ablation already run with seeds.
+  (e) **Surviving claims:** matched one-pass-vs-generation pair; verified no-effect masking by re-ranking the
+  model's own option distribution; a per-action no-effect gate from deterministic labels with a coverage–risk
+  certificate on AndroidWorld; app choice as a classification over the launchable-app list (no prior system passes
+  an app list; M3A's own source says an uninstalled name does nothing); candidate-cap recall measured live.
+  (f) **One arithmetic discrepancy, reported not closed:** IR tasks are **25** (registry-derived and counted in
+  `benchmarks/aw/hostscripts/aw116_answer_only.txt`) but R3 Task 4's answer-type decomposition sums to **26**
+  (STRING 16 + NUMBER 8 + DATE 1 + TIME 1). Resolve from `tasks.textproto` before the `answer` head ships.
+  All five slice agents were read-only; nothing in the harness, the model or the plan files was modified by this
+  sweep.
 - **2026-11-10 (4th) — FIRST PAIRED ANDROIDWORLD RESULT UNDER THE OFFICIAL PROTOCOL (one seed; no claim).**
   B0′ (E2, overlay hidden) and R1 s0 (contract v1) both ran all 116 tasks on the same host and instances.
   Pre-registered analysis (`paired_sr.py`, frozen in `da5d3eb8`): **R1 12.2% (14/115) vs B0′ 7.0% (8/115)**,
@@ -755,7 +809,7 @@ check_record.py            158/158
 verify_paper.py            69 assertions, exit 0
 verify_audit_objections.py ALL OBJECTIONS CLOSED
 verify_compound_accuracy.py ALL CHECKS PASS
-benchmarks/aw/tests        245 passed, 43 skipped
+benchmarks/aw/tests        249 passed, 43 skipped
 ```
 <!-- GATES:END -->
 Dated program-log entries below describe what was true **on their date** and quote the counts of that moment
