@@ -1,0 +1,40 @@
+rows 827 episodes 137 mean step acc 61.91%
+
+per gold type (3 seeds pooled): n per seed, step acc, type acc, grounding among spatial rows
+  click          n=420 step 57.7% type 89.2% grounding 64.7%
+  status         n=137 step 86.9% type 86.9% grounding -
+  scroll         n= 86 step 53.9% type 55.0% grounding -
+  wait           n= 56 step 30.4% type 30.4% grounding -
+  type_text      n= 53 step 61.0% type 83.6% grounding 72.9%
+  open_app       n= 45 step 83.0% type 94.8% grounding -
+  navigate_back  n= 29 step 60.9% type 60.9% grounding -
+  long_press     n=  1 step 0.0% type 0.0% grounding -
+
+wrong-type confusions gold -> predicted (share of all type errors):
+  click         -> status         22 rows/seed (14%)
+  wait          -> status         20 rows/seed (12%)
+  scroll        -> click          17 rows/seed (11%)
+  scroll        -> status         14 rows/seed (9%)
+  wait          -> click          13 rows/seed (8%)
+  status        -> click          11 rows/seed (7%)
+  click         -> scroll         10 rows/seed (6%)
+  click         -> navigate_back   8 rows/seed (5%)
+  type_text     -> click           7 rows/seed (5%)
+  navigate_back -> click           7 rows/seed (4%)
+
+wrong rows 945: wrong type 52%, right type wrong target/value 48%
+  right type, wrong detail, by gold type (3 seeds): {'open_app': 16, 'click': 397, 'type_text': 36, 'scroll': 3}
+
+step accuracy by position in the episode:
+  first step n=137 acc 63.7%
+  middle     n=553 acc 55.3%
+  last step  n=137 acc 86.9%
+
+rows right in 0/1/2/3 of the 3 seeds: [238, 76, 79, 434]
+mean confidence right 0.88, wrong 0.77
+seed 0 episodes with EVERY step right: 15/137 {'1-2': '4/7', '3-4': '7/43', '5-8': '4/66', '9+': '0/21'}
+        premature `status` rows (gold not status): 56
+seed 1 episodes with EVERY step right: 17/137 {'1-2': '4/7', '3-4': '10/43', '5-8': '3/66', '9+': '0/21'}
+        premature `status` rows (gold not status): 59
+seed 2 episodes with EVERY step right: 15/137 {'1-2': '5/7', '3-4': '5/43', '5-8': '5/66', '9+': '0/21'}
+        premature `status` rows (gold not status): 56

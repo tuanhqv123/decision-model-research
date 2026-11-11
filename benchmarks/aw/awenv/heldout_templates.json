@@ -1,0 +1,21 @@
+[
+ "BrowserMultiply",
+ "ClockTimerEntry",
+ "ExpenseDeleteDuplicates",
+ "ExpenseDeleteMultiple2",
+ "MarkorCreateFolder",
+ "MarkorDeleteNewestNote",
+ "MarkorMergeNotes",
+ "OsmAndTrack",
+ "RecipeDeleteDuplicateRecipes",
+ "RecipeDeleteMultipleRecipes",
+ "RecipeDeleteSingleRecipe",
+ "RetroPlaylistDuration",
+ "SimpleCalendarAddOneEventRelativeDay",
+ "SimpleCalendarDeleteEvents",
+ "SimpleSmsResend",
+ "SystemBluetoothTurnOn",
+ "SystemBrightnessMaxVerify",
+ "SystemWifiTurnOff",
+ "SystemWifiTurnOnVerify"
+]

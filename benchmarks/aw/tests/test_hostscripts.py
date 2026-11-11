@@ -75,3 +75,77 @@ def test_scored_count_of_a_fresh_run_dir_is_zero_and_creates_nothing(tmp_path):
     os.makedirs(tmp_path / "fresh")
     assert _count(str(tmp_path / "fresh")) == 0
     assert os.listdir(str(tmp_path / "fresh")) == []
+
+
+# ---- sweep_infra: an emulator that dies mid-chunk must not leave "scored" episodes behind --------------------------
+import importlib.util  # noqa: E402
+import json  # noqa: E402
+
+
+def _load_sweep():
+    spec = importlib.util.spec_from_file_location("sweep_infra", os.path.join(HERE, "..", "hostscripts", "sweep_infra.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _episode(run, eid, **res):
+    os.makedirs(os.path.join(run, "episodes"), exist_ok=True)
+    with open(os.path.join(run, "episodes", eid + ".jsonl"), "w") as fp:
+        fp.write(json.dumps({"type": "step"}) + "\n")
+        fp.write(json.dumps(dict({"type": "result", "episode_id": eid, "task_name": eid.upper()}, **res)) + "\n")
+    db = sqlite3.connect(os.path.join(run, "index.db"))
+    db.execute("CREATE TABLE IF NOT EXISTS episodes (episode_id TEXT, task_name TEXT, status TEXT)")
+    db.execute("INSERT INTO episodes VALUES (?,?,?)", (eid, eid.upper(), "ok"))
+    db.commit()
+
+
+def test_sweep_sets_aside_dead_emulator_episodes_and_keeps_real_outcomes(tmp_path):
+    sw = _load_sweep()
+    run = str(tmp_path)
+    _episode(run, "good", score=1.0, env_crash=False, setup_error=None)
+    _episode(run, "crashed", score=None, env_crash=True, setup_error=None)
+    _episode(run, "adbdead", score=None, env_crash=True, setup_error="AdbControllerError: adb: device 'emulator-5554' not found")
+    _episode(run, "realsetup", score=None, env_crash=False, setup_error="no such table: map_markers")
+    moved = sw.sweep(run, max_retries=2)
+    assert sorted(moved) == ["adbdead", "crashed"]
+    assert sorted(os.listdir(os.path.join(run, "episodes"))) == ["good.jsonl", "realsetup.jsonl"]
+    assert len([f for f in os.listdir(os.path.join(run, "abandoned_infra")) if f.endswith(".jsonl")]) == 2  # never deleted
+    ids = [r[0] for r in sqlite3.connect(os.path.join(run, "index.db")).execute("select episode_id from episodes")]
+    assert sorted(ids) == ["good", "realsetup"]  # so resumption will run the two again
+
+
+def test_sweep_gives_up_after_max_retries_so_a_task_that_kills_the_emulator_is_not_retried_forever(tmp_path):
+    sw = _load_sweep()
+    run = str(tmp_path)
+    for attempt in range(3):
+        _episode(run, "killer", score=None, env_crash=True, setup_error=None)
+        moved = sw.sweep(run, max_retries=2)
+        assert (moved == ["killer"]) == (attempt < 2)
+        if attempt == 2:  # third time the episode stays, recorded as the crash it is
+            assert os.path.exists(os.path.join(run, "episodes", "killer.jsonl"))
+        else:
+            assert not os.path.exists(os.path.join(run, "episodes", "killer.jsonl"))
+        db = sqlite3.connect(os.path.join(run, "index.db"))
+        db.execute("DELETE FROM episodes WHERE episode_id='killer'") if attempt == 2 else None
+        db.commit()
+
+
+def test_sweep_always_retries_a_victim_of_an_earlier_death(tmp_path):
+    """An episode that never started because the emulator was ALREADY dead (setup AdbControllerError, 0 steps) is not
+    a result about its task; it must be re-run however often that happens, unlike the task that killed the emulator."""
+    sw = _load_sweep()
+    run = str(tmp_path)
+    for attempt in range(4):
+        _episode(run, "victim", score=None, env_crash=True, n_steps=0,
+                 setup_error="AdbControllerError: adb: device 'emulator-5554' not found")
+        assert sw.sweep(run, max_retries=2) == ["victim"]
+
+
+def test_sweep_writes_the_emulator_log_when_it_sets_something_aside(tmp_path):
+    sw = _load_sweep()
+    run = str(tmp_path)
+    _episode(run, "crashed", score=None, env_crash=True, n_steps=8, setup_error=None)
+    sw.sweep(run, max_retries=2, emulator_log=lambda: "qemu: fatal\n")
+    logs = [f for f in os.listdir(os.path.join(run, "abandoned_infra")) if f.startswith("emu_log_")]
+    assert len(logs) == 1 and open(os.path.join(run, "abandoned_infra", logs[0])).read() == "qemu: fatal\n"
