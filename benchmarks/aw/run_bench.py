@@ -38,6 +38,31 @@ class ConfigError(RuntimeError):
     """A config that would produce an uninterpretable run."""
 
 
+TRAINING_IMG_WIDTH = 720  # every checkpoint since 2026-11-11 is trained on 720-px screenshots (stored AC width)
+
+
+def model_format_error(health: Dict[str, Any], history_format: str, img_width: int = TRAINING_IMG_WIDTH):
+    """Why the served checkpoint cannot be run with this harness config, or None.
+
+    The model's `/health` names its contract; a contract with `history: v3` reads v3 history lines (element + effect)
+    and every other contract reads v1 lines. The harness writes whatever `model.history_format` says, and the server
+    resizes screenshots to its `D1_IMG_W`. A disagreement on either would run all 116 tasks on inputs the checkpoint
+    never saw, and still print a number (2026-11-11)."""
+    from awenv import agent as _agent  # noqa: F401  (puts train/ on sys.path)
+    from ac_common import CONTRACTS
+    name = health.get("contract")
+    if name not in CONTRACTS:
+        return "served checkpoint reports contract %r, which this harness does not know" % (name,)
+    need = CONTRACTS[name].get("history", "v1")
+    if need != history_format:
+        return ("served checkpoint speaks contract %r, which reads %s history lines, but model.history_format is %r"
+                % (name, need, history_format))
+    served = health.get("img_width")
+    if served != img_width:
+        return "served image width is %r px but the checkpoint was trained at %d px (set D1_IMG_W)" % (served, img_width)
+    return None
+
+
 @dataclass
 class Plan:
     protocol: str
@@ -264,6 +289,11 @@ def run(plan: Plan, run_root: str, limit: Optional[int] = None,
     cfg = plan.config
     model_cfg = cfg["model"]
     client = ModelClient(base_url=model_cfg.get("url"), token=model_cfg.get("token"))
+    if plan.agent not in ("wait", "random", "status_now"):
+        err = model_format_error(client.health(), str(model_cfg.get("history_format", "v1")),
+                                 int(model_cfg.get("img_width", TRAINING_IMG_WIDTH)))
+        if err:
+            raise ConfigError(err)
     registry = _build_task_registry(cfg)
     validate_task_names([s.task_name for s in plan.specs], list(registry))
     env = _build_env(cfg)
