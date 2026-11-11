@@ -22,7 +22,7 @@ a judge-driven data loop, a 50-step horizon, a 12-action space), **not** RL and 
 | | status |
 |---|---|
 | Value brief (`outputs/calibrated-decision-value.md` + `.provenance.md`) | **DONE** — 39 sources (31 external / 8 internal), all cited, pre-registered 5/5 |
-| Claim audit — 64.32%→64.07%, grounding 56.50→56.05, coverage 96.9% | **DONE** — 11 retractions bannered; `verify_paper.py` 69 assertions |
+| Claim audit — 64.32%→64.07%, grounding **56.50 (step-705) → 56.05 (938 pure)**, coverage 96.9% | **DONE** — 11 retractions bannered; `verify_paper.py` 69 assertions |
 | Stage-2 status-downweight arm | **DONE — NEGATIVE**, fails its frozen bar (val +1.09 p=0.44, test −3.27 p=0.15) |
 | Online blockers: Clock "crash", empty `app_name` | **DONE** — both root-caused and fixed; read slot probe 1/8 → 8/8 |
 | **AndroidWorld 116 tasks** | **PARTIAL — 104/116.** 12 never reached a usable device (accessibility forwarder degrades after hours); 12 ran but their checker raised. **Not a model limitation; a harness defect that is now fixed** |
@@ -80,7 +80,7 @@ benchmarks/aw/tests         135 passed, 35 skipped
 ```
 
 **Four auditor rounds rejected completion, and every objection was real.** They named, in order: stale
-numbers in HANDOFF/GOAL; the missing `app_name` repair; the unbuilt-vs-built confusion; the 1,344/1,394 drift;
+numbers in HANDOFF/GOAL; the missing `app_name` repair; the unbuilt-vs-built confusion; a superseded emitted-action count that disagreed with the artifact;
 the `get_state` defect above; and finally a HANDOFF line concatenated three times by a sync regex that matched
 its own output. **The lesson to carry forward is not "the checks pass" — it is that each round found something
 the previous round's checks could not see.** Every one of those is now asserted, but assume there is a next one.

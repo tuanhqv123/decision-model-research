@@ -7,6 +7,7 @@
    successes split into those floor tasks and tasks beyond the floor.
 2. SUCCESS BY STEP BUDGET (task-completion tasks only; the 25 answer-only tasks score 0 by construction).
 3. TERMINATION: how often each arm declares done, and what a wrong 'done' looks like.
+4. Whether the confidence at the done step separates a right done from a wrong one.
 """
 import json
 import os
@@ -20,10 +21,33 @@ from paired_sr import ANSWER_ONLY_FILE, TASKS_FILE, _excluded, _names, _success,
 BUDGETS = os.path.join(HERE, "..", "..", "aw", "hostscripts", "aw116_budgets.json")
 
 
+def auroc(pos, neg):
+    return sum((a > b) + 0.5 * (a == b) for a in pos for b in neg) / (len(pos) * len(neg))
+
+
+def done_confidence(ao):
+    """4. Does the confidence at the `status` step separate a right 'done' from a wrong one? (task-completion tasks,
+    one episode = one point, bootstrap over episodes, 2000 resamples, seed 0)"""
+    import random
+    for nm in ("r1s0", "r1s1", "b0prime"):
+        right, wrong = [], []
+        for e in json.load(open(os.path.join(HERE, nm + "_export.json"))):
+            if not e["declared"] or e.get("setup_error") or e["task"] in ao:
+                continue
+            st = [s for s in e["steps"] if s["action"] == "status"]
+            if st and st[-1].get("conf") is not None:
+                (right if (e.get("score") or 0) > 0.5 else wrong).append(float(st[-1]["conf"]))
+        random.seed(0)
+        bs = sorted(auroc([random.choice(right) for _ in right], [random.choice(wrong) for _ in wrong]) for _ in range(2000))
+        print("   %-8s done right %d, wrong %d: AUROC(confidence at done -> right) %.3f [%.3f, %.3f]; mean confidence right %.2f, wrong %.2f" % (
+            nm, len(right), len(wrong), auroc(right, wrong), bs[50], bs[1949], sum(right) / len(right), sum(wrong) / len(wrong)))
+
+
 def main():
     q = load_results(os.path.join(HERE, "q11_status_now_results.jsonl"))
     arms = {"B0'": load_results(os.path.join(HERE, "b0prime_results.jsonl")),
-            "R1 s0": load_results(os.path.join(HERE, "r1s0_results.jsonl"))}
+            "R1 s0": load_results(os.path.join(HERE, "r1s0_results.jsonl")),
+            "R1 s1": load_results(os.path.join(HERE, "r1s1_results.jsonl"))}
     suite, ao = _names(TASKS_FILE), set(_names(ANSWER_ONLY_FILE))
     bud = {k: v["max_steps"] for k, v in json.load(open(BUDGETS)).items()}
     floor = sorted(t for t in suite if t in q and not _excluded(q[t]) and _success(q[t]))
@@ -48,7 +72,7 @@ def main():
             nm, len(done), len(tc), sum(_success(x) for x in done), len(wrong), 100 * wrong[len(wrong) // 2]))
         aod = [a[t] for t in suite if t in a and t in ao and not _excluded(a[t])]
         print("          answer-only: %d tasks, declared done %d, successes %d" % (len(aod), sum(x["declared_done"] for x in aod), sum(_success(x) for x in aod)))
-    for nm in ("r1s0", "b0prime"):
+    for nm in ("r1s0", "r1s1", "b0prime"):
         eps = json.load(open(os.path.join(HERE, nm + "_export.json")))
         for label, keep in (("wrong", lambda e: e["declared"] and not (e.get("score") or 0) > 0.5 and not e.get("setup_error")),
                             ("right", lambda e: e["declared"] and (e.get("score") or 0) > 0.5)):
@@ -57,6 +81,8 @@ def main():
             last = Counter(e["steps"][-2]["action"] if len(e["steps"]) > 1 else "(none)" for e in E)
             print("   %-8s %-5s done: %2d episodes, median acting steps before done %d, last action before done %s" % (
                 nm, label, len(E), n[len(n) // 2], last.most_common(3)))
+    print("4. Confidence at the done step (post-hoc; one seed, small n)")
+    done_confidence(ao)
 
 
 if __name__ == "__main__":

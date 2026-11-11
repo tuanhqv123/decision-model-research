@@ -1,15 +1,25 @@
 1. Floor split. Q11 successes (7 of 113 scored): ['RecipeDeleteMultipleRecipesWithConstraint', 'SystemBluetoothTurnOffVerify', 'SystemBluetoothTurnOnVerify', 'SystemBrightnessMaxVerify', 'SystemBrightnessMinVerify', 'SystemWifiTurnOn', 'SystemWifiTurnOnVerify']
    B0'     8 successes = 1 on floor tasks + 7 beyond; floor tasks missed: ['SystemBluetoothTurnOffVerify', 'SystemBluetoothTurnOnVerify', 'SystemBrightnessMaxVerify', 'SystemBrightnessMinVerify', 'SystemWifiTurnOn', 'SystemWifiTurnOnVerify']
    R1 s0  14 successes = 7 on floor tasks + 7 beyond; floor tasks missed: []
+   R1 s1  17 successes = 7 on floor tasks + 10 beyond; floor tasks missed: []
 2. Success by step budget (task-completion tasks)
    B0'    0-10: 4/25 | 11-20: 3/36 | 21-40: 1/18 | 41-999: 0/11
    R1 s0  0-10: 11/25 | 11-20: 2/36 | 21-40: 1/18 | 41-999: 0/11
+   R1 s1  0-10: 12/25 | 11-20: 4/36 | 21-40: 1/18 | 41-999: 0/11
 3. Termination (task-completion tasks)
    B0'    declared done 22 of 90; right 8, wrong 14 (median 46% of the step budget used when wrong)
           answer-only: 25 tasks, declared done 12, successes 0
    R1 s0  declared done 61 of 90; right 14, wrong 47 (median 36% of the step budget used when wrong)
           answer-only: 25 tasks, declared done 20, successes 0
+   R1 s1  declared done 67 of 90; right 17, wrong 50 (median 40% of the step budget used when wrong)
+          answer-only: 25 tasks, declared done 25, successes 0
    r1s0     wrong done: 67 episodes, median acting steps before done 4, last action before done [('click', 59), ('scroll', 4), ('type_text', 2)]
    r1s0     right done: 14 episodes, median acting steps before done 3, last action before done [('click', 13), ('open_app', 1)]
+   r1s1     wrong done: 75 episodes, median acting steps before done 4, last action before done [('click', 71), ('type_text', 2), ('open_app', 2)]
+   r1s1     right done: 17 episodes, median acting steps before done 4, last action before done [('click', 14), ('open_app', 2), ('scroll', 1)]
    b0prime  wrong done: 26 episodes, median acting steps before done 7, last action before done [('click', 23), ('scroll', 2), ('type_text', 1)]
    b0prime  right done:  8 episodes, median acting steps before done 10, last action before done [('click', 8)]
+4. Confidence at the done step (post-hoc; one seed, small n)
+   r1s0     done right 14, wrong 47: AUROC(confidence at done -> right) 0.782 [0.663, 0.889]; mean confidence right 0.85, wrong 0.66
+   r1s1     done right 17, wrong 50: AUROC(confidence at done -> right) 0.645 [0.471, 0.818]; mean confidence right 0.75, wrong 0.65
+   b0prime  done right 8, wrong 14: AUROC(confidence at done -> right) 0.643 [0.393, 0.866]; mean confidence right 0.56, wrong 0.52
