@@ -68,6 +68,25 @@ SCROLL = {"up": "content moves up (swipe up)", "down": "content moves down (swip
           "left": "content moves left", "right": "content moves right"}
 SPATIAL = ("click", "long_press", "type_text")
 
+# Contract v3 option texts. d1 shows a choice as `<code> <description>` and never the option name (prompt.py
+# `_option_line`, style "desc"), so the description carries the meaning. (2026-11-11: SCROLL above says the opposite of
+# what AC/AW `down` does — measured: content moves UP on 95% of 158 `down` rows. Kept only for v1/v2/v2a checkpoints.)
+ACTIONS_V3 = {
+    "click": "click: tap an element",
+    "write": "type_text: type text into a field",
+    "long_press": "long_press: press and hold an element",
+    "scroll": "scroll: scroll the screen in a direction",
+    "wait": "wait: wait for the screen to load or change",
+    "navigate_back": "navigate_back: press the Back button",
+    "navigate_home": "navigate_home: go to the home screen",
+    "open_app": "open_app: launch an app from the list",
+    "terminate": "status: the goal is fully achieved on this screen; end the task",
+}
+SCROLL_V3 = {"up": "up: reveal content above (content moves down)",
+             "down": "down: reveal content below (content moves up)",
+             "left": "left: reveal content on the left (content moves right)",
+             "right": "right: reveal content on the right (content moves left)"}
+
 
 def is_done_gold(is_terminal: bool) -> str:
     """The `noul` gold for 'has the task already been completed on this screen?'.
@@ -366,6 +385,12 @@ def option_texts(kept):
     return out
 
 
+def option_texts_v3(kept):
+    """Contract v3 `target_el` option texts: the head of the element's own state line, `[i] label | class`, so the
+    option the model scores names the same `[i]` it reads in the state (ids make every option distinct)."""
+    return {str(i): f"[{i}] {element_label(e)} | {e['class_short'] or '-'}" for i, e in enumerate(kept, 1)}
+
+
 def _pct(v, size):
     return round(100 * min(max(v, 0), size) / size)
 
@@ -453,6 +478,45 @@ def effect_changed(before, after):
     return keep(before) != keep(after)
 
 
+# AndroidWorld app names by package (= benchmarks/aw/awenv/aw_apps.json, pinned by a test). Contract v3 shows them in
+# "Current app:" so the state names an app the way the app-choice options do ("gmail (com.google.android.gm)").
+AW_APP_BY_PACKAGE = {
+    "com.android.chrome": "google chrome",
+    "com.android.settings": "settings",
+    "com.google.android.youtube": "youtube",
+    "com.android.vending": "google play",
+    "com.google.android.gm": "gmail",
+    "com.google.android.apps.maps": "google maps",
+    "com.google.android.apps.photos": "google photos",
+    "com.google.android.calendar": "google calendar",
+    "com.android.camera2": "camera",
+    "com.dimowner.audiorecorder": "audio recorder",
+    "com.google.android.apps.docs": "google drive",
+    "com.google.android.deskclock": "clock",
+    "com.google.android.googlequicksearchbox": "google search",
+    "com.google.android.contacts": "contacts",
+    "com.example.androidworld": "android world",
+    "com.google.android.documentsui": "files",
+    "net.gsantner.markor": "markor",
+    "ca.zgrs.clipper": "clipper",
+    "com.google.android.apps.messaging": "messages",
+    "com.simplemobiletools.smsmessenger": "simple sms messenger",
+    "com.google.android.dialer": "dialer",
+    "com.simplemobiletools.calendar.pro": "simple calendar pro",
+    "com.simplemobiletools.gallery.pro": "simple gallery pro",
+    "com.google.androidenv.miniwob": "miniwob",
+    "com.simplemobiletools.draw.pro": "simple draw pro",
+    "com.arduia.expense": "pro expense",
+    "com.flauschcode.broccoli": "broccoli",
+    "net.osmand": "osmand",
+    "org.tasks": "tasks",
+    "de.dennisguse.opentracks": "open tracks sports tracker",
+    "net.cozic.joplin": "joplin",
+    "org.videolan.vlc": "vlc",
+    "code.name.monkey.retromusic": "retro music",
+}
+
+
 def current_app(elements):
     """The app on screen: the most frequent package among non-system-UI elements; a launcher is `home screen`."""
     from collections import Counter
@@ -461,7 +525,9 @@ def current_app(elements):
     if not c:
         return "unknown"
     pkg = c.most_common(1)[0][0]
-    return "home screen" if pkg in LAUNCHERS else pkg
+    if pkg in LAUNCHERS:
+        return "home screen"
+    return f"{AW_APP_BY_PACKAGE[pkg]} ({pkg})" if pkg in AW_APP_BY_PACKAGE else pkg
 
 
 def build_state_v3(goal, entries, kept, W, H, app):
@@ -532,7 +598,7 @@ CONTRACTS = {
     # 2026-11-11 v3: v2a + the state says where the model is (progress, current app, previous actions with the element
     # acted on and whether the screen changed) — `element_inputs_v3`.
     "v3": {"actions": tuple(ACTIONS), "is_done": False, "elements": True, "element_rule": "cap40_reading_noime",
-           "app_choice": True, "history": "v3"},
+           "app_choice": True, "history": "v3", "option_texts": "v3"},
 }
 DEFAULT_CONTRACT = "v1"
 # Contracts that exist for one track only (a v2 state is meaningless without the element list).
@@ -622,13 +688,16 @@ def build_questions(track, cands=None, contract=DEFAULT_CONTRACT, apps=None):
 def _build_questions_v2(track, kept, spec, apps=None):
     if track != "VA":
         raise ValueError(f"an element-list contract is asked on the VA track only, not {track!r}")
+    v3 = spec.get("option_texts") == "v3"
+    acts, scroll, el_texts = (ACTIONS_V3, SCROLL_V3, option_texts_v3) if v3 else (ACTIONS, SCROLL, option_texts)
     q = {"action": {"type": "choice", "instructions": "The next UI action to perform to advance the task.",
-                    "criteria": {k: ACTIONS[k] for k in spec["actions"]}}}
+                    "criteria": {k: acts[k] for k in spec["actions"]}}}
     if kept:  # a choice needs at least one option; with none kept, a spatial action has no element
-        q["target_el"] = {"type": "choice", "instructions": "The element the next action acts on.",
-                          "criteria": option_texts(kept)}
+        q["target_el"] = {"type": "choice", "criteria": el_texts(kept), "instructions": (
+            "The element the next action acts on: its [id] in the element list." if v3 else
+            "The element the next action acts on.")}
     q["scroll_dir"] = {"type": "choice", "instructions": "The direction, if the next action is a scroll.",
-                       "criteria": dict(SCROLL)}
+                       "criteria": dict(scroll)}
     if spec.get("app_choice"):
         if not apps:
             raise ValueError("contract with app_choice needs the list of app names (`apps`)")
@@ -646,7 +715,7 @@ def app_options(gold, vocab, k=24, seed=""):
     import random as _r
     rng = _r.Random(str(seed))
     gold_l = (gold or "").strip().lower()
-    pool = sorted({v for v in vocab if v and v.strip().lower() != gold_l}, key=str.lower)
+    pool = sorted({v for v in vocab if v and v.strip().lower() != gold_l}, key=lambda n: (n.lower(), n))
     picks = rng.sample(pool, min(k, len(pool)))
     out = ([gold.strip()] if gold_l else []) + picks
     rng.shuffle(out)
