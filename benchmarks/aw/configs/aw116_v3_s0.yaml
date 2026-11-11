@@ -1,0 +1,26 @@
+# v3 seed 0 online (2026-11-11): contract v3 — v2a + state with progress, current app and previous actions with element and
+# effect (history_format v3), keyboard excluded from the list, v3 option texts. Track VA (elements sent). Harness awhV5.
+# Preflight with --expect-contract v3; run_bench refuses to start unless /health says contract v3 and img_width 720.
+protocol: aw-main-v1
+agent: d1_v3_s0
+checkpoint: v3_s0
+model:
+  url: http://172.17.0.1:8701
+  token: tok  # localhost-only API behind an SSH tunnel; not a secret
+  track: VA
+  return_readouts: true
+  history_format: v3
+  img_width: 720
+  done_threshold: 0.0
+environment:
+  url: http://127.0.0.1:5000
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+  emulator_setup: false
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  step_budgets_file: /tmp/budgets.json
+  tasks: all
