@@ -101,3 +101,24 @@ Termination: R1 s0 declares done on 61/90 task-completion tasks (14 right, 47 wr
 step budget) vs B0′ 22/90 (8 right, 14 wrong); a wrong done comes after a median 4 acting steps (R1) and a right one
 after 3 — the step count does not separate them. The 25 answer-only tasks score 0 for both (the model never emits an
 answer), a ceiling of 78.4%.
+
+## R1 seed 1 (`v1_s1`) vs B0′ — pre-registered, second of three seeds
+
+`paired_sr_s1.md` (frozen `paired_sr.py`): primary 116 — R1 s1 **14.8% (17/115)** [9.4, 22.4] vs B0′ 7.0% (8/115);
+**w = 12, l = 3**, sign test p = 0.035; 104-task sensitivity 15.5% vs 5.8%, w = 12, l = 2, p = 0.013; A1 |w−l| = 9 / 10.
+Every one of the 11 preflight health lines of the run names `v1_s1` (audit OK).
+
+| | R1 s0 | R1 s1 | B0′ |
+|---|---|---|---|
+| official SR (116) | 12.2% (14/115) | 14.8% (17/115) | 7.0% (8/115) |
+| w / l vs B0′ | 9 / 3 | 12 / 3 | — |
+| successes on the 7 floor tasks + beyond them (post-hoc) | 7 + 7 | 7 + **10** | 1 + 7 |
+| first-encounter repeat (A2-bis) | 41.2% [32.8, 50.2] | 36.4% [30.3, 44.0] | 65.8% [59.3, 73.3] |
+| typing share of decisions (A2) | 2.9% | **3.4%** | 2.0% |
+| declared done: right / wrong (task-completion) | 14 / 47 | 17 / 50 | 8 / 14 |
+
+Both seeds so far move SR the same way. **No claim yet:** §4 needs all three seeds and a pooled sign test; pooling the
+two seeds' counts would be 21 w / 6 l, but seed 2 is still running and the rule is pinned to three. Typing: seed 0 was
+within the 1-point band, seed 1 is +1.4 points above B0′ — the pre-registered "raises typing" prediction is mixed, and
+the absolute rate stays low. **The done-step confidence signal did not replicate:** AUROC(confidence at done → right)
+0.782 [0.663, 0.889] on seed 0 but 0.645 [0.471, 0.818] on seed 1 (CI includes 0.5) — no threshold may be fitted on it.
