@@ -216,6 +216,26 @@ def _history_line(dec: Dict[str, Any], mapped: MappedAction, ok: bool) -> str:
                                 "direction": dec.get("direction"), "app_name": dec.get("app_name")})
 
 
+def history_entry_v3_for_step(dec: Dict[str, Any], mapped: MappedAction, before_els: Optional[List[Dict[str, Any]]],
+                              after_els: Optional[List[Dict[str, Any]]]) -> str:
+    """The contract-v3 history line for one executed step — the SAME renderer and effect test training uses
+    (`ac_common.history_entry_with_label`, `ac_common.effect_changed`), so the line is identical to the one the
+    model learned from (`add_history_v3`). What EXECUTED is rendered: a substituted action (invalid -> `wait`)
+    names no element. The element is named by the server's `history_label` of the element the model chose."""
+    from ac_common import SPATIAL, canonical_element, effect_changed, history_entry_with_label
+    substituted = mapped.invalid or (mapped.reason is not None and not mapped.done)
+    if substituted and mapped.actions:
+        action, label = dict(mapped.actions[0]), None
+    else:
+        action = {"action_type": (dec.get("action") or "wait").strip().lower(), "text": dec.get("text"),
+                  "direction": dec.get("direction"), "app_name": dec.get("app_name")}
+        label = (dec.get("element") or {}).get("history_label") if action["action_type"] in SPATIAL else None
+    changed = None
+    if before_els is not None and after_els is not None:
+        changed = effect_changed([canonical_element(e) for e in before_els], [canonical_element(e) for e in after_els])
+    return history_entry_with_label(action, label, changed)
+
+
 class AgentCore:
     """One model, one environment, one step at a time."""
 
@@ -232,6 +252,7 @@ class AgentCore:
         done_threshold: float = 0.0,
         loop_break: bool = False,
         mask: bool = False,
+        history_format: str = "v1",
     ):
         self.model = model
         self.env = env
@@ -249,6 +270,11 @@ class AgentCore:
         # flag off the request, the decision and the execution are exactly what they were.
         self.mask = bool(mask)
         self._mask = NoEffectMask() if self.mask else None
+        # "v3": history entries say which element each action hit and whether the screen changed
+        # (`history_entry_v3_for_step`), for checkpoints of contract v3; "v1": the bare renderer.
+        if history_format not in ("v1", "v3"):
+            raise ValueError("history_format must be 'v1' or 'v3', not %r" % (history_format,))
+        self.history_format = history_format
         self.history: List[str] = []
         self._seen: List[Any] = []
         self._va_empty = 0
@@ -392,7 +418,8 @@ class AgentCore:
         # (class, text, bbox) of the a11y elements. A caret blink does not change it; navigating
         # to another screen does.
         before_struct = getattr(self, "_before_struct", None)
-        after_struct = self._structure()
+        after_els = self._read_elements()
+        after_struct = self._structure(after_els)
         struct_changed = (before_struct is None) or (after_struct != before_struct)
         screen_changed = after_hash != before_hash
         ui_changed = struct_changed
@@ -428,7 +455,8 @@ class AgentCore:
                 "env_reject": rejected,
                 "stuck_event": stuck_event,
                 "done": False,
-                "history_line": _history_line(executed_dec, mapped, ok),
+                "history_line": (history_entry_v3_for_step(executed_dec, mapped, before_els, after_els)
+                                 if self.history_format == "v3" else _history_line(executed_dec, mapped, ok)),
             }
         )
         # Exactly ONE history line per executed step, in the format training renders. The

@@ -28,7 +28,7 @@ import torch.nn.functional as F
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ac_common import (CONTRACTS, DEFAULT_CONTRACT, AppMemory, TrajMemory, build_questions,  # noqa: E402
-                       build_state, element_inputs, gold_answers, gold_answers_v2, length_buckets, row_app_options,
+                       build_state, element_inputs, element_inputs_v3, gold_answers, gold_answers_v2, length_buckets, row_app_options,
                        write_contract)
 
 # Run-wide settings that every sample must agree on. `contract` names the question set (ac_common.CONTRACTS)
@@ -184,8 +184,14 @@ def make_sample_elements(rec, data, track, spec):
         raise ValueError(f"contract {RUN['contract']!r} is trained on the VA track only, not {track!r}")
     if "elements" not in rec:
         raise ValueError(f"contract {RUN['contract']!r} needs rows with an `elements` list (compact_*_v2.jsonl)")
-    state, kept, keep_idx = element_inputs(rec["goal"], rec.get("history"), rec["elements"], rec["W"], rec["H"],
-                                           spec["element_rule"])
+    if spec.get("history") == "v3":
+        if "history_v3" not in rec:
+            raise ValueError(f"contract {RUN['contract']!r} needs rows with `history_v3` (add_history_v3.py)")
+        state, kept, keep_idx = element_inputs_v3(rec["goal"], rec["history_v3"], rec["elements"], rec["W"],
+                                                  rec["H"], spec["element_rule"])
+    else:
+        state, kept, keep_idx = element_inputs(rec["goal"], rec.get("history"), rec["elements"], rec["W"], rec["H"],
+                                               spec["element_rule"])
     apps = row_app_options(rec, RUN["app_vocab"]) if spec.get("app_choice") else None
     qs = build_questions("VA", kept, contract=RUN["contract"], apps=apps)
     gold, _ = gold_answers_v2(rec, kept, keep_idx, state, apps=apps, contract=RUN["contract"])
@@ -488,6 +494,8 @@ def main():
     ap.add_argument("--no-memory", action="store_true")
     ap.add_argument("--mem-frac", type=float, default=0.0, help="cap this process's share of GPU memory")
     ap.add_argument("--save-every", type=int, default=500)
+    ap.add_argument("--keep-ckpts", action="store_true",
+                    help="save each checkpoint to its own ckpt_<step> directory (choose the best on validation)")
     ap.add_argument("--grad-ckpt", action="store_true")
     ap.add_argument("--sync-dir", default="", help="local-SGD/DiLoCo: write rep_r<k>.safetensors every "
                     "--round-steps, wait for avg_r<k>.safetensors (made by sync_avg.sh), load it, continue")
@@ -622,8 +630,10 @@ def main():
         if a.eval_every and ((step + 1) % a.eval_every == 0 or step + 1 == total):
             best = periodic_eval(model, a, memory, step + 1, log, base_dir, best)
         if a.save_every and ((step + 1) % a.save_every == 0 or step + 1 == total):
-            save(model, f"{a.out}/ckpt", base_dir)
-            print(f"[save] step {step+1} -> {a.out}/ckpt", flush=True)
+            # --keep-ckpts: one directory per save, so the best one can be chosen on validation afterwards
+            dest = f"{a.out}/ckpt_{step + 1}" if a.keep_ckpts else f"{a.out}/ckpt"
+            save(model, dest, base_dir)
+            print(f"[save] step {step+1} -> {dest}", flush=True)
     print("TRAIN_DONE", flush=True)
 
 
