@@ -105,7 +105,7 @@ def test_keyboard_is_not_the_current_app_and_not_in_the_list():
     ime = "com.google.android.inputmethod.latin"
     els = [_el("Send", pkg="com.google.android.gm")] + [_el(k, cls="android.widget.FrameLayout", box=(i * 10, 2000, i * 10 + 9, 2100), pkg=ime) for i, k in enumerate("qwertyuiop")]
     canon = [A.canonical_element(e) for e in els]
-    assert A.current_app(canon) == "com.google.android.gm"
+    assert A.current_app(canon) == "gmail (com.google.android.gm)"
     kept, _ = A.select_elements(els, 1080, 2400, "cap40_reading_noime")
     assert [e["label"] for e in kept] == ["Send"]
     assert A.CONTRACTS["v3"]["element_rule"] == "cap40_reading_noime"

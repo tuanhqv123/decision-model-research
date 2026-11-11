@@ -102,3 +102,17 @@ def test_row_app_options_contains_the_gold_app_for_open_app_rows():
     row = _row("Open Spotify", {"action_type": "open_app", "app_name": "Spotify"})
     opts = A.row_app_options(row, ["Gmail", "Clock", "Settings"] + ["a%d" % i for i in range(40)], k=24)
     assert "Spotify" in opts and len(opts) == 25 and opts == A.row_app_options(row, ["Gmail", "Clock", "Settings"] + ["a%d" % i for i in range(40)], k=24)
+
+
+def test_app_vocab_and_options_do_not_depend_on_hash_order(tmp_path):
+    """Two names that differ only in case ("Keep notes" / "Keep Notes") must come out in one fixed order in every
+    process: the order used to follow set iteration, i.e. PYTHONHASHSEED (found 2026-11-11 by diffing two renders)."""
+    import subprocess
+    code = ("import sys; sys.path.insert(0, %r); import ac_common as A, train_d1 as T;"
+            "rows=['{\"action\": {\"action_type\": \"open_app\", \"app_name\": \"%%s\"}}' %% n for n in "
+            "['Keep notes','Keep Notes','Gmail','gmail','Zoom']];"
+            "v=T.app_vocab(rows, '/nonexistent'); print(v); print(A.app_options('Zoom', v, k=4, seed='1:2'))"
+            % os.path.dirname(os.path.abspath(__file__)))
+    outs = {subprocess.run([sys.executable, "-c", code], env=dict(os.environ, PYTHONHASHSEED=str(s)),
+                           capture_output=True, text=True).stdout for s in range(6)}
+    assert len(outs) == 1 and outs.pop().strip()

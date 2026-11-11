@@ -208,7 +208,7 @@ def app_vocab(recs, aw_apps_path):
                 names.add(a["app_name"].strip())
     if os.path.exists(aw_apps_path):
         names |= {x["name"] for x in json.load(open(aw_apps_path))}
-    return sorted(names, key=str.lower)
+    return sorted(names, key=lambda n: (n.lower(), n))  # case ties in a fixed order, not hash order
 
 
 def load_image(path, width=None):
