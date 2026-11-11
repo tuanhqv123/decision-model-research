@@ -555,6 +555,15 @@ def decode_app_choice(answer, apps):
     return apps[int(key) - 1] if key.isdigit() and 1 <= int(key) <= len(apps) else ""
 
 
+def length_buckets(lengths, micro):
+    """Indices grouped into micro-batches of `micro`, by length (shortest first), so a micro-batch pads to a similar
+    length — as d1's runner groups requests (`SystemOne._batches`). With micro == 1 the original order is kept."""
+    if micro <= 1:
+        return [[i] for i in range(len(lengths))]
+    order = sorted(range(len(lengths)), key=lambda i: (lengths[i], i))
+    return [order[k:k + micro] for k in range(0, len(order), micro)]
+
+
 FIRST_STEP_ACTIONS = ("open_app", "status")
 
 
