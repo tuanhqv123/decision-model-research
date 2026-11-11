@@ -23,6 +23,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 SPLIT = {}
+IMG_DIR = ""  # --eval-test: where the test screenshots are written (imgs/<ep>/<step>.jpg)
 COMPARED = ("action", "history", "target", "target_el_idx", "n_steps", "goal", "W", "H")
 
 
@@ -55,7 +56,7 @@ def do_shard(args):
     path, work, want = args
     import rebuild_ac_v2 as R
     import aw_extract as AX
-    from preprocess_ac import flat_nodes, records
+    from preprocess_ac import flat_nodes, records, save_screenshot
     from tfrecord import example_pb2
     name = os.path.basename(path)
     out_path = os.path.join(work, name + ".jsonl")
@@ -84,6 +85,12 @@ def do_shard(args):
                 fo.write(json.dumps({"ep": ep, "episode_error": {"n_actions": T, "shots": len(shots),
                                                                   "trees": len(trees)}}) + "\n")
                 continue
+            if split == "test" and IMG_DIR:
+                os.makedirs(os.path.join(IMG_DIR, "imgs", str(ep)), exist_ok=True)
+                for i, png in enumerate(shots):
+                    p = os.path.join(IMG_DIR, "imgs", str(ep), f"{i}.jpg")
+                    if not os.path.exists(p):
+                        save_screenshot(png, p)
             old = {i: flat_nodes(trees[i]) for i in range(T + 1)}
             oracle = R.v1_oracle(acts, old, W, H, set(range(T + 1)))
             forests = [AX.parse_forest(b) for b in trees]
@@ -98,8 +105,21 @@ def do_shard(args):
     return name, f"episodes={n_ep} rows={n_rows} bad={bad} {time.time() - t0:.0f}s", n_rows, bad
 
 
-def _init(split):
+def check_split_request(want, eval_test, out):
+    """AndroidControl test episodes are built only for SCORING: alone, in eval mode, into a file named `actest`.
+    Every other build must not contain them (they are never trained on)."""
+    if "test" not in want:
+        return
+    if not eval_test:
+        raise SystemExit("AndroidControl test episodes are never built for training (use --eval-test to score)")
+    if want != {"test"} or "actest" not in os.path.basename(out):
+        raise SystemExit("--eval-test builds the test split alone, into a file whose name contains 'actest'")
+
+
+def _init(split, img_dir=""):
+    global IMG_DIR
     SPLIT.update(split)
+    IMG_DIR = img_dir
 
 
 def cmd_build(a):
@@ -107,8 +127,7 @@ def cmd_build(a):
     splits = json.load(open(os.path.join(a.raw, "splits.json")))
     split = {e: s for s, eps in splits.items() for e in eps}
     want = set(a.split.split(","))
-    if "test" in want:
-        raise SystemExit("AndroidControl test episodes are never built for training")
+    check_split_request(want, a.eval_test, a.out)
     os.makedirs(a.work, exist_ok=True)
     shards = sorted(p for p in glob.glob(os.path.join(a.raw, "android_control-*-of-*"))
                     if not p.endswith(".done") and os.path.exists(p + ".done"))
@@ -117,7 +136,7 @@ def cmd_build(a):
         keep = set(json.load(open(a.episodes)))
         split = {e: s for e, s in split.items() if e in keep}
         print(f"[build] restricted to {len(split)} listed episodes", flush=True)
-    with Pool(a.workers, initializer=_init, initargs=(split,)) as pool:
+    with Pool(a.workers, initializer=_init, initargs=(split, a.img_dir if a.eval_test else "")) as pool:
         for name, msg, _, _ in pool.imap_unordered(do_shard, [(p, a.work, want) for p in shards]):
             print(f"[build] {name}: {msg}", flush=True)
     rows, errors = [], 0
@@ -130,7 +149,7 @@ def cmd_build(a):
                 rows.append(r)
     rows.sort(key=lambda r: (r["ep"], r["step"]))
     leak = [r["ep"] for r in rows if split.get(r["ep"]) == "test"]
-    if leak:
+    if leak and not a.eval_test:
         raise SystemExit(f"LEAK: {len(leak)} rows from test episodes")
     with open(a.out, "w") as fo:
         for r in rows:
@@ -171,6 +190,8 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--split", default="train")
     ap.add_argument("--episodes", default="", help="JSON list of episode ids to build (default: all of --split)")
+    ap.add_argument("--eval-test", action="store_true", help="build the TEST split for scoring only (actest file)")
+    ap.add_argument("--img-dir", default="", help="with --eval-test: write imgs/<ep>/<step>.jpg under this dir")
     ap.add_argument("--check")
     ap.add_argument("--against")
     a = ap.parse_args(argv)

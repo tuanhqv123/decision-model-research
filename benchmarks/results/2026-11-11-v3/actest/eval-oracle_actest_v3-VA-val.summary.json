@@ -1,0 +1,22 @@
+{
+ "track": "VA",
+ "n": 8444,
+ "step_acc": 0.8838,
+ "type_acc": 1.0,
+ "grounding": 0.8285,
+ "per_type": {
+  "click": "4225/5074",
+  "long_press": "6/9",
+  "navigate_back": "343/343",
+  "open_app": "607/608",
+  "scroll": "1211/1211",
+  "type_text": "504/632",
+  "wait": "567/567"
+ },
+ "ece_action": 0.1162,
+ "always_status": 0.0,
+ "eval_sec": 9,
+ "contract": "v3",
+ "element_rule": "cap40_reading_noime",
+ "tag": "oracle_actest_v3"
+}
