@@ -1,0 +1,16 @@
+{
+ "track": "VA",
+ "n": 463,
+ "step_acc": 1.0,
+ "type_acc": 1.0,
+ "grounding": 0.0,
+ "per_type": {
+  "open_app": "463/463"
+ },
+ "ece_action": 0.0009,
+ "always_status": 0.0,
+ "eval_sec": 45,
+ "contract": "v3",
+ "element_rule": "cap40_reading_noime",
+ "tag": "v3_s0_ckpt_1824_awgen_heldout_v3"
+}

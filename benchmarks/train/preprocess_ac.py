@@ -27,6 +27,14 @@ from multiprocessing import Pool
 IMG_W = 720  # stored width; 1080x2400 -> 720x1600 (aspect kept)
 
 
+def save_screenshot(png, path):
+    """THE screenshot renderer for every stored AndroidControl image (training, validation, and the test set used only
+    for scoring): RGB, IMG_W wide, aspect kept, bicubic, JPEG quality 90."""
+    from PIL import Image
+    im = Image.open(io.BytesIO(png)).convert("RGB")
+    im.resize((IMG_W, round(im.height * IMG_W / im.width)), Image.BICUBIC).save(path, quality=90)
+
+
 def records(path):
     with gzip.open(path, "rb") as f:
         while True:
@@ -117,8 +125,7 @@ def do_shard(args):
         for i, png in enumerate(shots):
             p = f"{out_dir}/imgs/{ep}/{i}.jpg"
             if not os.path.exists(p):
-                im = Image.open(io.BytesIO(png)).convert("RGB")
-                im.resize((IMG_W, round(im.height * IMG_W / im.width)), Image.BICUBIC).save(p, quality=90)
+                save_screenshot(png, p)
         last_click = None
         T = len(acts)
         for i in range(T + 1):

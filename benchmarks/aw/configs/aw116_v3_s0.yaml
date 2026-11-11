@@ -3,7 +3,7 @@
 # Preflight with --expect-contract v3; run_bench refuses to start unless /health says contract v3 and img_width 720.
 protocol: aw-main-v1
 agent: d1_v3_s0
-checkpoint: v3_s0
+checkpoint: v3_s0_ckpt1824
 model:
   url: http://172.17.0.1:8701
   token: tok  # localhost-only API behind an SSH tunnel; not a secret

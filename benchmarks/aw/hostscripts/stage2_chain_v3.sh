@@ -2,11 +2,11 @@
 # v3 seed 0 online (2026-11-11). Pre-registration: docs/research/PRE-REG-2026-11-11-v3.md.
 # Serves the v2a checkpoint (health must name it), runs the 116 tasks in chunks of 3 with the infra sweep after every
 # chunk, keeps a run_bench watchdog alive during the run, then audits every preflight health line.
-# Usage: stage2_chain_v3.sh   (the checkpoint must already be at ~/runs/v3_s0 on the serving host, with aw_apps.json)
+# Usage: stage2_chain_v3.sh   (the checkpoint must already be at ~/runs/v3_s0_ckpt1824 on the serving host; serving_v3 sets D1_APPS)
 set -u
 A=$HOME/aw
 LOG=$A/stage1_chain.log
-ID=aw116_v3_s0; CK=v3_s0; CONTRACT=v3
+ID=aw116_v3_s0; CK=v3_s0_ckpt1824; CONTRACT=v3   # ~/runs/v3_s0_ckpt1824 -> ~/runs/v3_s0/ckpt_1824 (final, pre-registered choice)
 note() { echo "$(date -u +%FT%TZ) $*" >> "$LOG"; }
 scored() { python3 "$A/scored_count.py" ~/awruns/$1; }
 health() { curl -s -m 5 -H "x-api-key: tok" http://172.17.0.1:8701/health; }
