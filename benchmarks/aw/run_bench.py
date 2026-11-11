@@ -334,6 +334,8 @@ def agent_kwargs(plan: Plan) -> Dict[str, Any]:
         # benchmarks/results/2026-11-10-episodic-s0-fails-prereg.md: `is_done` is a copy of
         # the action label on this corpus, so there is no threshold with an operating point.
         done_threshold=float(model_cfg.get("done_threshold", 0.0)),
+        # contract-v3 checkpoints read v3 history entries (element + effect); every other contract reads v1 lines
+        history_format=str(model_cfg.get("history_format", "v1")),
     )
 
 

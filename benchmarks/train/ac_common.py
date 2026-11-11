@@ -314,11 +314,28 @@ def rule_cap40_interactive_first(elements, W, H):
     return (_reading(elements, inter) + _reading(elements, labelled))[:ELEMENT_CAP]
 
 
+IME_PACKAGE = re.compile(r"inputmethod|keyboard|honeyboard|swiftkey|gboard", re.I)
+
+
+def is_keyboard(e):
+    """An on-screen keyboard key (IME window). Typing is one `type_text` action (AndroidWorld presses Enter itself), so
+    keys only take list slots: on the full-flow corpus the keyboard took a median 26 of the 40 slots on 14.6% of rows
+    while the gold element was a key on 55 of 17,756 spatial rows (2026-11-11)."""
+    return bool(IME_PACKAGE.search(e.get("package_name") or ""))
+
+
+def rule_cap40_reading_noime(elements, W, H):
+    """(e) (b) without keyboard keys, the first ELEMENT_CAP in reading order."""
+    return _reading(elements, [i for i in rule_interactive_or_labelled(elements, W, H)
+                               if not is_keyboard(elements[i])])[:ELEMENT_CAP]
+
+
 ELEMENT_RULES = {
     "all_app": rule_all_app,
     "interactive_or_labelled": rule_interactive_or_labelled,
     "cap40_reading": rule_cap40_reading,
     "cap40_interactive_first": rule_cap40_interactive_first,
+    "cap40_reading_noime": rule_cap40_reading_noime,
 }
 
 
@@ -375,6 +392,99 @@ def element_inputs(goal, history, elements, W, H, rule):
     return build_state_v2(goal, history, kept, W, H), kept, idx
 
 
+# ----------------------------------------------------------------------------- contract v3 state (2026-11-11)
+# The model is told where it is in the task: progress, the app on screen, and every previous action with the element
+# it acted on and whether the screen changed. ONE renderer for training rows (from full-flow episodes) and the live
+# agent (from the executed decision and the element lists before/after it).
+HISTORY_CAP = 12
+LAUNCHERS = ("com.google.android.apps.nexuslauncher", "com.android.launcher3", "com.android.launcher",
+             "com.sec.android.app.launcher", "com.miui.home", "com.huawei.android.launcher")
+
+
+def history_label(e):
+    """How a previous action's element is named in the history: its label, else its type in brackets."""
+    if e is None:
+        return None
+    return e["label"] if e["label"] else "[%s]" % (e["class_short"] or "element")
+
+
+def history_entry_v3(action, element, changed):
+    """One previous action: `click "Send" → screen changed`, `type_text "x" into "To" → no change`, `open_app clock`,
+    `scroll down`, `navigate_back`, `wait`. `element` is the canonical element acted on (or None); `changed` is
+    True / False / None (unknown -> no suffix)."""
+    return history_entry_with_label(action, history_label(element), changed)
+
+
+def history_entry_with_label(action, name, changed):
+    """`history_entry_v3` given the element's history label directly (the live agent gets it from the server's
+    response for the element the model chose; training computes it from the supervised kept element)."""
+    a = action or {}
+    at = {"input_text": "type_text"}.get(a.get("action_type") or "wait", a.get("action_type") or "wait")
+    if at in ("click", "long_press"):
+        line = '%s "%s"' % (at, name) if name and not name.startswith("[") else ("%s %s" % (at, name) if name else at)
+    elif at == "type_text":
+        line = 'type_text "%s"' % str(a.get("text") or "").strip()
+        if name:
+            line += (' into "%s"' % name) if not name.startswith("[") else " into %s" % name
+    elif at == "scroll":
+        line = "scroll %s" % (a.get("direction") or "").strip()
+    elif at == "open_app":
+        line = "open_app %s" % str(a.get("app_name") or "").strip()
+    else:
+        line = at
+    if changed is True:
+        line += " → screen changed"
+    elif changed is False:
+        line += " → no change"
+    return line.strip()
+
+
+def _effect_key(e):
+    b = e["bbox"] or {}
+    return (e["label"], e["class_short"], tuple(b.get(k) for k in ("x_min", "y_min", "x_max", "y_max")),
+            tuple(sorted(e["flags"].items())))
+
+
+def effect_changed(before, after):
+    """Did the screen change? Multiset of canonical elements (label, type, box, state flags) before vs after, system
+    UI ignored (its clock and battery change on their own). Training and serving call this same function."""
+    from collections import Counter
+    keep = lambda xs: Counter(_effect_key(e) for e in xs if e["package_name"] != SYSTEM_UI)  # noqa: E731
+    return keep(before) != keep(after)
+
+
+def current_app(elements):
+    """The app on screen: the most frequent package among non-system-UI elements; a launcher is `home screen`."""
+    from collections import Counter
+    c = Counter(e["package_name"] for e in elements
+                if e["package_name"] and e["package_name"] != SYSTEM_UI and not is_keyboard(e))
+    if not c:
+        return "unknown"
+    pkg = c.most_common(1)[0][0]
+    return "home screen" if pkg in LAUNCHERS else pkg
+
+
+def build_state_v3(goal, entries, kept, W, H, app):
+    n = len(entries)
+    lines = [f"Goal: {goal}", f"Progress: step {n + 1}, {n} actions done", f"Current app: {app}"]
+    if entries:
+        lines.append("Previous actions:")
+        shown = entries[-HISTORY_CAP:]
+        if n > len(shown):
+            lines.append(f"({n - len(shown)} earlier actions not shown)")
+        lines += [f"Step {n - len(shown) + i}: {e}" for i, e in enumerate(shown, 1)]
+    else:
+        lines.append("Previous actions: none")
+    return "\n".join(lines + [V2_ELEMENTS_HEADER] + render_elements(kept, W, H))
+
+
+def element_inputs_v3(goal, entries, elements, W, H, rule):
+    """(state, kept, kept indices) for one screen under contract v3 — train, eval and serve call this."""
+    canon = [canonical_element(d) for d in elements or []]
+    kept, idx = select_elements(elements, W, H, rule)
+    return build_state_v3(goal, list(entries or []), kept, W, H, current_app(canon)), kept, idx
+
+
 def element_centre(e):
     """Where a tap on this element lands: its bbox centre (AndroidWorld taps elements the same way)."""
     b = e["bbox"]
@@ -419,10 +529,14 @@ CONTRACTS = {
     # launchable apps at serving; the gold app + distractors in training), instead of copied out of the goal.
     "v2a": {"actions": tuple(ACTIONS), "is_done": False, "elements": True, "element_rule": "cap40_reading",
             "app_choice": True},
+    # 2026-11-11 v3: v2a + the state says where the model is (progress, current app, previous actions with the element
+    # acted on and whether the screen changed) — `element_inputs_v3`.
+    "v3": {"actions": tuple(ACTIONS), "is_done": False, "elements": True, "element_rule": "cap40_reading_noime",
+           "app_choice": True, "history": "v3"},
 }
 DEFAULT_CONTRACT = "v1"
 # Contracts that exist for one track only (a v2 state is meaningless without the element list).
-CONTRACT_TRACKS = {"v2": ("VA",), "v2a": ("VA",)}
+CONTRACT_TRACKS = {"v2": ("VA",), "v2a": ("VA",), "v3": ("VA",)}
 
 
 def write_contract(ckpt_dir, name, tracks=("V",)):

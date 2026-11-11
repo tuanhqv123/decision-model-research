@@ -36,7 +36,7 @@ from pydantic import BaseModel
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ac_common import (decode_app_choice, restrict_first_step,  # noqa: E402  (v2a)
                        CONTRACTS, FROM_OPTION, SPATIAL, app_intent_for, build_state, chosen_element,  # noqa: E402
-                        element_centre, element_inputs, element_label, pick_candidates, questions_for,
+                        element_centre, element_inputs, element_inputs_v3, element_label, history_label, pick_candidates, questions_for,
                         read_contract)
 from train_d1 import load_image  # noqa: E402
 
@@ -137,7 +137,10 @@ def build_request(contract, goal, history, nodes, W, H, track):
                              "with track 'VA'); there is no fallback without them")
         if track != "VA":
             raise ValueError(f"contract {contract['name']!r} is served on track 'VA' only, not {track!r}")
-        state, kept, keep_idx = element_inputs(goal, history, nodes, W, H, contract["element_rule"])
+        if CONTRACTS[contract["name"]].get("history") == "v3":  # history = the agent's v3 entries, verbatim
+            state, kept, keep_idx = element_inputs_v3(goal, history, nodes, W, H, contract["element_rule"])
+        else:
+            state, kept, keep_idx = element_inputs(goal, history, nodes, W, H, contract["element_rule"])
         return {"track": "VA", "state": state, "questions": questions_for(contract, "VA", kept, apps=APPS),
                 "cands": None, "kept": kept, "keep_idx": keep_idx}
     cands = None
@@ -266,6 +269,7 @@ def _respond_elements(req, ans, built, W, H, model_ms, t_req):
     el = ans.get("target_el") or {}   # absent only when no element survived the rule
     el_id, e = chosen_element(ans, built["kept"])
     out["element"] = {"idx": el_id, "label": element_label(e) if e is not None else None,
+                      "history_label": history_label(e) if e is not None else None,
                       "confidence": el.get("confidence"),
                       "aw_index": built["keep_idx"][el_id - 1] if el_id is not None else None}
     point = None

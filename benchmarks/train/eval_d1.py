@@ -20,7 +20,7 @@ import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ac_common import (CONTRACTS, DEFAULT_CONTRACT, FROM_OPTION, SPATIAL, build_questions,  # noqa: E402
-                       build_state, chosen_element, decode_app_choice, element_centre, element_inputs,
+                       build_state, chosen_element, decode_app_choice, element_centre, element_inputs, element_inputs_v3,
                        pick_candidates, read_contract, row_app_options)
 from run_acv2 import score_row  # noqa: E402
 
@@ -45,6 +45,8 @@ def val_row(rec, data):
            "cands": rec.get("cands")}
     if "elements" in rec:  # R2 corpus (compact_*_v2.jsonl): the AndroidWorld element list contract v2 reads
         row["elements"] = rec["elements"]
+    if "history_v3" in rec:  # contract v3 rows (add_history_v3.py)
+        row["history_v3"] = rec["history_v3"]
     if rec.get("apps"):  # generator rows (compact_awgen_*.jsonl) carry AndroidWorld's app list
         row["apps"] = rec["apps"]
     return row
@@ -199,8 +201,11 @@ def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule
                                  "(--val --val-set validation_v2); this row has none (the AC-v2 398 test rows carry "
                                  f"none): episode {r.get('episode_id')} step {r.get('step')}")
             W, H = r["screenshot_width"], r["screenshot_height"]
-            state, kept, keep_idx = element_inputs(r["goal"], r.get("previous_actions") or [], r["elements"], W, H,
-                                                   element_rule)
+            if CONTRACTS[contract].get("history") == "v3":
+                state, kept, keep_idx = element_inputs_v3(r["goal"], r["history_v3"], r["elements"], W, H, element_rule)
+            else:
+                state, kept, keep_idx = element_inputs(r["goal"], r.get("previous_actions") or [], r["elements"], W, H,
+                                                       element_rule)
             apps = (row_app_options({"ep": r["episode_id"], "step": r["step"], "action": r["action"],
                                      "apps": r.get("apps")}, app_vocab) if app_choice else None)
             reqs.append((state, build_questions("VA", kept, contract=contract, apps=apps),
