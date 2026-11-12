@@ -1,10 +1,11 @@
 # Arm B (2026-11-12, PLAN-FIX §4): weight merge 0.7*v3 + 0.3*v4 (no training; chosen on validation 65.4%) + harness V11.
 # Same harness as arm A -> the paired difference with aw116_v4f_s0 is the model. Half A, seed 30.
+# Runs in parallel with arm A: model served on a second API (port 8702), emulators aw-emu3/aw-emu4.
 protocol: aw-main-v1
 agent: d1_m03f_s0
 checkpoint: merge_v4a03
 model:
-  url: http://172.17.0.1:8701
+  url: http://172.17.0.1:8702
   token: tok
   track: VA
   return_readouts: true
