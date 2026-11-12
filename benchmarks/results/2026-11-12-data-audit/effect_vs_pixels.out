@@ -1,0 +1,142 @@
+part 1: label from the element list  x  pixels changed after the action
+action, label                           n      <1%     1-5%    5-20%    >=20%      n/a
+click, NO CHANGE                      126      86%       5%       8%       2%       0%
+click, changed                      15891       7%      12%      27%      54%       0%
+long_press, NO CHANGE                   3     100%       0%       0%       0%       0%
+long_press, changed                    54      28%      19%      46%       7%       0%
+navigate_back, NO CHANGE                1     100%       0%       0%       0%       0%
+navigate_back, changed                879       1%       6%      34%      59%       0%
+navigate_home, changed                 20       0%       0%       0%     100%       0%
+open_app, NO CHANGE                     1     100%       0%       0%       0%       0%
+open_app, changed                    1546       0%       1%       8%      91%       0%
+scroll, NO CHANGE                      56      50%      14%      25%      11%       0%
+scroll, changed                      1767      13%       5%      30%      52%       0%
+type_text, NO CHANGE                    7     100%       0%       0%       0%       0%
+type_text, changed                   1675      11%      63%      23%       3%       0%
+wait, NO CHANGE                        75      43%      19%       8%      31%       0%
+wait, changed                        1156       6%      11%      25%      57%       0%
+
+part 2: previous scroll labelled 'no change', gold is scroll again
+ 1 ep 751 step 3 | goal: In the Settings app, increase the volume of Ring & notification and turn off vibration
+     prev: scroll left, pixels changed 0.003925 | step instruction: swipe right to drag the Ring & notification volume bar
+     gold: scroll down | step instruction: scroll down to view the vibration option
+ 2 ep 771 step 10 | goal: Set an alarm for 4.15 p.m. Set the snooze length to 3 minutes and snooze the alarm.
+     prev: scroll left, pixels changed 0.0 | step instruction: Click on 3
+     gold: scroll left | step instruction: Click on 3
+ 3 ep 2021 step 2 | goal: Delete an existing contact from the drupe app.
+     prev: scroll right, pixels changed 0.0 | step instruction: Swipe from right to left on the option available in the middle of the screen.
+     gold: scroll right | step instruction: Swipe from right to left on the option available in the middle of the screen.
+ 4 ep 2895 step 5 | goal: In the settings app, under the Sound & Vibration option, increase the volume of Ring & not
+     prev: scroll left, pixels changed 0.002125 | step instruction: Swipe right on the progress bar of the Ring & notification to increase volume.
+     gold: scroll down | step instruction: Scroll down to view Vibration & haptics option
+ 5 ep 3353 step 7 | goal: Create an account on the FitAI app to do the morning workout and gain muscle.
+     prev: scroll up, pixels changed 0.001345 | step instruction: Set the age to 25.
+     gold: scroll up | step instruction: Set the age to 25.
+ 6 ep 4128 step 1 | goal: It will be more pleasant to read the book if I slightly raise the brightness by half scale
+     prev: scroll left, pixels changed 0.0 | step instruction: Swipe right the Brightness slider by half scale
+     gold: scroll left | step instruction: Swipe right the Brightness slider by half scale
+ 7 ep 5930 step 6 | goal: Open the TickTick app, navigate to the date and time area, and set the reminder for the ta
+     prev: scroll up, pixels changed 0.000734 | step instruction: Scroll up to set the time at 8 p.m.
+     gold: scroll down | step instruction: Scroll down to change AM to PM.
+ 8 ep 7164 step 11 | goal: Open Youtube and search for video how to install window 11 on new pc move forward the vide
+     prev: scroll right, pixels changed 0.000104 | step instruction: swipe left to see watch later option
+     gold: scroll right | step instruction: swipe left to see watch later option
+ 9 ep 7164 step 12 | goal: Open Youtube and search for video how to install window 11 on new pc move forward the vide
+     prev: scroll right, pixels changed 0.0 | step instruction: swipe left to see watch later option
+     gold: scroll right | step instruction: swipe left to see watch later option
+10 ep 8505 step 2 | goal: In the Sound Recorder Plus app, I want to go backward for 3 seconds of the current recordi
+     prev: scroll right, pixels changed 0.0 | step instruction: Swipe towards left side to go backward for 3 seconds
+     gold: scroll left | step instruction: Swipe towards left side to go backward for 3 seconds
+11 ep 11010 step 4 | goal: In the Skyscanner app,search for Obi Hostel in Tokyo,view the videos, photos, and reviews 
+     prev: scroll right, pixels changed 0.064418 | step instruction: Swipe left to view more images
+     gold: scroll right | step instruction: Swipe left to view more images
+12 ep 11010 step 5 | goal: In the Skyscanner app,search for Obi Hostel in Tokyo,view the videos, photos, and reviews 
+     prev: scroll right, pixels changed 0.063918 | step instruction: Swipe left to view more images
+     gold: scroll right | step instruction: Swipe left to view more images
+13 ep 11010 step 6 | goal: In the Skyscanner app,search for Obi Hostel in Tokyo,view the videos, photos, and reviews 
+     prev: scroll right, pixels changed 0.062099 | step instruction: Swipe left to view more images
+     gold: scroll right | step instruction: Swipe left to view more images
+14 ep 11314 step 5 | goal: Open the Nature´s Basket app and scroll down to view the Fabbox peri peri almonds, 120 g 1
+     prev: scroll right, pixels changed 0.119727 | step instruction: Swipe left to view more photos
+     gold: scroll right | step instruction: Swipe left to view more photos
+15 ep 11314 step 6 | goal: Open the Nature´s Basket app and scroll down to view the Fabbox peri peri almonds, 120 g 1
+     prev: scroll right, pixels changed 0.043593 | step instruction: Swipe left to view more photos
+     gold: scroll right | step instruction: Swipe left to view more photos
+16 ep 11314 step 7 | goal: Open the Nature´s Basket app and scroll down to view the Fabbox peri peri almonds, 120 g 1
+     prev: scroll right, pixels changed 0.136777 | step instruction: Swipe left to view more photos
+     gold: scroll right | step instruction: Swipe left to view more photos
+17 ep 11664 step 7 | goal: Open OLX India app, View the list of search results and open the TVS Apache RTR 160 4V Bik
+     prev: scroll right, pixels changed 0.523866 | step instruction: Swipe left to view more photos
+     gold: scroll right | step instruction: Swipe left to view more photos
+18 ep 12335 step 4 | goal: Open the Blinkit app and scroll down to view the Fortune Sunlite refined sunflower Oil the
+     prev: scroll right, pixels changed 0.060988 | step instruction: Swipe left to view more photos
+     gold: scroll right | step instruction: Swipe left to view more photos
+19 ep 12335 step 5 | goal: Open the Blinkit app and scroll down to view the Fortune Sunlite refined sunflower Oil the
+     prev: scroll right, pixels changed 0.057713 | step instruction: Swipe left to view more photos
+     gold: scroll right | step instruction: Swipe left to view more photos
+20 ep 14196 step 3 | goal: Toggle the wi-fi setting in the settings app
+     prev: scroll up, pixels changed 0.0 | step instruction: scroll up to view Network & internet setting
+     gold: scroll up | step instruction: scroll up to view Network & internet setting
+21 ep 14196 step 4 | goal: Toggle the wi-fi setting in the settings app
+     prev: scroll up, pixels changed 0.0 | step instruction: scroll up to view Network & internet setting
+     gold: scroll up | step instruction: scroll up to view Network & internet setting
+22 ep 15558 step 6 | goal: Create an account on the FitAI app to do the morning workout, jogging and cycling.
+     prev: scroll down, pixels changed 0.012203 | step instruction: Scroll down on the age meter to select the age.
+     gold: scroll down | step instruction: Scroll down on the age meter to select the age.
+23 ep 15558 step 7 | goal: Create an account on the FitAI app to do the morning workout, jogging and cycling.
+     prev: scroll down, pixels changed 0.013047 | step instruction: Scroll down on the age meter to select the age.
+     gold: scroll down | step instruction: Scroll down on the age meter to select the age.
+24 ep 15558 step 8 | goal: Create an account on the FitAI app to do the morning workout, jogging and cycling.
+     prev: scroll down, pixels changed 0.012982 | step instruction: Scroll down on the age meter to select the age.
+     gold: scroll down | step instruction: Scroll down on the age meter to select the age.
+25 ep 15558 step 9 | goal: Create an account on the FitAI app to do the morning workout, jogging and cycling.
+     prev: scroll down, pixels changed 0.010994 | step instruction: Scroll down on the age meter to select the age.
+     gold: scroll down | step instruction: Scroll down on the age meter to select the age.
+26 ep 15558 step 10 | goal: Create an account on the FitAI app to do the morning workout, jogging and cycling.
+     prev: scroll down, pixels changed 0.013119 | step instruction: Scroll down on the age meter to select the age.
+     gold: scroll down | step instruction: Scroll down on the age meter to select the age.
+27 ep 15558 step 11 | goal: Create an account on the FitAI app to do the morning workout, jogging and cycling.
+     prev: scroll down, pixels changed 0.009292 | step instruction: Scroll down on the age meter to select the age.
+     gold: scroll down | step instruction: Scroll down on the age meter to select the age.
+28 ep 18054 step 4 | goal: Go to the Nike app and open the Jordan Retro 6 G NRG in Black color then view its informat
+     prev: scroll right, pixels changed 0.1018 | step instruction: Swipe the image towards the left side to view more images
+     gold: scroll right | step instruction: Swipe the image towards the left side to view more images
+29 ep 18054 step 5 | goal: Go to the Nike app and open the Jordan Retro 6 G NRG in Black color then view its informat
+     prev: scroll right, pixels changed 0.104444 | step instruction: Swipe the image towards the left side to view more images
+     gold: scroll right | step instruction: Swipe the image towards the left side to view more images
+30 ep 18054 step 6 | goal: Go to the Nike app and open the Jordan Retro 6 G NRG in Black color then view its informat
+     prev: scroll right, pixels changed 0.189428 | step instruction: Swipe the image towards the left side to view more images
+     gold: scroll right | step instruction: Swipe the image towards the left side to view more images
+31 ep 18054 step 7 | goal: Go to the Nike app and open the Jordan Retro 6 G NRG in Black color then view its informat
+     prev: scroll right, pixels changed 0.194581 | step instruction: Swipe the image towards the left side to view more images
+     gold: scroll right | step instruction: Swipe the image towards the left side to view more images
+32 ep 18054 step 8 | goal: Go to the Nike app and open the Jordan Retro 6 G NRG in Black color then view its informat
+     prev: scroll right, pixels changed 0.122222 | step instruction: Swipe the image towards the left side to view more images
+     gold: scroll right | step instruction: Swipe the image towards the left side to view more images
+33 ep 18054 step 9 | goal: Go to the Nike app and open the Jordan Retro 6 G NRG in Black color then view its informat
+     prev: scroll right, pixels changed 0.486647 | step instruction: Swipe the image towards the left side to view more images
+     gold: scroll right | step instruction: Swipe the image towards the left side to view more images
+34 ep 18054 step 10 | goal: Go to the Nike app and open the Jordan Retro 6 G NRG in Black color then view its informat
+     prev: scroll right, pixels changed 0.287076 | step instruction: Swipe the image towards the left side to view more images
+     gold: scroll right | step instruction: Swipe the image towards the left side to view more images
+35 ep 18054 step 11 | goal: Go to the Nike app and open the Jordan Retro 6 G NRG in Black color then view its informat
+     prev: scroll right, pixels changed 0.340383 | step instruction: Swipe the image towards the left side to view more images
+     gold: scroll down | step instruction: Swipe up to view the product information
+36 ep 18092 step 4 | goal: Delete the event Royal Mech
+     prev: scroll down, pixels changed 0.003639 | step instruction: Scroll down for event Royal Mech
+     gold: scroll down | step instruction: Scroll down for event Royal Mech
+37 ep 18977 step 5 | goal: Go to the Decathlon app and open the Quechua hiking boots - NH100 then view its informatio
+     prev: scroll right, pixels changed 0.137895 | step instruction: Swipe the image towards the left to view more images of the shoe
+     gold: scroll right | step instruction: Swipe the image towards the left to view more images of the shoe
+38 ep 18977 step 6 | goal: Go to the Decathlon app and open the Quechua hiking boots - NH100 then view its informatio
+     prev: scroll right, pixels changed 0.160851 | step instruction: Swipe the image towards the left to view more images of the shoe
+     gold: scroll right | step instruction: Swipe the image towards the left to view more images of the shoe
+39 ep 18977 step 7 | goal: Go to the Decathlon app and open the Quechua hiking boots - NH100 then view its informatio
+     prev: scroll right, pixels changed 0.087459 | step instruction: Swipe the image towards the left to view more images of the shoe
+     gold: scroll right | step instruction: Swipe the image towards the left to view more images of the shoe
+40 ep 18977 step 8 | goal: Go to the Decathlon app and open the Quechua hiking boots - NH100 then view its informatio
+     prev: scroll right, pixels changed 0.174581 | step instruction: Swipe the image towards the left to view more images of the shoe
+     gold: scroll down | step instruction: Swipe up to view the shoe details
+41 ep 19434 step 5 | goal: Increase the brightness level & turn on night mode under display settings
+     prev: scroll left, pixels changed 0.013691 | step instruction: swipe right to drag the volume bar at the top of the screen to increase brightness level
+     gold: scroll down | step instruction: scroll down to view night mode option

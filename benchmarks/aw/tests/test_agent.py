@@ -74,7 +74,8 @@ def test_status_terminates_without_executing_anything():
 
 def test_unmappable_action_is_invalid_and_not_a_clean_wait():
     env = FakeEnv()
-    agent = AgentCore(FakeModel([{"action": "answer", "text": "42"}]), env)
+    # `answer` became emittable with contract v4 (2026-11-12); `double_tap` is still outside the model's action set
+    agent = AgentCore(FakeModel([{"action": "double_tap", "text": "42"}]), env)
 
     rec = agent.step("do it", i=0)
 

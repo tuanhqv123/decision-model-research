@@ -34,7 +34,7 @@ from PIL import Image
 from pydantic import BaseModel
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ac_common import (decode_app_choice, restrict_first_step,  # noqa: E402  (v2a)
+from ac_common import (answer_text, decode_app_choice, restrict_first_step,  # noqa: E402  (v2a)
                        CONTRACTS, FROM_OPTION, SPATIAL, app_intent_for, build_state, chosen_element,  # noqa: E402
                         element_centre, element_inputs, element_inputs_v3, element_label, history_label, pick_candidates, questions_for,
                         read_contract)
@@ -45,6 +45,14 @@ MODEL_PATH = os.environ.get("D1_MODEL", "models/e2-final")
 # weights says which; a checkpoint without one is refused at startup rather than served a guess
 # (2026-11-10: E2, trained on 8 options + 5 questions, was being served 9 + 6).
 CONTRACT = read_contract(MODEL_PATH)
+# Diagnostic override (2026-11-11): serve a checkpoint with another element rule than the one it was trained with
+# (e.g. cap40_priority_noime). /health then reports both, so a run can never hide that it deviates from training.
+if os.environ.get("D1_ELEMENT_RULE"):
+    from ac_common import ELEMENT_RULES
+    if os.environ["D1_ELEMENT_RULE"] not in ELEMENT_RULES:
+        raise SystemExit(f"D1_ELEMENT_RULE={os.environ['D1_ELEMENT_RULE']!r} is not one of {sorted(ELEMENT_RULES)}")
+    CONTRACT["element_rule_trained"] = CONTRACT.get("element_rule")
+    CONTRACT["element_rule"] = os.environ["D1_ELEMENT_RULE"]
 # App-choice contracts (v2a): the app is chosen from AndroidWorld's launchable apps (`aw_apps.json`, written by
 # benchmarks/aw/hostscripts/make_aw_app_rows.py inside the emulator container). Refused at startup if missing.
 APPS = None
@@ -142,7 +150,7 @@ def build_request(contract, goal, history, nodes, W, H, track):
         else:
             state, kept, keep_idx = element_inputs(goal, history, nodes, W, H, contract["element_rule"])
         return {"track": "VA", "state": state, "questions": questions_for(contract, "VA", kept, apps=APPS),
-                "cands": None, "kept": kept, "keep_idx": keep_idx}
+                "cands": None, "kept": kept, "keep_idx": keep_idx, "nodes": nodes}
     cands = None
     if track == "VA":
         cands = pick_candidates(_normalise(nodes), W, H)
@@ -164,7 +172,8 @@ def build_request(contract, goal, history, nodes, W, H, track):
 
 @app.get("/health")
 def health():
-    rule = {"element_rule": CONTRACT["element_rule"]} if _element_contract(CONTRACT) else {}
+    rule = ({"element_rule": CONTRACT["element_rule"], "element_rule_trained": CONTRACT.get("element_rule_trained",
+             CONTRACT["element_rule"])} if _element_contract(CONTRACT) else {})
     return {"ok": True, "model": MODEL_PATH, "contract": CONTRACT["name"], "tracks": CONTRACT["tracks"], **rule,
             "img_width": int(os.environ.get("D1_IMG_W", "720")),
             "gpu_mem_gb": round(torch.cuda.max_memory_allocated() / 2**30, 2), **STATS}
@@ -266,6 +275,8 @@ def _respond_elements(req, ans, built, W, H, model_ms, t_req):
                            else ans["app_name"].get("text") or "")
     elif action == "type_text":
         out["text"] = ans["type_text"].get("text") or ""
+    elif action == "answer":   # contract v4: the harness sends answer_text to AndroidWorld's `answer`
+        out["answer_value"], out["answer_text"] = answer_text(ans, built["nodes"], built["kept"], built["keep_idx"])
     el = ans.get("target_el") or {}   # absent only when no element survived the rule
     el_id, e = chosen_element(ans, built["kept"])
     out["element"] = {"idx": el_id, "label": element_label(e) if e is not None else None,

@@ -127,6 +127,18 @@ class AndroidWorldEnv:
             raise AttributeError(name)
         return getattr(self._env, name)
 
+    # `__getattr__` forwards READS only. Upstream `task_eval.py:145` WRITES `env.interaction_cache = ""` in
+    # initialize_task, which created this wrapper's own attribute and shadowed the forwarding for the whole episode:
+    # `execute_action(answer)` stored the answer on the inner env while the checker read "" here, so every
+    # information-retrieval answer scored 0 (measured on the device 2026-11-12: inner 'Zoom meeting', wrapper '').
+    @property
+    def interaction_cache(self) -> str:
+        return getattr(self._env, "interaction_cache", "")
+
+    @interaction_cache.setter
+    def interaction_cache(self, value: str) -> None:
+        self._env.interaction_cache = value
+
     def close(self) -> None:
         closer = getattr(self._env, "close", None)
         if callable(closer):

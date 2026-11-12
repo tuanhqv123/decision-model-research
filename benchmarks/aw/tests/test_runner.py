@@ -816,3 +816,53 @@ def test_episode_sums_generated_tokens_from_its_steps(tmp_path):
     runner, rec, task, env = _runner(tmp_path, agent=GenAgent(n_steps=3))
     runner.run([_spec()], step_budget=10)
     assert rec.episodes()[0]["tokens_generated"] == 36
+
+
+class SequenceTask(FakeTask):
+    """is_successful returns 0, 0, 1, ... in order (the device state after each step)."""
+    def __init__(self, name, idx, scores):
+        super().__init__(name, idx)
+        self.scores = list(scores)
+
+    def is_successful(self, env):
+        self.checked += 1
+        return self.scores.pop(0) if self.scores else 1.0
+
+
+def test_probe_records_after_each_step_whether_the_task_is_already_done(tmp_path):
+    """Self-play labels (2026-11-11): with `probe_success_each_step`, the checker is asked after every step, so a
+    rollout says WHEN the task became complete — the label for 'declare done now?' at every step."""
+    import json
+    rec = Recorder(str(tmp_path), "run1", config={"protocol": "aw-main-v1"})
+    task = SequenceTask("ClockStopWatchRunning", 0, [0.0, 1.0, 1.0])
+    runner = Runner(recorder=rec, env_factory=lambda: FakeEnv(), agent_factory=lambda e: FakeAgent(n_steps=2),
+                    task_factory=lambda spec: task, probe_success_each_step=True)
+    runner.run([_spec()], step_budget=5)
+    steps = [json.loads(l) for p in os.listdir(os.path.join(str(tmp_path), "episodes"))
+             for l in open(os.path.join(str(tmp_path), "episodes", p)) if '"type": "step"' in l]
+    assert [s["probe_score"] for s in steps] == [0.0, 1.0]
+
+
+def test_no_probe_by_default(tmp_path):
+    import json
+    runner, rec, task, env = _runner(tmp_path)
+    runner.run([_spec()], step_budget=5)
+    steps = [json.loads(l) for p in os.listdir(os.path.join(str(tmp_path), "episodes"))
+             for l in open(os.path.join(str(tmp_path), "episodes", p)) if '"type": "step"' in l]
+    assert steps and all("probe_score" not in s for s in steps)
+
+
+# 2026-11-12 review (AW_PROTOCOL: a number carries the setup that produced it): the agent-side policy (masking, history
+# format, effect labels, harness timing) changes outcomes without changing `protocol`, so every episode header records it.
+def test_agent_policy_is_written_into_the_header(tmp_path):
+    agent = FakeAgent()
+    agent.policy = lambda: {"mask": True, "effect": "v4"}
+    runner, rec, _, _ = _runner(tmp_path, agent=agent)
+    runner.run([_spec()], step_budget=10)
+    assert rec.episode_header(rec.episodes()[0]["episode_id"])["policy"] == {"mask": True, "effect": "v4"}
+
+
+def test_header_policy_is_none_for_an_agent_without_one(tmp_path):
+    runner, rec, _, _ = _runner(tmp_path)
+    runner.run([_spec()], step_budget=10)
+    assert rec.episode_header(rec.episodes()[0]["episode_id"])["policy"] is None

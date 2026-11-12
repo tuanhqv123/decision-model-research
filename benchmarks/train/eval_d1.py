@@ -89,7 +89,7 @@ def load_rows(path, shots, data, val=False, limit=0, val_set="validation"):
 
 @torch.no_grad()
 def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=DEFAULT_CONTRACT, element_rule=None,
-             app_vocab=None, exclude_actions=()):
+             app_vocab=None, exclude_actions=(), drop_actions=(), with_instruction=False):
     """Serve every row through model.system_one_batch and score it. Returns (records, summary).
 
     Element contract (v2): every row must carry `elements` (the R2 validation file); the state and questions are
@@ -102,7 +102,8 @@ def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=
             raise ValueError(f"contract {contract!r} is evaluated on the VA track only, not {track!r}")
         element_rule = element_rule or CONTRACTS[contract]["element_rule"]
         return _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image,
-                                  app_vocab or [], exclude_actions=exclude_actions)
+                                  app_vocab or [], exclude_actions=exclude_actions, drop_actions=drop_actions,
+                                  with_instruction=with_instruction)
     out, t_start = [], time.time()
     for b0 in range(0, len(rows), batch):
         chunk = rows[b0:b0 + batch]
@@ -203,7 +204,7 @@ def _gold_as_answers(rec, state, kept, keep_idx, apps, contract):
 
 
 def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image, app_vocab=(),
-                       exclude_actions=()):
+                       exclude_actions=(), drop_actions=(), with_instruction=False):
     """`model=None`: oracle — the gold answers go down the same decoding path (the ceiling of the interface)."""
     app_choice = bool(CONTRACTS[contract].get("app_choice"))
     out, t_start = [], time.time()
@@ -217,13 +218,19 @@ def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule
                                  f"none): episode {r.get('episode_id')} step {r.get('step')}")
             W, H = r["screenshot_width"], r["screenshot_height"]
             if CONTRACTS[contract].get("history") == "v3":
-                state, kept, keep_idx = element_inputs_v3(r["goal"], r["history_v3"], r["elements"], W, H, element_rule)
+                instr = (r.get("rec") or {}).get("local_goal") if with_instruction else None  # AC-Low
+                state, kept, keep_idx = element_inputs_v3(r["goal"], r["history_v3"], r["elements"], W, H, element_rule,
+                                                          instr)
             else:
                 state, kept, keep_idx = element_inputs(r["goal"], r.get("previous_actions") or [], r["elements"], W, H,
                                                        element_rule)
             apps = (row_app_options({"ep": r["episode_id"], "step": r["step"], "action": r["action"],
                                      "apps": r.get("apps")}, app_vocab) if app_choice else None)
-            reqs.append((state, build_questions("VA", kept, contract=contract, apps=apps),
+            qs = build_questions("VA", kept, contract=contract, apps=apps)
+            if drop_actions:  # a benchmark without that action: the option is not offered at all (input changes)
+                qs["action"] = dict(qs["action"], criteria={k: v for k, v in qs["action"]["criteria"].items()
+                                                            if k not in drop_actions})
+            reqs.append((state, qs,
                          [load_image(r["screenshot"])] if model is not None else []))
             metas.append((r, kept, keep_idx, apps, state))
         t0 = time.time()
@@ -298,6 +305,11 @@ def main():
     ap.add_argument("--exclude-actions", nargs="*", default=[],
                     help="option names never chosen (e.g. terminate on AndroidControl, which has no end step); the "
                          "best remaining option of the same pass is taken. Benchmark adaptation: report it")
+    ap.add_argument("--drop-actions", nargs="*", default=[],
+                    help="option names removed from the action question itself (the model is asked without them; "
+                         "unlike --exclude-actions this changes the input). Benchmark adaptation: report it")
+    ap.add_argument("--instruction", action="store_true",
+                    help="show each row's step instruction (AndroidControl-Low); contract v3i checkpoints only")
     ap.add_argument("--oracle", action="store_true",
                     help="no model: the gold answers down the same decoding path (ceiling of the interface)")
     a = ap.parse_args()
@@ -312,6 +324,8 @@ def main():
     rows = load_rows(a.rows, a.shots, a.data, a.val, a.limit, a.val_set)
     contract = a.contract or (read_contract(a.ckpt)["name"] if os.path.isdir(a.ckpt) else DEFAULT_CONTRACT)
     a.track = resolve_track(contract, a.track)
+    if a.instruction and not CONTRACTS[contract].get("instruction"):
+        raise SystemExit(f"--instruction needs a checkpoint trained with step instructions (v3i), not {contract!r}")
     rule = element_rule_for(a.ckpt, contract)
     print(f"[contract] {contract}" + (f" element_rule={rule}" if rule else ""), flush=True)
     # An element contract's state has no memory line (training and serving add none).
@@ -324,7 +338,8 @@ def main():
     if CONTRACTS[contract].get("app_choice") and not app_vocab:
         raise SystemExit(f"contract {contract!r} chooses the app from a list; {vocab_path} is missing")
     out, summ = run_eval(model, rows, a.track, memory, a.batch, a.save_readouts, contract=contract,
-                         element_rule=rule, app_vocab=app_vocab, exclude_actions=tuple(a.exclude_actions))
+                         element_rule=rule, app_vocab=app_vocab, exclude_actions=tuple(a.exclude_actions),
+                         drop_actions=tuple(a.drop_actions), with_instruction=a.instruction)
     summ["tag"] = a.tag
     summ["contract"] = contract
     os.makedirs(a.out, exist_ok=True)

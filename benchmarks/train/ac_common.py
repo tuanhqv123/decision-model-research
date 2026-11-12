@@ -42,7 +42,7 @@ ACTION_VOCAB = ("click", "type_text", "long_press", "scroll", "wait", "navigate_
 # eval naming <-> option name
 TO_OPTION = {"click": "click", "type_text": "write", "long_press": "long_press", "scroll": "scroll",
              "wait": "wait", "navigate_back": "navigate_back", "navigate_home": "navigate_home",
-             "open_app": "open_app", "status": "terminate"}
+             "open_app": "open_app", "status": "terminate", "answer": "answer"}
 FROM_OPTION = {v: k for k, v in TO_OPTION.items()}
 # KNOWN INCONSISTENCY, NOT FIXED YET — read before changing these strings.
 #
@@ -81,6 +81,8 @@ ACTIONS_V3 = {
     "navigate_home": "navigate_home: go to the home screen",
     "open_app": "open_app: launch an app from the list",
     "terminate": "status: the goal is fully achieved on this screen; end the task",
+    # contract v4 only (a v3 spec never lists it): the question in the goal is answered from the screen
+    "answer": "answer: give the answer to the question in the goal, read from this screen",
 }
 SCROLL_V3 = {"up": "up: reveal content above (content moves down)",
              "down": "down: reveal content below (content moves up)",
@@ -349,12 +351,35 @@ def rule_cap40_reading_noime(elements, W, H):
                                if not is_keyboard(elements[i])])[:ELEMENT_CAP]
 
 
+def rule_cap40_priority_noime(elements, W, H):
+    """(f) (e) but, over the cap, keep labelled interactive elements first, then labelled ones, then the rest, before
+    cutting to ELEMENT_CAP; the kept ones are numbered in reading order. Under the cap it equals (e). Why (2026-11-11):
+    (e) cut the bottom of long screens — Simple Calendar's ~42 unlabelled day cells pushed `New Event` out of the list
+    on every add-event task of the AndroidWorld run (155 steps)."""
+    cand = _reading(elements, [i for i in rule_interactive_or_labelled(elements, W, H) if not is_keyboard(elements[i])])
+    if len(cand) <= ELEMENT_CAP:
+        return cand
+    tier = lambda i: (0 if elements[i]["label"] and _interactive(elements[i]) else  # noqa: E731
+                      1 if elements[i]["label"] else 2)
+    keep = sorted(cand, key=lambda i: (tier(i), cand.index(i)))[:ELEMENT_CAP]
+    return _reading(elements, keep)
+
+
+def rule_all_reading_noime(elements, W, H):
+    """(g) contract v4: (e) without the cap. Why (2026-11-12): 454/1541 AndroidWorld steps had more than 40 candidates
+    and the cap cut `New Event` on every add-event task; the d1-2B context (128k) holds the full list (v3 rows: p99 2,659
+    text tokens uncapped). Under the cap it equals (e)."""
+    return _reading(elements, [i for i in rule_interactive_or_labelled(elements, W, H) if not is_keyboard(elements[i])])
+
+
 ELEMENT_RULES = {
     "all_app": rule_all_app,
     "interactive_or_labelled": rule_interactive_or_labelled,
     "cap40_reading": rule_cap40_reading,
     "cap40_interactive_first": rule_cap40_interactive_first,
     "cap40_reading_noime": rule_cap40_reading_noime,
+    "cap40_priority_noime": rule_cap40_priority_noime,
+    "all_reading_noime": rule_all_reading_noime,
 }
 
 
@@ -455,6 +480,8 @@ def history_entry_with_label(action, name, changed):
         line = "scroll %s" % (a.get("direction") or "").strip()
     elif at == "open_app":
         line = "open_app %s" % str(a.get("app_name") or "").strip()
+    elif at == "answer":
+        line = 'answer "%s"' % str(a.get("text") or "").strip()
     else:
         line = at
     if changed is True:
@@ -468,6 +495,28 @@ def _effect_key(e):
     b = e["bbox"] or {}
     return (e["label"], e["class_short"], tuple(b.get(k) for k in ("x_min", "y_min", "x_max", "y_max")),
             tuple(sorted(e["flags"].items())))
+
+
+def _effect_key_v4(e):
+    b = e["bbox"] or {}
+    return (e["label"], e["class_short"], tuple(b.get(k) for k in ("x_min", "y_min", "x_max", "y_max")),
+            tuple(sorted((k, v) for k, v in e["flags"].items() if k != "focused")))
+
+
+def effect_changed_v4(before, after):
+    """Contract v4's effect: as `effect_changed`, but the focused flag and keyboard (IME) elements do not count. Why
+    (2026-11-12): AndroidWorld never reports focus (0/18,470 elements of the self-play states) and, on AndroidWorld, a
+    field is usually already focused with the keyboard up, so tapping it changes nothing; in the AndroidControl rows the
+    same tap reads "changed" because the keyboard appears (637/699). Training and serving call this same function."""
+    from collections import Counter
+    keep = lambda xs: Counter(_effect_key_v4(e) for e in xs  # noqa: E731
+                              if e["package_name"] != SYSTEM_UI and not is_keyboard(e))
+    return keep(before) != keep(after)
+
+
+def effect_changed_for(contract):
+    """The effect function a contract's history lines use."""
+    return effect_changed_v4 if CONTRACTS.get(contract, {}).get("effect") == "v4" else effect_changed
 
 
 def effect_changed(before, after):
@@ -530,9 +579,10 @@ def current_app(elements):
     return f"{AW_APP_BY_PACKAGE[pkg]} ({pkg})" if pkg in AW_APP_BY_PACKAGE else pkg
 
 
-def build_state_v3(goal, entries, kept, W, H, app):
+def build_state_v3(goal, entries, kept, W, H, app, instruction=None):
     n = len(entries)
-    lines = [f"Goal: {goal}", f"Progress: step {n + 1}, {n} actions done", f"Current app: {app}"]
+    lines = [f"Goal: {goal}"] + ([f"Step instruction: {instruction}"] if instruction else []) + [
+        f"Progress: step {n + 1}, {n} actions done", f"Current app: {app}"]
     if entries:
         lines.append("Previous actions:")
         shown = entries[-HISTORY_CAP:]
@@ -544,11 +594,19 @@ def build_state_v3(goal, entries, kept, W, H, app):
     return "\n".join(lines + [V2_ELEMENTS_HEADER] + render_elements(kept, W, H))
 
 
-def element_inputs_v3(goal, entries, elements, W, H, rule):
-    """(state, kept, kept indices) for one screen under contract v3 — train, eval and serve call this."""
+def element_inputs_v3(goal, entries, elements, W, H, rule, instruction=None):
+    """(state, kept, kept indices) for one screen under contract v3 — train, eval and serve call this.
+    `instruction` (contract v3i only): AndroidControl's low-level step instruction, shown after the goal."""
     canon = [canonical_element(d) for d in elements or []]
     kept, idx = select_elements(elements, W, H, rule)
-    return build_state_v3(goal, list(entries or []), kept, W, H, current_app(canon)), kept, idx
+    return build_state_v3(goal, list(entries or []), kept, W, H, current_app(canon), instruction), kept, idx
+
+
+def instruction_included(rec):
+    """Contract v3i training: whether this row shows its step instruction — a fixed half of the rows, chosen by a
+    hash of (episode, step) so every epoch, process and machine picks the same rows."""
+    import hashlib
+    return hashlib.sha256(f"{rec.get('ep')}:{rec.get('step')}".encode()).digest()[0] < 128
 
 
 def element_centre(e):
@@ -563,6 +621,23 @@ def centre_in_box(b, target):
         return False
     cx, cy = (b["x_min"] + b["x_max"]) / 2, (b["y_min"] + b["y_max"]) / 2
     return target["x_min"] <= cx <= target["x_max"] and target["y_min"] <= cy <= target["y_max"]
+
+
+def answer_text(ans, nodes, kept, keep_idx):
+    """(answer_value choice, the text AndroidWorld receives) for an `answer` decision (contract v4): the chosen element's
+    FULL text (text, else content description; the state shows only LABEL_CHARS of it), or the number / True / False."""
+    value = str(((ans or {}).get("answer_value") or {}).get("choice") or "element")
+    if value != "element":
+        return value, value
+    el_id, _ = chosen_element(ans, kept)
+    if el_id is None:
+        return value, ""
+    node = nodes[keep_idx[el_id - 1]]
+    for key in ("text", "content_description", "hint_text"):
+        s = " ".join(str(node.get(key) or "").split())
+        if s:
+            return value, s
+    return value, ""
 
 
 def chosen_element(ans, kept):
@@ -599,10 +674,19 @@ CONTRACTS = {
     # acted on and whether the screen changed) — `element_inputs_v3`.
     "v3": {"actions": tuple(ACTIONS), "is_done": False, "elements": True, "element_rule": "cap40_reading_noime",
            "app_choice": True, "history": "v3", "option_texts": "v3"},
+    # v3 + AndroidControl's step instruction on about half the training rows (AC-Low); served without it (AndroidWorld)
+    "v3i": {"actions": tuple(ACTIONS), "is_done": False, "elements": True, "element_rule": "cap40_reading_noime",
+            "app_choice": True, "history": "v3", "option_texts": "v3", "instruction": True},
+    # 2026-11-12 (docs/research/2026-11-12-V4-WORKLOG-vi.md): no element cap, effect without focus/keyboard, an
+    # `answer` action (+ `answer_value`), AC-Low step instruction on half the rows (as v3i), avoid-only rows.
+    "v4": {"actions": tuple(ACTIONS) + ("answer",), "is_done": False, "elements": True,
+           "element_rule": "all_reading_noime", "app_choice": True, "history": "v3", "effect": "v4",
+           "option_texts": "v3", "instruction": True, "answer": True},
 }
 DEFAULT_CONTRACT = "v1"
 # Contracts that exist for one track only (a v2 state is meaningless without the element list).
-CONTRACT_TRACKS = {"v2": ("VA",), "v2a": ("VA",), "v3": ("VA",)}
+CONTRACT_TRACKS = {"v2": ("VA",), "v2a": ("VA",), "v3": ("VA",), "v3i": ("VA",), "v4": ("VA",)}
+ANSWER_COUNT_MAX = 20
 
 
 def write_contract(ckpt_dir, name, tracks=("V",)):
@@ -706,6 +790,12 @@ def _build_questions_v2(track, kept, spec, apps=None):
     else:
         q["app_name"] = {"type": "text", "instructions": "The exact app name, if the next action launches an app."}
     q["type_text"] = {"type": "text", "instructions": "The exact text to type, if the next action enters text."}
+    if spec.get("answer"):
+        crit = {"element": "the text of the element chosen as the target"}
+        crit.update({str(i): str(i) for i in range(ANSWER_COUNT_MAX + 1)})
+        crit.update({"True": "True", "False": "False"})
+        q["answer_value"] = {"type": "choice", "criteria": crit, "instructions": (
+            "If the next action is answer: the answer is the chosen element's text, a number, or True/False.")}
     return q
 
 
@@ -999,7 +1089,7 @@ def gold_target_el_v2(rec, keep_idx, kept):
     outside the target (198 train rows) and left 498 rows with a creditable kept element unsupervised.
     Non-spatial rows: (None, None).
     """
-    if rec["action"]["action_type"] not in SPATIAL:
+    if rec["action"]["action_type"] not in SPATIAL + ("answer",):
         return None, None
     t = rec.get("target")
     if not t:
@@ -1018,7 +1108,13 @@ def gold_target_el_v2(rec, keep_idx, kept):
 
 def gold_answers_v2(rec, kept, keep_idx, state, apps=None, contract="v2"):
     """Supervision for one row under contract v2 -> (gold, target_el case). `kept`/`keep_idx` come from
-    `element_inputs` on this row; the action, scroll, app and text golds are v1's (`gold_answers`)."""
+    `element_inputs` on this row; the action, scroll, app and text golds are v1's (`gold_answers`).
+    Contract v4: a row with `avoid_action` supervises nothing but "not this action" (unlikelihood in train_d1); an
+    `answer` row also supervises `answer_value` ("element" -> the answer is the target element's text)."""
+    if rec.get("avoid_action"):
+        if not CONTRACTS[contract].get("answer"):
+            raise ValueError(f"contract {contract!r} has no avoid rows")
+        return {"avoid_action": TO_OPTION[rec["avoid_action"]]}, None
     g = gold_answers(rec, "V", None, state)
     g.pop("target_box", None)
     g.pop("is_done", None)
@@ -1033,4 +1129,10 @@ def gold_answers_v2(rec, kept, keep_idx, state, apps=None, contract="v2"):
     el, case = gold_target_el_v2(rec, keep_idx, kept)
     if el is not None:
         g["target_el"] = el
+    if (rec.get("action") or {}).get("action_type") == "answer":
+        if not CONTRACTS[contract].get("answer"):
+            raise ValueError(f"contract {contract!r} has no answer action")
+        g["answer_value"] = str(rec["answer_value"])
+        if g["answer_value"] != "element":
+            g.pop("target_el", None)
     return g, case

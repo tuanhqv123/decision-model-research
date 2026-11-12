@@ -96,7 +96,9 @@ def test_action_space_gap_is_declared():
     assert "input_text" not in EMITTABLE
     # 9 since 2026-11-09: navigate_home was in the vocabulary and the corpus (29 raw rows) but had
     # been omitted from the adapter, so the model could learn an action it could never emit.
-    assert len(EMITTABLE) == 9
+    # 10 since 2026-11-12: contract v4 emits `answer` (25 information-retrieval tasks score only through it).
+    assert len(EMITTABLE) == 10
+    assert "answer" in EMITTABLE and "answer" not in NOT_EMITTED
     assert "navigate_home" in EMITTABLE
     assert "navigate_home" not in NOT_EMITTED
 

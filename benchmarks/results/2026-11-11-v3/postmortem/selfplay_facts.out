@@ -1,0 +1,12 @@
+episodes finished                                          37
+successes                                                  7
+steps                                                      395
+steps with a checker answer                                395
+steps with a checker error                                 0
+steps with full model input recorded                       395
+episodes the checker says complete at some step            8
+  ... declared done LATER than needed                      2
+declared done while the checker said NOT complete          18
+  ... never declared done                                  1
+  ... declared done the next step                          5
+late examples (task, complete after step, declared done at step): [('AudioRecorderRecordAudio', 4, 6), ('ClockStopWatchPausedVerify', 2, 4)]

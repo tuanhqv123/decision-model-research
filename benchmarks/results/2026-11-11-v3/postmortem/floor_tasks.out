@@ -1,0 +1,8 @@
+do-nothing (Q11) solves: ['RecipeDeleteMultipleRecipesWithConstraint', 'SystemBluetoothTurnOffVerify', 'SystemBluetoothTurnOnVerify', 'SystemBrightnessMaxVerify', 'SystemBrightnessMinVerify', 'SystemWifiTurnOn', 'SystemWifiTurnOnVerify']
+    SystemWifiTurnOnVerify -> settings covered
+    SystemBrightnessMinVerify -> settings covered
+    SystemBluetoothTurnOnVerify -> settings covered
+    SystemBluetoothTurnOffVerify -> settings covered
+    SystemWifiTurnOn -> settings covered
+    RecipeDeleteMultipleRecipesWithConstraint -> broccoli zero rows
+    SystemBrightnessMaxVerify -> settings covered

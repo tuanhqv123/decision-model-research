@@ -1,0 +1,26 @@
+result.setup_error               1
+step.click_not_interactive       164
+step.invalid_action              16
+step.stuck_event                 161
+step.typed_landed=False          2
+steps                            1347
+result.setup_error e.g. ['SimpleSmsReplyMostRecent']
+step.invalid_action e.g. [('SimpleCalendarAddOneEvent', 15, 'text_missing'), ('SimpleCalendarAddRepeatingEvent', 12, 'text_missing'), ('TasksDueOnDate', 1, 'point_missing'), ('SimpleCalendarNextEvent', 3, 'text_missing'), ('SimpleCalendarNextEvent', 5, 'text_missing'), ('SimpleCalendarNextEvent', 6, 'text_missing')]
+step.typed_landed=False e.g. [('OsmAndFavorite', 6), ('OsmAndFavorite', 8)]
+interactive                    563
+interactive & no change        221
+NOT interactive                160
+NOT interactive & no change    38
+no-change rate: interactive 39%, NOT interactive 24%
+   ('SportsTrackerTotalDistanceForCategoryOverInterval', 4, '1.76', None)
+   ('TurnOnWifiAndOpenApp', 6, 'Internet', None)
+   ('TurnOnWifiAndOpenApp', 7, 'Internet', None)
+   ('TurnOffWifiAndTurnOnBluetooth', 2, 'Internet', None)
+   ('TurnOffWifiAndTurnOnBluetooth', 3, 'Networks available', None)
+   ('TurnOffWifiAndTurnOnBluetooth', 4, 'Internet', None)
+   ('TurnOffWifiAndTurnOnBluetooth', 5, 'Networks available', None)
+   ('TurnOffWifiAndTurnOnBluetooth', 6, 'Networks available', None)
+   ('TurnOffWifiAndTurnOnBluetooth', 7, 'Networks available', None)
+   ('TurnOffWifiAndTurnOnBluetooth', 8, 'Networks available', None)
+   ('TurnOffWifiAndTurnOnBluetooth', 9, 'Networks available', None)
+   ('TurnOffWifiAndTurnOnBluetooth', 10, 'Networks available', None)

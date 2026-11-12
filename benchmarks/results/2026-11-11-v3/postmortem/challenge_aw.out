@@ -1,0 +1,13 @@
+Q-A no-change steps by kind: {'click on another interactive element': 191, 'scroll': 155, 'wait': 151, 'click on an EDITABLE field': 71, 'click on a NON-interactive element': 23, 'open_app': 4} total 595
+    next action after a no-change click on an editable field: {'click': 57, 'input_text': 11}
+Q-B step at which done was declared: premature (n=49) median 6, IQR 5-9 | correct (n=16) median 6
+    premature done step histogram: {3: 3, 4: 6, 5: 7, 6: 13, 7: 4, 8: 3, 9: 7, 10: 2, 11: 1, 12: 1, 20: 1, 23: 1}
+Q-C budget   0-10 : premature done n=16, median step 5, max 8
+Q-C budget  11-20 : premature done n=19, median step 7, max 11
+Q-C budget  21-999: premature done n=14, median step 8, max 23
+Q-C Spearman(step budget, premature-done step) = 0.46 (n=49)
+Q-D clicks that changed nothing, app has rows : 45/104 = 43.3%
+Q-D clicks that changed nothing, app zero rows: 240/662 = 36.3%
+Q-D two-proportion z = -1.38 (pooled over steps; steps within an episode are not independent)
+Q-E identical repeats after a no-change step, by action: {'click': 196, 'scroll': 142, 'wait': 131} total 469
+    ... of which the repeat DID change the screen: {'wait': 37, 'click': 8, 'scroll': 0}

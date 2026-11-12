@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 EMITTABLE = (
+    "answer",
     "click",
     "long_press",
     "type_text",
@@ -170,6 +171,14 @@ def map_decision(
             invalid=True,
             reason="unmappable_action:%s" % (action or "empty"),
         )
+
+    if action == "answer":
+        # contract v4: AndroidWorld stores the LAST answer text (interface.py interaction_cache); the agent turns the
+        # chosen element's full text into the accumulated, comma-joined answer before execution.
+        text = str(dec.get("answer_text") or "").strip()
+        if not text:
+            return MappedAction(actions=[{"action_type": "wait"}], invalid=True, reason="answer_missing")
+        return MappedAction(actions=[{"action_type": "answer", "text": text}])
 
     if action in ("click", "long_press"):
         pt = _point(dec)

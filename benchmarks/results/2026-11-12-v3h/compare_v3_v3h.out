@@ -1,0 +1,17 @@
+== v3
+  official SR 14.0% (16/114 scored; excluded ['MarkorMergeNotes', 'SimpleSmsReplyMostRecent'])
+  without SMS tasks: 14.8% (16/108)
+  failed 98: declared done but not done 49, step budget 49
+  steps 1541, no change 643 (42%); same action after no change 427/472; failed eps with >=5 identical in a row 44
+  scrolls 245, with index 0; answer-task successes 0
+  successes: AudioRecorderRecordAudio, ClockStopWatchPausedVerify, ClockStopWatchRunning, ContactsAddContact, ExpenseDeleteMultiple, ExpenseDeleteSingle, MarkorCreateFolder, OpenAppTaskEval, OsmAndFavorite, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemWifiTurnOff
+== v3h
+  official SR 15.0% (17/113 scored; excluded ['MarkorMergeNotes', 'MarkorTranscribeReceipt', 'SimpleSmsReplyMostRecent'])
+  without SMS tasks: 15.9% (17/107)
+  failed 96: declared done but not done 48, step budget 48
+  steps 1488, no change 512 (34%); same action after no change 303/325; failed eps with >=5 identical in a row 43
+  scrolls 247, with index 39; answer-task successes 0
+  successes: AudioRecorderRecordAudio, ClockStopWatchPausedVerify, ClockStopWatchRunning, ContactsAddContact, ExpenseDeleteMultiple, ExpenseDeleteSingle, MarkorCreateFolder, OpenAppTaskEval, OsmAndFavorite, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemBrightnessMaxVerify, SystemWifiTurnOff
+== paired v3h vs v3 on 113 common tasks: wins 1, losses 0, sign test p=1.000
+  wins: SystemBrightnessMaxVerify
+  losses: 
