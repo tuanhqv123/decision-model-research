@@ -6,17 +6,17 @@
 
 We fine-tune a 2B **decision model**, LiquidAI's d1-2B, into a mobile agent. At each step it reads the screenshot, the goal, its own action history and the screen's accessibility elements once, and answers typed questions in a single forward pass with **zero generated tokens**: which action, which element, which scroll direction, which app, and which span of the input to type or answer.
 
-Trained only on AndroidControl plus synthetic augmentation, and evaluated on AndroidControl and on the official AndroidWorld protocol (116 tasks, seed 30, one attempt), the model:
+We train it on AndroidControl plus synthetic augmentation, plus 1,736 goal→app rows built from AndroidWorld's task generator. Those rows cover 97 of the 116 evaluated task templates, and no AndroidWorld rollout is used. We evaluate on AndroidControl and on the official AndroidWorld protocol (116 tasks, seed 30, one attempt). The model:
 
 - **AndroidControl-High:** **61.7%** of steps right (5,213/8,444), but only **22.3%** of episodes with every step right (344/1,543).
 - **AndroidControl-Low:** **89.3%** of steps (7,544/8,444) and 60.4% of episodes (932/1,543).
-- **AndroidWorld:** **21.7%** of tasks (25/115), at a median **135 ms** per decision.
+- **AndroidWorld:** a score of **25/115 = 21.7%** (24 full successes + 2 half credits), at a median **135 ms** per decision.
 
 The AndroidControl episode-level rate and the AndroidWorld rate are almost the same, although the per-step number suggests far more. We analyse what the gap is made of:
 
 - **Per-step vs episode:** AndroidControl-High per-step accuracy is teacher-forced and never checks the goal. Whole-episode accuracy falls from 59% on 1-step episodes to 9.4% on episodes of six or more steps.
-- **Failed tasks:** reading the traces of all 91 failed AndroidWorld tasks shows premature termination as the largest failure class (49 tasks). About 36 failures need capabilities a single pass cannot provide in our setting: arithmetic, date computation, memory across screens, or text that exists only in pixels.
-- **Harness and environment:** harness and environment defects moved the score as much as model changes did. Five fixes raised the same checkpoint from 15.5/115 to 25/115, with no losses at the first step.
+- **Failed tasks:** of the 91 failed AndroidWorld tasks, 51 ended with the model declaring the task done when it was not (49 scored zero, 2 got half credit) and 40 ran out of step budget. A trace-level reading of all 91 estimates that about 36 are blocked by our constraints (one model, no planner, AndroidControl-only data): arithmetic, date computation, memory across screens, text that exists only in pixels, and information the accessibility tree does not carry.
+- **Harness and environment:** harness and environment changes moved the score as much as model changes did. On the same checkpoint they raised the score from 15.5/115 to 25/115 (paired: 5 wins / 0 losses, then 5 wins / 1 loss).
 - **Vision:** replacing every screenshot with a grey image drops validation step accuracy from 519/827 to 337/827, so the model uses the image, mostly to decide *what kind* of action to take.
 
 We report the negative results alongside the positive ones.
@@ -44,23 +44,23 @@ We answer with measurements rather than a leaderboard claim. The paper makes fou
 - V-Droid (59.5%) trains on AndroidWorld apps and tasks [vdroid2025].
 - AndroidGen (46.8% with GPT-4o) collects its training trajectories in the AndroidWorld emulator, and its retrieval database grows during evaluation [androidgen2025].
 
-These are **not comparable** to our number. They differ in model size, number of calls per step, generated reasoning, tools, use of AndroidWorld-derived training data, and in some cases the task count: AndroidGen's percentages fit 111 tasks, not 116. We give them as context only (AGENTS.md M4).
+These are **not comparable** to our number. They differ in model size, number of calls per step, generated reasoning, tools, use of AndroidWorld-derived training data, and in some cases the task count: AndroidGen's percentages fit 111 tasks, not 116 (our derivation). We give them as context only (AGENTS.md M4).
 
 **Published AndroidWorld results, for context (not a ranking).** Each paper reports its own numbers. None were produced by our harness. The columns show why they are not directly comparable.
 
 | Agent / model | Params | Model calls per step | Generates text | AndroidWorld-derived training data | Extra components | AndroidWorld SR | Source |
 |---|---|---|---|---|---|---|---|
-| **Ours: d1-2B decision model (v4)** | 2B | 1 | **no** (0 tokens) | goal templates only (`awgen`, §4) | none | **21.7%** (25/115) | this paper |
+| **Ours: d1-2B decision model (v4)** | 2B | 1 | **no** (0 tokens) | goal→app rows from the task generator, 97/116 templates (`awgen`, §4) | none | **21.7%** (score 25/115) | this paper |
 | M3A, GPT-4 Turbo | – | ≥2 (action + summary) | yes | no | step summary as memory | 30.6% | [androidworld2024] |
 | UI-TARS | – | 1 | yes | not stated | – | 46.6% | [uitars2025] |
-| AndroidGen, GPT-4o | – | several | yes | trajectories collected in AndroidWorld; retrieval database grows during evaluation | planner, retrieval, checks | 46.8% (fits 111 tasks) | [androidgen2025] |
+| AndroidGen, GPT-4o | – | several | yes | trajectories collected in AndroidWorld; retrieval database grows during evaluation | planner, retrieval, checks | 46.8% (its percentages fit 111 tasks: our derivation) | [androidgen2025] |
 | MAI-UI-2B | 2B | 1 | yes | not stated | none ("without … external tools") | 49.1% | [maiui2026] |
 | UI-Venus-1.5-2B | 2B | 1 | yes | not stated | – | 55.6% | [uivenus15-androidworld] |
 | V-Droid | 8B verifier + LLM | several | yes | "apps and tasks from the AndroidWorld benchmark" | verifier over candidate actions | 59.5% | [vdroid2025] |
 | GUI-Owl-7B | 7B | 1 | yes | not stated | – | 66.4% | [guiowl2025] |
 | Mobile-Agent-v3 (GUI-Owl-32B) | 32B | several | yes | not stated | manager, worker, reflector, notetaker | 73.3% | [guiowl2025] |
 | MAI-UI-235B-A22B | 235B (22B active) | 1 | yes | not stated | none | 76.7% | [maiui2026] |
-| MobileRL-9B | 9B | 1 | yes | online RL on generated AndroidWorld task variants | – | 80.2% | [mobilerl2025] |
+| MobileRL-9B | 9B | 1 | yes | online RL on generated AndroidWorld task variants | – | 80.2% (average of 3 runs; pass@k reported separately) | [mobilerl2025] |
 
 "–" means the field was not checked in the source. All entries are one model's self-reported pass@1 on the official task suite, unless noted. The closest setting to ours, a 2B end-to-end model with no tools, is MAI-UI-2B (49.1%) or UI-Venus-1.5-2B (55.6%), and both generate text. The difference from them is the question this paper does not answer: we have not run a generative 2B model on our harness.
 
@@ -90,14 +90,14 @@ flowchart LR
 
 ## 4. Training
 
-- **Starting point and schedule.** We fine-tune all parameters of d1-2B, including the vision encoder (132/132 vision tensors change from the base). The run lasts one epoch: 2,482 steps × 16 rows, lr 1e-5, contract v4.
+- **Starting point and schedule.** We fine-tune all parameters of d1-2B except the tied embedding / LM head, which is frozen. This includes the vision encoder: 132/132 vision tensors change from the base (`benchmarks/results/2026-11-12-imgablate/weights_changed.md`). The run lasts one epoch: 2,482 steps × 16 rows, lr 1e-5, contract v4.
 - **Data: 37,977 rows from AndroidControl's train split,** selected from task kinds similar to AndroidWorld's and rebuilt from the original files, with test episodes excluded. The rows are augmented with:
   - effect-labelled history;
   - "no change" rows that teach not to repeat an action that changed nothing;
   - avoid rows;
   - step-instruction rows (the AndroidControl-Low instruction shown on a fixed half of the rows);
   - answer episodes.
-- **Disclosure: 1,736 `awgen` rows.** These rows map **goal text generated by AndroidWorld's own task generator** to the app to open, with 19 templates held out. No AndroidWorld rollout, screen or checker is used, but the rows do expose the model to AndroidWorld's goal phrasing.
+- **Disclosure: 1,736 `awgen` rows.** These rows map **goal text generated by AndroidWorld's own task generator** to the app to open. They cover **97 of the 116** evaluated templates; 19 are held out. No AndroidWorld rollout, screen or checker is used, but the rows do expose the model to AndroidWorld's goal phrasing and app names for most tasks. A split of success on held-out vs covered templates is not reported here.
 
 ## 5. Experiments
 
@@ -109,7 +109,7 @@ flowchart LR
 | AndroidControl-Low | step and whole episode, with the step instruction shown | same |
 | AndroidWorld | task, 116 tasks, seed 30, pass@1 | official checker; SR = score sum / scored tasks (partial credit counts) |
 
-Our model is deterministic (argmax), so k attempts would be identical. We report **pass@1 only**, whereas MobileRL reports pass@k over 8 sampled attempts.
+The policy is argmax, but the environment is not deterministic: same-host replays diverged on 6/20 trajectories in an earlier check. We ran **one attempt per task (pass@1)**, whereas MobileRL reports pass@k over 8 sampled attempts.
 
 ### 5.2 Main results
 
@@ -135,12 +135,12 @@ The AndroidControl-High scorer feeds the demonstrator's history and screen at ev
 | % | 59 | 30 | 35 | 27 | 19 | 11 | 13 | 11 | 6 | 5 |
 
 The whole-episode rate on AndroidControl-High (22.3%) is close to AndroidWorld's (21.7%). They are still different quantities:
-- AndroidWorld is **harder** in that errors compound, the agent must stop by itself, and its apps are unseen.
+- AndroidWorld is **harder** in that errors compound, the agent must stop by itself, and 13 of its 20 apps have no training goals.
 - AndroidWorld is **easier** in that any path to the goal state is accepted.
 
 The two effects happen to roughly cancel here. The episode-level rate is the better offline proxy.
 
-Termination is a large part of the gap. The AndroidControl test set contains **no** step where "done" is the right answer, yet the model predicts it on **1,171/8,444** steps. 460 of these fall on an episode's last real step, and 566 on steps whose gold action is a scroll.
+Termination is a large part of the gap. The AndroidControl test set contains **no** step where "done" is the right answer, yet the model predicts it on **1,171/8,444** steps. Of these, 460 fall on an episode's last real step and 566 on steps whose gold action is a scroll. The two groups overlap by 186 steps, so they should not be added.
 
 ### 5.4 AndroidWorld by difficulty, complexity and steps
 
@@ -157,7 +157,7 @@ Difficulty labels and optimal step counts are from upstream `task_metadata.json`
 |---|---|---|---|---|
 | SR | 19/45 = 42.2% | 5.5/40 = 13.8% | 0/9 | 0.5/21 = 2.4% |
 
-When the model succeeds, it does so in close to the optimal number of steps: 5.5 steps on easy tasks against an optimum of 5.0. Our level counts (45/41/9/21) differ from those MobileRL reports for the same definition (49/41/11/15).
+The "avg optimal steps" column averages over all scored tasks in a row. On the tasks the model actually solved, it took 5.5 steps on easy tasks against an optimum of 3.2 for those same tasks, and 6.7 against 5.0 on medium. Its successes are therefore not on the shortest path. Our level counts (45/41/9/21) differ from those MobileRL reports for the same definition (49/41/11/15, read from its figure).
 
 ### 5.5 The harness and the environment move the score as much as the model
 
@@ -166,14 +166,14 @@ Same checkpoint (v4), same seed, paired per task:
 | Harness | Score | vs previous row | What changed |
 |---|---|---|---|
 | V8 | 15.5/115 | – | – |
-| V11 | 20.5/115 | 5 wins / 0 losses | the answer reached the checker's cache (every answer had scored 0); fresh observation when the accessibility tree lagged the pixels; policy recorded per episode |
-| V12 + environment | **25/115** | 5 wins / 1 loss (p = 0.22) | fresh-wait trigger on page change; working SIM (IPv6 container network) |
+| V11 | 20.5/115 | 5 wins / 0 losses (p = 0.062) | the answer reached the checker's cache (every answer had scored 0); fresh observation when the accessibility tree lagged the pixels (8 s cap); the agent policy is now logged per episode (logging, not a fix) |
+| V12 + environment | **25/115** | 5 wins / 1 loss (p = 0.22) | fresh-wait trigger on page change (cap 8 → 20 s); working SIM (IPv6 container network); Chrome first-run screens clicked through before the suite |
 | V14 + Markor/OsmAnd repairs | *pending* (39 affected tasks re-run; other 77 tasks unchanged by construction) | | numeric answer format; Back to close the keyboard after typing; emulator app-state checks |
 
 **Environment defects found from traces:**
 - **Markor** opened on its first-run screens in 6/6 Markor episodes on one emulator.
 - **OsmAnd:** running `sqlite3` as root on a missing database left a 0-byte root-owned `map_markers_db`. OsmAnd could not open it, so OsmAndMarker failed setup in 3 of 4 runs.
-- **VLC:** the media library stays "Loading" after the task's own setup clears its Media table as root. The task remains solvable through VLC's file browser.
+- **VLC:** the media library stays "Loading" on every emulator. The log shows the library refusing a folder after the task's own setup clears the Media table as root, so the cause is *inferred* (`benchmarks/results/2026-11-12-failanalysis/vlc_investigation.md`). The Browse tab still reaches the files.
 - **Accessibility service:** `uiautomator dump` kills AndroidWorld's accessibility forwarder.
 
 Each of these produces failures that look like model failures.
@@ -186,11 +186,11 @@ On validation (827 steps, v4), every screenshot was replaced by a uniform grey i
 |---|---|---|
 | Step accuracy | 519/827 | 337/827 |
 | Action-type accuracy | 80.0% | 50.8% |
-| Grounding (element, given the right type) | 65.5% | 59.9% |
+| Grounding (element, given the right type) | 65.5% (271/414) | 59.9% (124/207) |
 | type_text right | 37/53 | 3/53 |
 | scroll right | 40/86 | 7/86 |
 
-The image mostly decides **what** to do (a keyboard means type; a long list means scroll). The element list carries much of **which element**. Source: `benchmarks/results/2026-11-12-imgablate/`.
+The image mostly affects **what** to do: action-type accuracy falls by 29 points, and type_text and scroll collapse. Our reading is that the model looks for a keyboard or a long list, but that is an interpretation, not a measurement. The element choice, given the right type, falls less, on different subsets. Source: `benchmarks/results/2026-11-12-imgablate/`.
 
 ### 5.7 Latency
 
@@ -198,20 +198,21 @@ On 1,335 AndroidWorld steps, the model takes **135 ms** per decision at p50 and 
 
 ### 5.8 What the 91 failed tasks are made of
 
-Four independent readers each took one group of failed tasks. For every task they found the first wrong step in the trace and screenshots, and checked the upstream checker (`benchmarks/results/2026-11-12-failanalysis/*.tsv`).
+Four independent LLM agents (one per group, no shared context) each took one group of failed tasks. For every task they found the first wrong step in the trace and screenshots, and checked the upstream checker (`benchmarks/results/2026-11-12-failanalysis/*.tsv`).
 
 | Group (failed tasks) | Main causes (tasks) |
 |---|---|
 | Information retrieval (21) | answer visible but never given (4) · answer format (1) · wrong navigation (4) · date, time or colour reasoning (4) · counting across screens (2) · answer not expressible by the contract (6) |
-| Easy (27) | long press needed (5) · *Verify* tasks already satisfied but flipped (3) · premature done (4) · wrong element (4) · target scrolled off screen (3) · typing replaces instead of appends (2) · clipboard chip filtered out (2) · environment / app knowledge (4) |
-| Medium/hard (34) | app procedure (7) · values that must be computed, e.g. dates and end times (6) · stops after the first of several items (4) · environment (3) · form fields hidden by the keyboard (3) · duplicates across screens (3) · long note content (2) · VLC (2) · single cases (4) |
+| Easy (27) | long press needed (5) · *Verify* tasks already satisfied (3: two flipped back, one never declared done) · premature done (4) · wrong element (4) · target scrolled off screen (3) · typing replaces instead of appends (2) · clipboard chip filtered out (2) · environment / app knowledge (4) |
+| Medium/hard (34) | app procedure (7) · values that must be computed, e.g. dates and end times (6) · stops after the first of several items (4) · environment (3) · form fields not filled (3: two hidden by the keyboard, one needing a horizontal scroll) · duplicates across screens (3) · long note content (2) · VLC (2) · single cases (4) |
 | Visual (9) | navigation, no reading needed (2) · drawing or maze pages (2) · text only in pixels (4) · arithmetic (1) |
 
-**About 36 of the 91 failures need a capability the single pass does not have in our setting:**
+**About 36 of the 91 failures (an estimate from the group reports, not a per-task tally) are blocked by our constraints (one model, no planner, AndroidControl-only data):**
 - arithmetic and date computation;
 - memory across screens (counting, duplicates, transcription);
 - text that exists only in pixels;
-- colour or icon semantics with no training labels.
+- colour or icon semantics with no training labels;
+- information the accessibility tree does not carry (e.g. screen brightness), and inputs the data cannot teach (keyboard clipboard chips, appending to a field).
 
 These are the capabilities that TypeSafe's own guidance assigns to code rather than to the model [typesafe-jev-limits-2026]. A deterministic tool layer (§7) is the natural next step.
 
@@ -223,13 +224,13 @@ These are the capabilities that TypeSafe's own guidance assigns to code rather t
 | A separate "is the task done?" yes/no head | redundant: on AndroidControl its label equals "action = done" on 137/137 rows | measured |
 | Masking an action already marked "no change" | 2 wins / 2 losses on AndroidWorld; premature stops rose | measured, one run |
 | Weight merge 0.3·v3 + 0.7·v4 | 6 wins / 9 losses vs v4 | measured, one run |
-| Recovery ("go back") rows | back misuse on validation up (pilot ~10%; 44/798 at an early checkpoint) | tentative: early checkpoints |
-| "Already satisfied → done" rows | false "done" on validation 108/690 vs 64/690 at an early checkpoint | tentative: early checkpoint |
+| Recovery ("go back") rows | pilot (300 steps): validation step accuracy 65.2% → 57.7%, back predicted where gold is not back 1.9% → 10.0% (`2026-11-12-recovery/gate2_pilot1.out`) | measured on the pilot; the full runs were not finished |
+| "Already satisfied → done" rows | like-for-like at ckpt_250: false "done" 108/690 with the rows vs 67/690 without (but 106/690 after removing them again in a third run) | not evidence: the third run contradicts the attribution |
 | Early-warning rule at 10% of training | invalid: on v3's own run, mid-training metrics do not predict final ones (back misuse 34 → 18; false done 49–52 → 31) | measured (AGENTS.md M17) |
 
 ### 5.10 Zero-shot pattern probes (current model, no training)
 
-| Pattern | Validation | AndroidControl sample (2,012 rows) |
+| Pattern | Validation (827 rows; 430 with a target) | AndroidControl sample (2,012 rows; 1,224 with a target) |
 |---|---|---|
 | Element by the trained choice (argmax) | 286/430 | 821/1,224 |
 | Re-rank top-5 with one yes/no question per candidate | 261/430 | 772/1,224 |
@@ -244,14 +245,14 @@ Without training, per-candidate re-ranking does not help, although the top-5 hol
 - **Benchmark-derived data:** the `awgen` rows use AndroidWorld goal templates (§4).
 - **Pending results:** the untrained-base numbers, the V14 harness result and a retrained model.
 - **No live comparison with a generative model** of the same size on the same harness. Published numbers are context, not comparisons (§2).
-- **Failure-taxonomy rigour:** the taxonomy is a careful reading by one reader per group, without inter-rater agreement.
+- **Failure-taxonomy rigour:** the taxonomy was produced by four LLM agents (one per group) reading traces and screenshots, without a second reader or inter-rater agreement.
 
 ## 7. Conclusion and next steps
 
 A 2B decision model can operate a phone end to end at 135 ms per decision. Its per-step accuracy on AndroidControl overstates its task success by a factor of about three. Its episode-level accuracy and its AndroidWorld success are both near 22%.
 
 The gap is made of three things:
-- **termination** (the largest single class);
+- **termination:** 51 of 91 failures ended with a wrong "done";
 - **harness and environment defects**, worth as much as model changes;
 - **capabilities a single pass should not be asked to provide:** arithmetic, dates, memory and pixel text.
 
