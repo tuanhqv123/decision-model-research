@@ -1,0 +1,9 @@
+61
+tasks scored in both: 112
+v3 (no mask): 16/112
+mask on:      19/112
+mask wins 4, mask losses 1
+changed tasks: [('OpenAppTaskEval', True, False), ('RecipeDeleteMultipleRecipesWithConstraint', False, True), ('SystemWifiTurnOn', False, True), ('SystemWifiTurnOnVerify', False, True), ('TurnOnWifiAndOpenApp', False, True)]
+aw116_v3_s0+aw116_v3_s0_b identical repeat after no-change 469/542 = 86.5% | failed 98, of which declared done 49
+aw116_v3m_s0+aw116_v3m_s0_b identical repeat after no-change 168/270 = 62.2% | failed 93, of which declared done 56
+sign test w=4 l=1: two-sided p = 0.375

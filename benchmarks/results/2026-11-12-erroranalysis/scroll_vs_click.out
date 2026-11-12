@@ -1,0 +1,8 @@
+scroll steps                       247
+scroll steps, no change            146
+click ranked 2nd                   238
+click 2nd & scroll did nothing     139
+click 2nd with P>=0.2              56
+click 2nd P>=0.2 & no change       28
+in failed eps                      245
+in successful eps                  2

@@ -1,0 +1,16 @@
+rows 27454, episodes 4197
+
+S1 after a click on an editable field: n=629
+  next gold action: {'type_text': 536, 'click': 80, 'scroll': 4, 'status': 3, 'long_press': 3, 'wait': 3}
+  history line of that click says: {'changed': 608, 'no change': 21}
+  next screen has a focused editable element: {True: 584, False: 45}
+
+S2 right after a no-change step: n=539
+   {'same type': '238 (44%)', 'same type AND same element (exact repeat)': '45 (8%)'}
+  (previous -> gold) top: [(('click', 'click'), 175), (('wait', 'click'), 56), (('wait', 'status'), 48), (('click', 'status'), 43), (('scroll', 'scroll'), 41), (('click', 'wait'), 36), (('scroll', 'status'), 30), (('click', 'type_text'), 25)]
+
+S3 status rows: n=4197
+  episode length (rows incl. status): median 6, p75 8, p90 11, max 38
+  share of episodes with > 10 rows: 11.1%, > 15: 3.0%
+  action just before status: {'click': 3370, 'wait': 454, 'scroll': 258, 'type_text': 67, 'navigate_back': 36, 'open_app': 9, 'long_press': 2, 'navigate_home': 1}
+  effect of that action (history line): {'changed': 4075, 'no change': 122}

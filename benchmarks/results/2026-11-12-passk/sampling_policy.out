@@ -1,0 +1,22 @@
+action option keys: ['click', 'long_press', 'navigate_back', 'navigate_home', 'open_app', 'scroll', 'terminate', 'wait', 'write']
+rows: 8444
+
+== policy: top-3, status sampled like any type
+  T     type_acc  type_dev  el_acc  el_dev  click_step_acc  P(status|gold!=status)  P(status|gold=status)
+  0       81.0%     0.0%   60.9%    0.0%      55.4%          6.38%                  0.0%
+  0.3     80.2%     5.2%   59.9%    8.7%      54.3%          6.76%                  0.0%
+  0.5     78.9%     8.7%   58.8%   13.7%      52.8%          7.09%                  0.0%
+  0.7     77.3%    12.0%   57.5%   18.0%      50.9%          7.42%                  0.0%
+  1.0     74.4%    16.9%   55.5%   23.5%      47.5%          7.93%                  0.0%
+
+== policy: top-3, never sample INTO status (only if argmax)
+  T     type_acc  type_dev  el_acc  el_dev  click_step_acc  P(status|gold!=status)  P(status|gold=status)
+  0       81.0%     0.0%   60.9%    0.0%      55.4%          6.38%                  0.0%
+  0.3     81.2%     3.9%   59.9%    8.7%      54.6%          5.35%                  0.0%
+  0.5     80.6%     6.6%   58.8%   13.7%      53.2%          4.83%                  0.0%
+  0.7     79.5%     9.3%   57.5%   18.0%      51.5%          4.42%                  0.0%
+  1.0     77.3%    13.5%   55.5%   23.5%      48.4%          3.95%                  0.0%
+
+gold status rows: 0
+status ranked 2nd/3rd: 3076 rows, gold=status in 0
+status ranked 1st: 539 rows, gold!=status in 539 (premature), of which gold type in top-3: 468

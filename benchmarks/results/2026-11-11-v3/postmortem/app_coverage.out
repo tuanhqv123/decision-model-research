@@ -1,0 +1,7 @@
+app has training rows        8/25 = 32.0%
+app has ZERO training rows   8/89 = 9.0%
+one-sided Fisher exact p = 0.0072
+budget   0-10   app has rows 7/16   app has zero rows 4/32
+budget  11-20   app has rows 1/7   app has zero rows 4/31
+budget  21-999  app has rows 0/2   app has zero rows 0/26
+budget<=10 one-sided Fisher p=0.0213

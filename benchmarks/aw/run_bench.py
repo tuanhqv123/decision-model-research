@@ -41,7 +41,8 @@ class ConfigError(RuntimeError):
 TRAINING_IMG_WIDTH = 720  # every checkpoint since 2026-11-11 is trained on 720-px screenshots (stored AC width)
 
 
-def model_format_error(health: Dict[str, Any], history_format: str, img_width: int = TRAINING_IMG_WIDTH):
+def model_format_error(health: Dict[str, Any], history_format: str, img_width: int = TRAINING_IMG_WIDTH,
+                       effect: str = "v3"):
     """Why the served checkpoint cannot be run with this harness config, or None.
 
     The model's `/health` names its contract; a contract with `history: v3` reads v3 history lines (element + effect)
@@ -57,6 +58,10 @@ def model_format_error(health: Dict[str, Any], history_format: str, img_width: i
     if need != history_format:
         return ("served checkpoint speaks contract %r, which reads %s history lines, but model.history_format is %r"
                 % (name, need, history_format))
+    need_effect = CONTRACTS[name].get("effect", "v3")
+    if need_effect != effect:
+        return ("served checkpoint speaks contract %r, whose history lines use effect %s, but model.effect is %r"
+                % (name, need_effect, effect))
     served = health.get("img_width")
     if served != img_width:
         return "served image width is %r px but the checkpoint was trained at %d px (set D1_IMG_W)" % (served, img_width)
@@ -291,7 +296,8 @@ def run(plan: Plan, run_root: str, limit: Optional[int] = None,
     client = ModelClient(base_url=model_cfg.get("url"), token=model_cfg.get("token"))
     if plan.agent not in ("wait", "random", "status_now"):
         err = model_format_error(client.health(), str(model_cfg.get("history_format", "v1")),
-                                 int(model_cfg.get("img_width", TRAINING_IMG_WIDTH)))
+                                 int(model_cfg.get("img_width", TRAINING_IMG_WIDTH)),
+                                 effect=str(model_cfg.get("effect", "v3")))
         if err:
             raise ConfigError(err)
     registry = _build_task_registry(cfg)
@@ -329,6 +335,7 @@ def run(plan: Plan, run_root: str, limit: Optional[int] = None,
         task_factory=task_factory,
         protocol=plan.protocol,
         checkpoint=plan.checkpoint,
+        probe_success_each_step=bool((cfg.get("record") or {}).get("probe_success_each_step", False)),
     )
     out = runner.run(
         specs,
@@ -353,6 +360,7 @@ def run(plan: Plan, run_root: str, limit: Optional[int] = None,
 def agent_kwargs(plan: Plan) -> Dict[str, Any]:
     """Every AgentCore setting a config controls, in one place so a test can see it reach the agent."""
     model_cfg = plan.config.get("model") or {}
+    harness = plan.config.get("harness") or {}
     return dict(
         allow_app_fallback=plan.allow_app_fallback,
         stuck_k=plan.stuck_k,
@@ -366,6 +374,14 @@ def agent_kwargs(plan: Plan) -> Dict[str, Any]:
         done_threshold=float(model_cfg.get("done_threshold", 0.0)),
         # contract-v3 checkpoints read v3 history entries (element + effect); every other contract reads v1 lines
         history_format=str(model_cfg.get("history_format", "v1")),
+        record_state=bool((plan.config.get("record") or {}).get("state", False)),
+        # contract v4 history lines use effect v4 (no focus flag, no keyboard); the guard checks it against /health
+        effect=str(model_cfg.get("effect", "v3")),
+        # 2026-11-12 harness review: all off unless a config's `harness:` section turns them on
+        deferred_effect=bool(harness.get("deferred_effect", False)),
+        scroll_index=bool(harness.get("scroll_index", False)),
+        post_action_wait_s=float(harness.get("post_action_wait_s", 0.0)),
+        fresh_wait_s=float(harness.get("fresh_wait_s", 0.0)),
     )
 
 

@@ -1,0 +1,5 @@
+tasks scored in both: 56
+v3 (no mask): 12/56
+mask on:      12/56
+mask wins 1, mask losses 1
+changed tasks: [('OpenAppTaskEval', True, False), ('RecipeDeleteMultipleRecipesWithConstraint', False, True)]

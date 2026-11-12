@@ -1,0 +1,15 @@
+('keyboard before', False, 'after', True, 'changed', 'next gold', 'type_text') 380
+('keyboard before', True, 'after', True, 'changed', 'next gold', 'type_text') 179
+('keyboard before', False, 'after', False, 'changed', 'next gold', 'click') 38
+('keyboard before', False, 'after', True, 'changed', 'next gold', 'click') 33
+('keyboard before', True, 'after', True, 'changed', 'next gold', 'click') 16
+('keyboard before', True, 'after', True, 'no change', 'next gold', 'type_text') 15
+('keyboard before', True, 'after', True, 'no change', 'next gold', 'click') 8
+('keyboard before', False, 'after', False, 'changed', 'next gold', 'other') 7
+('keyboard before', True, 'after', False, 'changed', 'next gold', 'other') 7
+('keyboard before', True, 'after', False, 'changed', 'next gold', 'click') 5
+('keyboard before', False, 'after', False, 'changed', 'next gold', 'type_text') 3
+('keyboard before', False, 'after', True, 'changed', 'next gold', 'other') 3
+('keyboard before', True, 'after', True, 'changed', 'next gold', 'other') 3
+('keyboard before', False, 'after', False, 'no change', 'next gold', 'click') 1
+('keyboard before', False, 'after', False, 'no change', 'next gold', 'other') 1

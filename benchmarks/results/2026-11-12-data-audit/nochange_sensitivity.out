@@ -1,0 +1,15 @@
+states: 124
+  replay A == recorded action                      124 (100%)
+  A as recorded (no change): repeats failed action 40 (32%)
+  A as recorded (no change): says status           9 (7%)
+  B says screen changed: repeats failed action     38 (31%)
+  B says screen changed: says status               10 (8%)
+  C line removed: repeats failed action            63 (51%)
+  C line removed: says status                      1 (1%)
+  A vs B: same action type                         122 (98%)
+  A vs B: same action AND same point               120 (97%)
+by the failed action's type:
+  click      n=119  A 37  B 35  C 58
+  open_app   n=1  A 0  B 0  C 1
+  scroll     n=3  A 3  B 3  C 3
+  type_text  n=1  A 0  B 0  C 1

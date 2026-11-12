@@ -1,0 +1,16 @@
+step 0    rows  4197  P(status) 0.0%
+step 1    rows  4197  P(status) 6.2%
+step 2    rows  3935  P(status) 11.2%
+step 3    rows  3493  P(status) 16.2%
+step 4    rows  2926  P(status) 22.0%
+step 5    rows  2283  P(status) 25.6%
+step 6    rows  1698  P(status) 27.7%
+step 7    rows  1227  P(status) 29.3%
+step 8    rows   868  P(status) 28.6%
+step 9    rows   620  P(status) 24.8%
+step 10    rows   466  P(status) 26.2%
+step 11    rows   344  P(status) 25.0%
+step 12    rows   258  P(status) 20.2%
+step 13    rows   206  P(status) 18.9%
+step 14    rows   167  P(status) 24.6%
+step 15+   rows   569  P(status) 22.1%

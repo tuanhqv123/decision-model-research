@@ -1,0 +1,2 @@
+click      'no change' n= 336 | next step's list differs 31 (9%) | pixels >=1% 48 (14%) | both: list differs AND pixels >=1% 31 (9%)
+scroll     'no change' n= 143 | next step's list differs 1 (1%) | pixels >=1% 1 (1%) | both: list differs AND pixels >=1% 1 (1%)

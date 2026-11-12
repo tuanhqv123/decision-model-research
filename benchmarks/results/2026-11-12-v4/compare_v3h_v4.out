@@ -1,0 +1,19 @@
+== v3h
+  setup: {"policy": null, "protocol": "aw-main-v1"}
+  official SR 15.04% (score sum 17/113 scored; 17 full successes; excluded ['MarkorMergeNotes', 'MarkorTranscribeReceipt', 'SimpleSmsReplyMostRecent'])
+  without SMS tasks: 15.9% (17/107)
+  failed 96: declared done but not done 48, step budget 48
+  steps 1488, no change 512 (34%); same action after no change 303/325; failed eps with >=5 identical in a row 43
+  scrolls 247, with index 39; answer-task successes 0
+  successes: AudioRecorderRecordAudio, ClockStopWatchPausedVerify, ClockStopWatchRunning, ContactsAddContact, ExpenseDeleteMultiple, ExpenseDeleteSingle, MarkorCreateFolder, OpenAppTaskEval, OsmAndFavorite, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemBrightnessMaxVerify, SystemWifiTurnOff
+== v4
+  setup: {"policy": null, "protocol": "aw-main-v1"}
+  official SR 13.48% (score sum 15.5/115 scored; 15 full successes; excluded ['SimpleSmsReplyMostRecent'])
+  without SMS tasks: 14.2% (15/109)
+  failed 100: declared done but not done 60, step budget 40
+  steps 1347, no change 472 (35%); same action after no change 227/266; failed eps with >=5 identical in a row 39
+  scrolls 166, with index 4; answer-task successes 0
+  successes: CameraTakePhoto, ClockStopWatchPausedVerify, ClockStopWatchRunning, ExpenseDeleteSingle, MarkorCreateFolder, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemWifiTurnOff, SystemWifiTurnOn, SystemWifiTurnOnVerify, TurnOnWifiAndOpenApp
+== paired v4 vs v3h on 113 common tasks: wins 5, losses 6, sign test p=1.000
+  wins: CameraTakePhoto, RetroSavePlaylist, SystemWifiTurnOn, SystemWifiTurnOnVerify, TurnOnWifiAndOpenApp
+  losses: AudioRecorderRecordAudio, ContactsAddContact, ExpenseDeleteMultiple, OpenAppTaskEval, OsmAndFavorite, SystemBrightnessMaxVerify

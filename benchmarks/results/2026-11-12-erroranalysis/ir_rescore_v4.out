@@ -1,0 +1,11 @@
+NotesMeetingAttendeeCount                          answer='25 individuals were present'    expected=['25.0']                                 score=0.0 declared=True
+NotesRecipeIngredientCount                         answer='3/4 cup'                        expected=['3/4 cup']                              score=1.0 declared=True
+SimpleCalendarAnyEventsOnDate                      answer='Game night'                     expected=['Sports game', 'Coffee with CEO', 'Dinner with friends'] score=0.0 declared=True
+SimpleCalendarEventsInTimeRange                    answer='Meeting with Alice'             expected=['Cooking Class']                        score=0.0 declared=False
+SimpleCalendarEventsOnDate                         answer='Trivia Night'                   expected=['Trivia Night']                         score=1.0 declared=True
+SimpleCalendarFirstEventAfterStartTime             answer='Grocery Shopping'               expected=['Grocery Shopping']                     score=1.0 declared=True
+SimpleCalendarLocationOfEvent                      answer='100 Main St Chicago'            expected=['100 Main St Chicago']                  score=1.0 declared=True
+SportsTrackerTotalDistanceForCategoryOverInterval  answer='1.76'                           expected=['3200.0']                               score=0.0 declared=True
+TasksDueOnDate                                     answer='Follow up on support tickets'   expected=['Call client for follow-up', 'Review quarterly goals', 'Complete project proposal'] score=0.0 declared=True
+TasksIncompleteTasksOnDate                         answer="Read 'The Martian'"             expected=['Attend networking event', 'Review performance metrics', 'Plan team outing'] score=0.0 declared=True
+WOULD SCORE under the fix (checker 1.0 AND declared done): 4 of 10 answering episodes

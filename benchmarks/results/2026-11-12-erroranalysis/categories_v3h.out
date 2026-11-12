@@ -1,0 +1,9 @@
+96 scored failed episodes (v3h, seed 30; 99 listed, 3 unscored excluded)
+  APP_PROCEDURE     32/96  33.3%  does not know how this app does the task (wrong path/menu/app), first wrong step is a plan step
+  IR_ANSWER         25/96  26.0%  information-retrieval task: needs an answer (v3 has no answer action / reads wrong info)
+  WIDGET            13/96  13.5%  special widget: date/number picker, keypad digits, selector, unlabelled '(no label)' control
+  ENV                8/96   8.3%  environment: Chrome first-run dialog, no SIM (SMS)
+  WRONG_INSTANCE     6/96   6.2%  picks the wrong one among similar items (distractor file, duplicates, other row)
+  TEXT_ENTRY         5/96   5.2%  typing semantics: replaced instead of inserting, dropped file extension, wrong field
+  NO_EFFECT_LOOP     4/96   4.2%  an action that is correct or harmless shows no UI change; model repeats it until budget
+  MULTI_ITEM_STOP    3/96   3.1%  multi-item goal: does item 1 (of N) correctly, then status

@@ -1,0 +1,103 @@
+- AudioRecorderRecordAudioWithFileName   status@ 5/ 20 multi=1 save=1 | Record an audio clip and save it with name "presentation_fGwr.m4a" using Audio Recorder app.
+      last: click "Naming: Record-1.m4a" → screen changed || click "Naming: Record-1.m4a" → screen changed || click "Apply" → screen changed
+- ExpenseAddMultiple                     status@ 8/ 60 multi=1 save=1 | Add the following expenses into the pro expense: Expense: Social Club Dues  amount_dollars: $67.41  category_n
+      last: click "Social" → no change || type_text "Monthly recurring" into "Note" → screen changed || click "SAVE" → no change
+- ExpenseAddMultipleFromGallery          status@ 6/ 60 multi=0 save=1 | Add the expenses from expenses.jpg in Simple Gallery Pro to pro expense.
+      last: click "OK" → screen changed || type_text "pro expense" into "Title" → screen changed || click "OK" → screen changed
+- ExpenseAddMultipleFromMarkor           status@ 4/ 60 multi=0 save=0 | Go through the transactions in my_expenses.txt in Markor. Log the reimbursable transactions in the pro expense
+      last: click "Reimbursements" → screen changed || click "EDIT" → screen changed || click "UPDATE" → no change
+- ExpenseAddSingle                       status@ 8/ 12 multi=1 save=1 | Add the following expenses into the pro expense: Expense: Therapy Sessions  amount_dollars: $307.01  category_
+      last: click "Note" → no change || type_text "I may repeat this" into "Note" → screen changed || click "SAVE" → no change
+- ExpenseDeleteDuplicates2               status@10/ 18 multi=1 save=1 | Delete all but one of any expenses in pro expense that are exact duplicates, ensuring at least one instance of
+      last: click "Dining Out" → screen changed || click [ImageView] → screen changed || click "CONFIRM" → screen changed
+- ExpenseDeleteDuplicates                status@ 8/ 12 multi=1 save=1 | Delete all but one of any expenses in pro expense that are exact duplicates, ensuring at least one instance of
+      last: click "Wellness Products" → screen changed || click [ImageView] → screen changed || click "CONFIRM" → screen changed
+- ExpenseDeleteMultiple2                 status@ 8/ 34 multi=1 save=1 | Delete the following expenses from pro expense: Streaming Services, Unexpected Expenses, Pet Supplies.
+      last: click "190.95" → screen changed || click [ImageView] → screen changed || click "CONFIRM" → screen changed
+- MarkorCreateNoteFromClipboard          status@ 8/ 14 multi=1 save=1 | Create a note in Markor named 2023_09_08_active_umbrella.txt. Perform a paste operation in the note and save t
+      last: click "Plain Text" → screen changed || click "OK" → screen changed || click "Save" → no change
+- MarkorDeleteAllNotes                   status@ 4/ 14 multi=1 save=1 | Delete all my notes in Markor.
+      last: click "File art_project_sketches_st16.md" → screen changed || click "Delete lines" → no change || click "Delete lines" → screen changed
+- MarkorDeleteNewestNote                 status@ 4/ 10 multi=0 save=1 | Delete the newest note in Markor.
+      last: click "File fine_jelly_final.md" → screen changed || click "Delete lines" → no change || click "Delete lines" → screen changed
+- MarkorDeleteNote                       status@ 4/ 10 multi=0 save=1 | Delete the note in Markor named bold_king_edited.
+      last: click "File bold_king_edited" → screen changed || click "Delete lines" → no change || click "Delete lines" → screen changed
+- MarkorEditNote                         status@ 5/ 12 multi=1 save=1 | Edit note_SiFbv.txt in Markor. Add to the top of the note Hello, World!
+      last: click "Don't forget to water the plants while I" → screen changed || type_text "Hello, World" into "Don't forget to water the plants while I" → screen changed || click "Save" → no change
+- MarkorTranscribeReceipt                status@ 8/ 18 multi=1 save=1 | Create a file in Markor, called receipt.md with the transactions from the receipt.png. Use Simple Gallery to v
+      last: click "Save" → no change || type_text "csv format including the header "Date, Item, Amount" into "Save" → screen changed || click "Save" → no change
+- NotesIsTodo                            status@ 2/ 10 multi=0 save=0 | Is the note titled 'To-Do List' in the Joplin app marked as a todo item? Respond with either 'True' if it is a
+      last: open_app joplin → screen changed || click "To-Do List" → screen changed
+- NotesMeetingAttendeeCount              status@ 4/ 10 multi=0 save=0 | How many attendees were present in the meeting titled 'Employee Performance Evaluation' in the Joplin app? Exp
+      last: click "Search" → screen changed || type_text "Employee Performance Evaluation" into [EditText] → screen changed || click "Employee Performance Evaluation" → screen changed
+- NotesRecipeIngredientCount             status@ 4/ 10 multi=1 save=0 | What quantity of spirulina do I need for the recipe 'Chicken Alfredo' in the Joplin app? Express your answer i
+      last: click "Search" → screen changed || type_text "spirulina" into [EditText] → screen changed || click "Chicken Alfredo" → no change
+- NotesTodoItemCount                     status@ 3/ 10 multi=0 save=0 | How many to-dos do I have in the 'Ideas' folder in the Joplin app? Express your answer as just a single number
+      last: open_app joplin → screen changed || click "Sort notes by" → screen changed || click "to-do: Charitable Giving Log" → screen changed
+- OsmAndMarker                           status@ 5/ 20 multi=1 save=0 | Add a location marker for Planken, Liechtenstein in the OsmAnd maps app.
+      last: type_text "Planken, Liechtenstein" into "Type to search all" → screen changed || click "Liechtenstein" → screen changed || click "Marker" → screen changed
+- RecipeAddMultipleRecipes               status@11/ 60 multi=1 save=1 | Add the following recipes into the Broccoli app: Recipe: Chicken Alfredo Pasta  description: A delicious and h
+      last: click "A delicious and healthy choice for any t" → screen changed || type_text "A delicious and healthy choice for any time of the day.
+ servings: 2 servings
+ preparationTime: 10 mins
+ ingredients: as desired
+ directions: Cook fettuccine pasta, toss with Alfredo sauce and grilled chicken strips. Serve with a sprinkle of Parmesan cheese. Try adding a pinch of your favorite spices for extra flavor." into "A delicious and healthy choice for any t" → screen changed || click "SAVE" → screen changed
+- RecipeAddMultipleRecipesFromMarkor2    status@ 5/ 60 multi=0 save=1 | Add the recipes from recipes.txt in Markor that take 10 mins to prepare into the Broccoli recipe app.
+      last: click "title|description|servings|preparationTi" → screen changed || type_text "Broccoli" into "title|description|servings|preparationTi" → screen changed || click "Save" → no change
+- RecipeAddMultipleRecipesFromMarkor     status@ 3/ 60 multi=0 save=1 | Add the recipes from recipes.txt in Markor to the Broccoli recipe app.
+      last: open_app markor → screen changed || click "File recipes.txt" → screen changed || click "Save" → no change
+- RecipeDeleteDuplicateRecipes2          status@ 5/ 24 multi=1 save=1 | Delete all but one of any recipes in the Broccoli app that are exact duplicates, ensuring at least one instanc
+      last: click "More options" → screen changed || click "Delete" → screen changed || click "DELETE" → screen changed
+- RecipeDeleteDuplicateRecipes3          status@ 5/ 34 multi=1 save=1 | Delete all but one of any recipes in the Broccoli app that are exact duplicates, ensuring at least one instanc
+      last: click "More options" → screen changed || click "Delete" → screen changed || click "DELETE" → screen changed
+- RecipeDeleteMultipleRecipes            status@ 5/ 24 multi=1 save=1 | Delete the following recipes from Broccoli app: Zucchini Noodles with Pesto, Garlic Butter Shrimp, Lentil Soup
+      last: click "More options" → screen changed || click "Delete" → screen changed || click "DELETE" → screen changed
+- RetroCreatePlaylist                    status@22/ 24 multi=1 save=1 | Create a playlist in Retro Music titled "Hip Hop Bangers 270" with the following songs, in order: Golden Days,
+      last: click "Playlist name" → no change || type_text "Hip Hop Bangers 270" into "Playlist name" → screen changed || click "Create" → screen changed
+- RetroPlayingQueue                      status@ 9/ 32 multi=1 save=1 | Add the following songs, in order, Through the Storm, Hidden Paths, Forever Young, Whispers of the Past, Heart
+      last: click "Create" → screen changed || click [ImageView] → screen changed || click "Add to playing queue" → screen changed
+- RetroPlaylistDuration                  status@ 7/ 30 multi=1 save=1 | Create a playlist in Retro Music titled "Reggae Rhythms 51" with a duration between 45 and 50 minutes using th
+      last: click "Playlist name" → no change || type_text "Reggae Rhythms 51" into "Playlist name" → screen changed || click "Create" → screen changed
+- RetroSavePlaylist                      status@19/ 50 multi=1 save=0 | Create a playlist in Retro Music titled "Blues Break 567" with the following songs, in order: Chasing Shadows,
+      last: click "More options" → screen changed || click "Import playlist" → screen changed || click "Import" → screen changed
+- SaveCopyOfReceiptTaskEval              status@ 8/ 16 multi=1 save=1 | In Simple Gallery Pro, copy receipt_2023_01_22_sure_frog.jpg in DCIM and save a copy with the same name in Dow
+      last: click "Create new folder" → screen changed || type_text "Download" into "Title" → screen changed || click "OK" → screen changed
+- SimpleCalendarDeleteEvents             status@ 9/ 14 multi=1 save=0 | In Simple Calendar Pro, delete all the calendar events on 2023-10-27
+      last: click "Review session for Project X" → screen changed || click "Delete" → screen changed || click "Yes" → screen changed
+- SimpleCalendarDeleteEventsOnRelativeDay status@ 5/ 12 multi=1 save=0 | In Simple Calendar Pro, delete all events scheduled for this Monday.
+      last: click "Go to date" → screen changed || click "OK" → screen changed || click [View] → screen changed
+- SimpleCalendarEventsInNextWeek         status@ 3/ 10 multi=1 save=0 | What events do I have in the next week in Simple Calendar Pro? Assume the week starts from Monday. Answer with
+      last: open_app simple calendar pro → screen changed || click "Change view" → screen changed || click "Weekly view" → screen changed
+- SimpleCalendarEventsOnDate             status@ 7/ 10 multi=1 save=1 | What events do I have October 24 in Simple Calendar Pro? Answer with the titles only. If there are multiple ti
+      last: scroll down → screen changed || click "24" → screen changed || click "OK" → screen changed
+- SimpleCalendarLocationOfEvent          status@ 6/ 10 multi=0 save=1 | What is the location of my Family reunion event in Simple Calendar Pro? Answer with the location only.
+      last: click "Family reunion" → screen changed || click "100 Main St Chicago" → screen changed || click "Save" → screen changed
+- SimpleDrawProCreateDrawing             status@ 5/ 18 multi=0 save=1 | Create a new drawing in Simple Draw Pro. Name it adipiscing_fair_jelly_final.png. Save it in the Pictures fold
+      last: type_text "adipiscing_fair_jelly_final" into "image_2023_10_15_15_34_10" → screen changed || click "OK" → screen changed || click "SAVE" → screen changed
+- SimpleSmsReply                         status@ 7/ 12 multi=1 save=0 | Reply to +18407874306 with message: Yoga class every Tuesday and Thursday at 6 PM. in Simple SMS Messenger
+      last: click [ImageView] → screen changed || type_text "Yoga class every Tuesday and Thursday at 6 PM." into "Type a message…" → screen changed || click "SMS" → screen changed
+- SimpleSmsResend                        status@ 5/ 12 multi=0 save=0 | Resend the message I just sent to Noa Mohammed in Simple SMS Messenger
+      last: click "Inconceivable!" → no change || click "Not sent. Touch to retry." → screen changed || click "SMS" → screen changed
+- SimpleSmsSend                          status@ 6/ 12 multi=1 save=0 | Send a text message using Simple SMS Messenger to +16597910719 with message: Beauty is in the eye of the behol
+      last: click [ImageView] → screen changed || type_text "Beauty is in the eye of the beholder" into "Type a message…" → screen changed || click "SMS" → screen changed
+- SimpleSmsSendClipboardContent          status@ 6/ 12 multi=0 save=0 | Send a message to +15459061746 with the clipboard content in Simple SMS Messenger
+      last: click [ImageView] → screen changed || type_text "clipboard content" into "Type a message…" → screen changed || click "SMS" → screen changed
+- SimpleSmsSendReceivedAddress           status@ 5/ 18 multi=0 save=0 | Text the address of the event to Gabriel Ibrahim that Oscar Mohamed just sent me in Simple SMS Messenger
+      last: click "Gabriel Ibrahim" → screen changed || type_text "Oscar Mohamed" into "Type a message…" → screen changed || click "SMS" → screen changed
+- SportsTrackerActivitiesCountForWeek    status@ 3/ 10 multi=0 save=0 | How many running activities did I do this week in the OpenTracks app? Assume the week starts from Monday. Expr
+      last: open_app open tracks sports tracker → screen changed || scroll down → screen changed || click "6 Oct" → screen changed
+- SportsTrackerActivitiesOnDate          status@ 2/ 20 multi=1 save=0 | What activities did I do October 01 in the OpenTracks app? Answer with the activity type only. If there are mu
+      last: open_app open tracks sports tracker → screen changed || click "Today" → no change
+- SportsTrackerTotalDurationForCategoryThisWeek status@ 4/ 16 multi=0 save=0 | What was the total duration of running activities in the OpenTracks app this week? Assume the week starts from
+      last: click "Track" → screen changed || click "By time" → screen changed || click "Stats" → screen changed
+- SystemBluetoothTurnOffVerify           status@ 5/ 10 multi=0 save=0 | Turn bluetooth off.
+      last: click "Connection preferences" → screen changed || click "Bluetooth" → screen changed || click [Switch] → screen changed
+- TasksCompletedTasksForDate             status@ 2/ 10 multi=1 save=0 | Which tasks have I completed for October 16 2023 in Tasks app? Answer with the titles only. If there are multi
+      last: open_app tasks → screen changed || scroll down → no change
+- TasksDueNextWeek                       status@ 3/ 12 multi=0 save=0 | How many tasks do I have due next week in Tasks app? Assume the week starts from Monday. Express your answer a
+      last: open_app tasks → screen changed || scroll down → screen changed || scroll down → screen changed
+- TasksDueOnDate                         status@ 3/ 10 multi=1 save=1 | What tasks do I have due October 24 2023 in Tasks app? Answer with the titles only. If there are multiples tit
+      last: open_app tasks → screen changed || click "Follow up on support tickets" → no change || click "Save" → screen changed
+- TasksHighPriorityTasks                 status@ 5/ 10 multi=1 save=0 | What are my high priority tasks in Tasks app? Answer with the titles only. If there are multiples titles, form
+      last: click "Settings" → screen changed || click "Priority" → no change || click "RESET TO DEFAULTS" → no change
+{'n': 49, 'multi-part goal': 31, 'last action save-like': 27, 'both': 20}

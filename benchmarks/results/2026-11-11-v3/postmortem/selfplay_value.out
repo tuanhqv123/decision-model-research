@@ -1,0 +1,3 @@
+self-play finished tasks: 54 | successes: 9
+self-play successes: ['AudioRecorderRecordAudio', 'ClockStopWatchPausedVerify', 'ClockStopWatchRunning', 'ContactsAddContact', 'ExpenseDeleteMultiple', 'ExpenseDeleteSingle', 'MarkorCreateFolder', 'OsmAndFavorite', 'OsmAndMarker']
+solved by self-play AND already by v3: 8 | NEW (v3 failed): 1 ['OsmAndMarker'] | v3 solved, self-play failed: 2 ['OpenAppTaskEval', 'RecipeDeleteDuplicateRecipes']

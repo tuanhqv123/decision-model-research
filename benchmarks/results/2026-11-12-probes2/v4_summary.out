@@ -1,0 +1,15 @@
+== v4.jsonl 2886 rows
+  P1 no change        n=386 (eps 52)  mean 0.501  top1 53%
+  P1 screen changed   n=386 (eps 52)  mean 0.490  top1 51%  Δ -0.011 [-0.063, +0.030]  top1 flips 34/386
+  P2 1x               n=250 (eps 41)  mean 0.228  top1 23%
+  P2 2x               n=250 (eps 41)  mean 0.226  top1 20%  Δ -0.002 [-0.014, +0.006]  top1 flips 15/250
+  P2 3x               n=250 (eps 41)  mean 0.222  top1 20%  Δ -0.006 [-0.025, +0.006]  top1 flips 20/250
+  P2 4x               n=250 (eps 41)  mean 0.219  top1 19%  Δ -0.010 [-0.034, +0.008]  top1 flips 25/250
+  P3 +0               n=226 (eps 110)  mean 0.022  top1 2%
+  P3 +3               n=226 (eps 110)  mean 0.035  top1 2%  Δ +0.013 [+0.009, +0.017]  top1 flips 0/226
+  P3 +6               n=226 (eps 110)  mean 0.043  top1 3%  Δ +0.021 [+0.015, +0.028]  top1 flips 2/226
+  P3 +10              n=226 (eps 110)  mean 0.051  top1 4%  Δ +0.028 [+0.020, +0.038]  top1 flips 3/226
+  P4 as is            n= 16 (eps 16)  mean 0.920  top1 100%
+  P4 + second task    n= 16 (eps 16)  mean 0.012  top1 0%  Δ -0.908 [-0.964, -0.833]  top1 flips 16/16
+  P5 as served        n= 89 (eps 22)  mean 0.659  top1 74%
+  P5 focused          n= 89 (eps 22)  mean 0.650  top1 73%  Δ -0.009 [-0.043, +0.019]  top1 flips 3/89

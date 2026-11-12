@@ -1,0 +1,12 @@
+# merge 0.3 replayed on the 10 recorded v4 states where v4 emitted `answer` (served model: merge_v4a03, contract v4)
+NotesMeetingAttendeeCount            v4 '25 individuals were present' | merge: answer 0.83 element '25 individuals were present'
+NotesRecipeIngredientCount           v4 '3/4 cup'                     | merge: answer 0.85 element '3/4 cup'            (correct)
+SimpleCalendarAnyEventsOnDate        v4 'Game night'                  | merge: answer 0.58 element 'Game night'
+SimpleCalendarEventsInTimeRange      v4 'Meeting with Alice'          | merge: terminate 0.53 (answer 0.32)
+SimpleCalendarEventsOnDate           v4 'Trivia Night'                | merge: answer 0.57 element 'Trivia Night'        (correct)
+SimpleCalendarFirstEventAfterStartTime v4 'Grocery Shopping'          | merge: answer 0.40 element 'Grocery Shopping'    (correct)
+SimpleCalendarLocationOfEvent        v4 '100 Main St Chicago'         | merge: answer 0.62 element 'Save'               (WRONG element; v4 was correct)
+SportsTrackerTotalDistance...        v4 '1.76'                        | merge: answer 0.51 element '1.76'
+TasksDueOnDate                       v4 'Follow up on support tickets'| merge: click 0.52 (answer 0.37)
+TasksIncompleteTasksOnDate           v4 "Read 'The Martian'"          | merge: scroll 0.37 (answer 0.17)
+# summary: still answers on 7/10 states; of v4's 4 correct answers the merge keeps 3 (loses SimpleCalendarLocationOfEvent)

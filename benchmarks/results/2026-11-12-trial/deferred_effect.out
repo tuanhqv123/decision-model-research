@@ -1,0 +1,26 @@
+action     immediate  deferred   pixels  n
+click      changed    changed    px<1%   31
+click      changed    changed    px>=1%  453
+click      no change  changed    px>=1%  31
+click      no change  no change  px<1%   288
+click      no change  no change  px>=1%  17
+open_app   changed    changed    px>=1%  113
+open_app   no change  changed    px>=1%  1
+open_app   no change  no change  px<1%   2
+open_app   no change  no change  px>=1%  1
+scroll     changed    changed    px<1%   55
+scroll     changed    changed    px>=1%  30
+scroll     no change  changed    px>=1%  1
+scroll     no change  no change  px<1%   142
+type_text  changed    changed    px<1%   12
+type_text  changed    changed    px>=1%  48
+wait       changed    changed    px<1%   52
+wait       changed    changed    px>=1%  7
+wait       no change  changed    px<1%   37
+wait       no change  no change  px<1%   105
+
+scroll 'changed' with <0.5% pixel change — what differs (before-only | after-only):
+  ('p1_t0000_simplecalendaraddoneevent_s30_d1_v3_s0.js', 'scroll down → screen changed', [('14', 'Button', (445, 896, 613, 1069), 'cl'), ('15', 'EditText', (445, 1069, 613, 1195), 'cel'), ('16', 'Button', (445, 1195, 613, 1369), 'cl')], [('21', 'Button', (445, 896, 613, 1069), 'cl'), ('22', 'EditText', (445, 1069, 613, 1195), 'cel'), ('23', 'Button', (445, 1195, 613, 1369), 'cl')])
+  ('p1_t0000_simplecalendaraddoneevent_s30_d1_v3_s0.js', 'scroll down → screen changed', [('21', 'Button', (445, 896, 613, 1069), 'cl'), ('22', 'EditText', (445, 1069, 613, 1195), 'cel'), ('23', 'Button', (445, 1195, 613, 1369), 'cl')], [('01', 'EditText', (445, 1069, 613, 1195), 'cel'), ('02', 'Button', (445, 1195, 613, 1369), 'cl'), ('30', 'Button', (445, 896, 613, 1069), 'cl')])
+  ('p1_t0000_simplecalendaraddoneevent_s30_d1_v3_s0.js', 'scroll down → screen changed', [('01', 'EditText', (445, 1069, 613, 1195), 'cel'), ('02', 'Button', (445, 1195, 613, 1369), 'cl'), ('30', 'Button', (445, 896, 613, 1069), 'cl')], [('10', 'Button', (445, 896, 613, 1069), 'cl'), ('11', 'EditText', (445, 1069, 613, 1195), 'cel'), ('12', 'Button', (445, 1195, 613, 1369), 'cl')])
+  ('p1_t0000_simplecalendaraddoneevent_s30_d1_v3_s0.js', 'scroll down → screen changed', [('10', 'Button', (445, 896, 613, 1069), 'cl'), ('11', 'EditText', (445, 1069, 613, 1195), 'cel'), ('12', 'Button', (445, 1195, 613, 1369), 'cl')], [('20', 'Button', (445, 896, 613, 1069), 'cl'), ('21', 'EditText', (445, 1069, 613, 1195), 'cel'), ('22', 'Button', (445, 1195, 613, 1369), 'cl')])

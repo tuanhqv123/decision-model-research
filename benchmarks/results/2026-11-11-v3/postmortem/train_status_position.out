@@ -1,0 +1,2 @@
+training demos: decision number at which status is the gold (n=4197): median 6, IQR 4-8
+histogram: {2: 262, 3: 442, 4: 567, 5: 643, 6: 585, 7: 471, 8: 359, 9: 248, 10: 154, 11: 122, 12: 86, 13: 52, 14: 39, 15: 41, 16: 35, 17: 19}

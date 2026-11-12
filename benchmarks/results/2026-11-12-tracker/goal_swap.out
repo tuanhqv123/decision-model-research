@@ -1,0 +1,6 @@
+v3 final     n=137  mean P(terminate) 0.653  top-1 status 106/137 (77%)
+v3 swapother n=137  mean P(terminate) 0.257  top-1 status 39/137 (28%)
+v3 swapsame  n=  8  mean P(terminate) 0.267  top-1 status 2/8 (25%)
+v4 final     n=137  mean P(terminate) 0.776  top-1 status 123/137 (90%)
+v4 swapother n=137  mean P(terminate) 0.234  top-1 status 34/137 (25%)
+v4 swapsame  n=  8  mean P(terminate) 0.269  top-1 status 2/8 (25%)

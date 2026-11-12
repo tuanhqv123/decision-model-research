@@ -1,0 +1,4 @@
+1. episodes 4197; episodes whose first screen is the home screen: 615; distinct finishing apps 400; same-app ordered pairs 318030
+   top apps: [('clock (com.google.android.deskclock)', 255), ('google calendar (com.google.android.calendar)', 190), ('google drive (com.google.android.apps.docs)', 181), ('google maps (com.google.android.apps.maps)', 180), ('alarm.clock.calendar.reminder', 180), ('youtube (com.google.android.youtube)', 131), ('com.google.android.keep', 115), ('com.ajnsnewmedia.kitchenstories', 110)]
+   episode rows median 6 -> a chained pair would be ~13 rows
+2. {'rows': 27454, 'rows with >40 candidates (raw, system UI and keyboard removed)': 7741} | among them median 56, p90 85, max 1020

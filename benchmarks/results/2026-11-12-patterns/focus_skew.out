@@ -1,0 +1,5 @@
+field clicks with a next row: 699
+  as trained (focus kept, IME kept): no change            25 (4%)
+  focus dropped: no change                                29 (4%)
+  focus AND keyboard dropped (= AW view): no change       96 (14%)
+  next screen contains keyboard (IME) elements            637

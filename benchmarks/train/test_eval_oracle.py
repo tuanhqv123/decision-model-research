@@ -69,3 +69,37 @@ def test_excluded_action_is_replaced_by_the_most_likely_remaining_one():
     assert out[0]["pred"] == "scroll" and out[0]["value"] == "down" and abs(out[0]["conf"] - 0.3) < 1e-9
     out, _ = E._run_eval_elements(_FakeModel(), rows, 8, False, "v3", "cap40_reading_noime", lambda p: None, [])
     assert out[0]["pred"] == "status"  # default unchanged
+
+
+class _CapturingModel(_FakeModel):
+    """Records the action options it is asked, answers 'scroll'."""
+    def system_one_batch(self, reqs):
+        self.options = [list(q["action"]["criteria"]) for _, q, _ in reqs]
+        ans = {"action": {"choice": "scroll", "confidence": 0.7, "probabilities": {"scroll": 0.7, "click": 0.3}},
+               "target_el": {"choice": "2"}, "scroll_dir": {"choice": "down"}, "type_text": {"text": ""}}
+        return [{"answers": ans} for _ in reqs]
+
+
+def test_dropped_action_is_removed_from_the_question_itself():
+    """`--drop-actions terminate`: the action question offers 8 options; the model cannot answer `status`."""
+    m = _CapturingModel()
+    rows = [E.val_row(_rec({"action_type": "scroll", "direction": "down"}), "/nonexistent")]
+    out, _ = E._run_eval_elements(m, rows, 8, False, "v3", "cap40_reading_noime", lambda p: None, [],
+                                  drop_actions=("terminate",))
+    assert "terminate" not in m.options[0] and len(m.options[0]) == 8 and out[0]["pred"] == "scroll"
+
+
+class _StateModel(_FakeModel):
+    def system_one_batch(self, reqs):
+        self.states = [st for st, _, _ in reqs]
+        return super().system_one_batch(reqs)
+
+
+def test_ac_low_evaluation_shows_the_step_instruction_to_the_model():
+    m = _StateModel()
+    rec = dict(_rec({"action_type": "scroll", "direction": "down"}), local_goal="Scroll down to see more")
+    rows = [E.val_row(rec, "/nonexistent")]
+    E._run_eval_elements(m, rows, 8, False, "v3i", "cap40_reading_noime", lambda p: None, [], with_instruction=True)
+    assert "Step instruction: Scroll down to see more" in m.states[0]
+    E._run_eval_elements(m, rows, 8, False, "v3i", "cap40_reading_noime", lambda p: None, [])
+    assert "Step instruction" not in m.states[0]

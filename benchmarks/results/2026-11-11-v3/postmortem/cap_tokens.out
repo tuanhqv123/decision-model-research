@@ -1,0 +1,6 @@
+# run on the training host, 2026-11-11, tokenizer of ckpt_1824 (d1-2B@cfe5760)
+config keys with 'position' or 'max': {'d1_vision_max_pixels': 1638400} {'max_position_embeddings': 128000}
+sampled rows 6863 of 27454
+candidates (no cap): median 19 p90 41 p99 72 max 191 | rows > 40: 740 (10.8%)
+text tokens (state + target_el options), cap 40: median 775 p90 1459 p99 1706 max 2213
+text tokens (state + target_el options), no cap: median 775 p90 1565 p99 2659 max 6456

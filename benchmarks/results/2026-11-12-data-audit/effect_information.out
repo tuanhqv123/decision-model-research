@@ -1,0 +1,9 @@
+previous action, effect         n    repeat    status      wait
+click, changed              15724      2.3%     21.2%      5.4%
+click, no change              293     14.7%     14.7%     12.3%
+other, changed               4157      6.0%      2.7%      4.9%
+other, no change               29     17.2%      3.4%      6.9%
+scroll, changed              1733     46.6%     13.2%      1.2%
+scroll, no change              90     37.8%     33.3%      7.8%
+
+I(effect word ; gold action type) = 0.0015 bits of H(gold) = 1.778 bits (0.09%), over 22026 rows; 'no change' rows: 412 (1.9%)

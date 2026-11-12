@@ -1,0 +1,11 @@
+rows (AndroidControl, AW-like full flow)                     27454
+rows per AndroidWorld app                                    {'android world': 0, 'audio recorder': 0, 'broccoli': 0, 'camera': 0, 'clipper': 0, 'clock': 1227, 'contacts': 420, 'dialer': 14, 'files': 155, 'gmail': 1253, 'google calendar': 1390, 'google chrome': 162, 'google drive': 943, 'google maps': 1110, 'google photos': 137, 'google play': 28, 'google search': 0, 'joplin': 0, 'markor': 0, 'messages': 20, 'miniwob': 0, 'open tracks sports tracker': 0, 'osmand': 0, 'pro expense': 0, 'retro music': 0, 'settings': 384, 'simple calendar pro': 0, 'simple draw pro': 0, 'simple gallery pro': 0, 'simple sms messenger': 0, 'tasks': 0, 'vlc': 0, 'youtube': 768}
+rows home screen / other (non-AW) app                        (655, 18788)
+AndroidWorld apps with ZERO rows                             19/33: ['android world', 'audio recorder', 'broccoli', 'camera', 'clipper', 'google search', 'joplin', 'markor', 'miniwob', 'open tracks sports tracker', 'osmand', 'pro expense', 'retro music', 'simple calendar pro', 'simple draw pro', 'simple gallery pro', 'simple sms messenger', 'tasks', 'vlc']
+rows right after a no-change step                            539/27454 = 2.0%
+  gold action on those rows                                  {'click': 261, 'status': 122, 'wait': 62, 'scroll': 54, 'type_text': 29, 'navigate_back': 9, 'long_press': 2}
+after a click on an editable field, next gold is type_text   577/699 = 82.5%
+status rows                                                  4197
+status rows that are the LAST row of their episode           4197/4197
+episodes                                                     4197
+non-final rows labelled status                               0

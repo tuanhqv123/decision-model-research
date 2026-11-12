@@ -116,8 +116,12 @@ class Runner:
         protocol: str = DEFAULT_PROTOCOL,
         checkpoint: Optional[str] = None,
         save_screenshots: bool = True,
+        probe_success_each_step: bool = False,
     ):
         self.recorder = recorder
+        # Self-play labels (2026-11-11): ask the task's own checker after EVERY step, so a rollout records when the
+        # task became complete. Off by default (the official protocol checks once, at the end).
+        self.probe_success_each_step = bool(probe_success_each_step)
         self.env_factory = env_factory
         self.agent_factory = agent_factory
         self.task_factory = task_factory
@@ -196,6 +200,9 @@ class Runner:
             "step_budget": step_budget,
             "harness_commit": _harness_id(),
             "coverage": _coverage_of(task),
+            # agent-side policy (masking, history format, effect labels, harness timing): it changes outcomes
+            # without changing `protocol`, so the header carries it (AW_PROTOCOL; 2026-11-12 review)
+            "policy": agent.policy() if callable(getattr(agent, "policy", None)) else None,
         }
         self.recorder.start_episode(header)
 
@@ -259,6 +266,11 @@ class Runner:
                     record = _error_step(i, exc)
                     record["env_crash_candidate"] = True
                 record = self._attach_image(record, spec.episode_id, i)
+                if self.probe_success_each_step:
+                    try:
+                        record["probe_score"] = float(task.is_successful(env))
+                    except Exception as exc:  # noqa: BLE001 - a probe must never end the episode
+                        record["probe_score"], record["probe_error"] = None, "%s: %s" % (type(exc).__name__, exc)
                 self.recorder.add_step(record)
                 steps.append(record)
                 i += 1

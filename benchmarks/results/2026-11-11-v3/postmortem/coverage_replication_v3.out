@@ -1,0 +1,5 @@
+== v3, all tasks
+aw116_v3_s0+aw116_v3_s0_b app has rows  8/25 = 32.0% | zero rows  8/89 =  9.0% | one-sided Fisher p = 0.0072
+== v3, without the 7 do-nothing tasks
+excluding 7 tasks a do-nothing agent (Q11, status at step 0) already solves: ['RecipeDeleteMultipleRecipesWithConstraint', 'SystemBluetoothTurnOffVerify', 'SystemBluetoothTurnOnVerify', 'SystemBrightnessMaxVerify', 'SystemBrightnessMinVerify', 'SystemWifiTurnOn', 'SystemWifiTurnOnVerify']
+aw116_v3_s0+aw116_v3_s0_b app has rows  7/19 = 36.8% | zero rows  8/88 =  9.1% | one-sided Fisher p = 0.0050

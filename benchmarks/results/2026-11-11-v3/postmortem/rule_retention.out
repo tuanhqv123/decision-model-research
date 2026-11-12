@@ -1,0 +1,8 @@
+AC train (AW-like, full flow) {'spatial rows': 17737, 'rows over the cap': 1697, 'R0 reading (now): gold kept': 1285, 'R1 labelled-first: gold kept': 1427, 'R2 interactive-first: gold kept': 1465}
+AC validation {'spatial rows': 474, 'rows over the cap': 80, 'R0 reading (now): gold kept': 59, 'R1 labelled-first: gold kept': 67, 'R2 interactive-first: gold kept': 68}
+AC-High test {'spatial rows': 5708, 'rows over the cap': 656, 'R0 reading (now): gold kept': 487, 'R1 labelled-first: gold kept': 547, 'R2 interactive-first: gold kept': 543}
+
+--- rows where R0 kept the gold but a new rule loses it ---
+AC train (AW-like, full flow) {'R1': 70, 'R2': 41} {('R1', 'labelled', 'static'): 18, ('R2', 'labelled', 'static'): 41, ('R1', 'unlabelled', 'interactive'): 52}
+AC validation {'R2': 1, 'R1': 3} {('R2', 'labelled', 'static'): 1, ('R1', 'unlabelled', 'interactive'): 3}
+AC-High test {'R1': 16, 'R2': 19} {('R1', 'unlabelled', 'interactive'): 12, ('R2', 'labelled', 'static'): 19, ('R1', 'labelled', 'static'): 4}

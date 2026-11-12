@@ -1,0 +1,6 @@
+nothing clickable at the point           n= 4130  elements same   2.4%  elements+pixels same   2.0%   next gold: click 2616, status 561, type_text 423
+ALL clicks                               n=15873  elements same   1.8%  elements+pixels same   1.4%   next gold: click 9417, status 3356, type_text 1583
+editable, not focused, no keyboard       n=  392  elements same   0.3%  elements+pixels same   0.3%   next gold: type_text 326, click 58, long_press 3
+focused editable field                   n=   90  elements same  20.0%  elements+pixels same  20.0%   next gold: type_text 78, click 10, status 1
+editable, keyboard already up            n=  191  elements same  10.5%  elements+pixels same  10.5%   next gold: type_text 166, click 20, status 2
+selected item (or inside one)            n=   74  elements same  23.0%  elements+pixels same  20.3%   next gold: click 50, scroll 8, status 7

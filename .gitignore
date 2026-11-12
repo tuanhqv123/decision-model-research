@@ -1,31 +1,39 @@
-# exported subset: code + reports only
-.venv*/
-venv/
-venv*
+# heavy data / caches — keep git lean (these are large or regenerable)
+benchmarks/data/
+benchmarks/decision-index/.venv/
+benchmarks/decision-index/*.egg-info/
 .python-version
+.venv/
+venv/
 __pycache__/
 *.pyc
 *.pyo
-.pytest_cache/
+.ipynb_checkpoints/
 node_modules/
+.pytest_cache/
+*.egg-info/
 .DS_Store
 *.log
 *.key
 *.token
-
-# heavy data / regenerable artefacts
-benchmarks/data/
-benchmarks/decision-index/
-coordinator/*.json
-coordinator/*.jsonl
-vkjobs/
-backup-*/
 references/raw/*.zip
 references/raw/*.tar
-*.tgz
-*.tar
-*.safetensors
-*.bin
-*.pt
-*.onnx
-*.gguf
+models/*.gguf
+models/*.safetensors
+models/**/*.safetensors
+
+# GPU/API credentials — NEVER commit (secrets)
+credentials/
+
+# runtime / nested repos — NOT source
+.pi/
+benchmarks/decision-index/
+benchmarks/data/curated/emb/
+
+backup-2026-10-29/
+.acv2_done
+backup-2026-11-06/
+benchmarks/results/2026-11-11-v3/actest/*.jsonl.gz
+backup-2026-11-12/
+benchmarks/results/2026-11-12-v3h/androidworld/
+benchmarks/results/2026-11-12-v4/androidworld/

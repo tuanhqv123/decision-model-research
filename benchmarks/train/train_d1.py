@@ -28,8 +28,8 @@ import torch.nn.functional as F
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ac_common import (CONTRACTS, DEFAULT_CONTRACT, AppMemory, TrajMemory, build_questions,  # noqa: E402
-                       build_state, element_inputs, element_inputs_v3, gold_answers, gold_answers_v2, length_buckets, row_app_options,
-                       write_contract)
+                       build_state, element_inputs, element_inputs_v3, gold_answers, gold_answers_v2, instruction_included,
+                       length_buckets, row_app_options, write_contract)
 
 # Run-wide settings that every sample must agree on. `contract` names the question set (ac_common.CONTRACTS)
 # and is stamped on every saved checkpoint as contract.json, which the server requires.
@@ -47,7 +47,7 @@ def stamp_contract(ckpt_dir, track):
 BASE = "LiquidAI/d1-2B"
 BASE_REV = "cfe5760ff5d5998f91d9ac56bd4b2dbd96996d41"  # pinned: train and eval run the same remote code
 W_LOSS = {"hit": 0.0, "action": 1.0, "target_el": 1.0, "scroll_dir": 0.5, "presence": 0.2, "edge": 0.25,
-          "read": 0.5, "read_nothing": 0.05, "is_done": 0.5}
+          "read": 0.5, "read_nothing": 0.05, "is_done": 0.5, "avoid": 1.0, "answer_value": 1.0}
 
 # The candidate cap below this discards most of the distractors the contrastive signal comes from.
 # The VA arm trained at 14 and threw away 58.6% of all candidates (DATA-SPEC §8) — that result is a
@@ -187,8 +187,9 @@ def make_sample_elements(rec, data, track, spec):
     if spec.get("history") == "v3":
         if "history_v3" not in rec:
             raise ValueError(f"contract {RUN['contract']!r} needs rows with `history_v3` (add_history_v3.py)")
+        instruction = (rec.get("local_goal") if spec.get("instruction") and instruction_included(rec) else None)
         state, kept, keep_idx = element_inputs_v3(rec["goal"], rec["history_v3"], rec["elements"], rec["W"],
-                                                  rec["H"], spec["element_rule"])
+                                                  rec["H"], spec["element_rule"], instruction)
     else:
         state, kept, keep_idx = element_inputs(rec["goal"], rec.get("history"), rec["elements"], rec["W"], rec["H"],
                                                spec["element_rule"])
@@ -223,6 +224,12 @@ def load_image(path, width=None):
         im.save(buf, format="JPEG", quality=90)
         im = Image.open(io.BytesIO(buf.getvalue())).convert("RGB")
     return im
+
+
+def unlikelihood(logp, idx):
+    """-log(1 - p[idx]) from log-probs, computed as -log1p(-exp(logp[idx])) with p clamped below 1 (finite gradient)."""
+    p = logp[idx].exp().clamp(max=1 - 1e-6)
+    return -torch.log1p(-p)
 
 
 def center_in_range_logprob(lp_a, lp_b, lo, hi):
@@ -308,13 +315,18 @@ def _losses(model, eng, M, samples, out, slots, reads, pointer, position_maps, b
     for ci, j in enumerate(code_idx):
         r, (i, qi), sq, _, s_idx = slots[j]
         name, gold = names[i][qi], golds[i]
-        if name not in gold:
+        avoid = name == "action" and "avoid_action" in gold
+        if name not in gold and not avoid:
             continue
         tokens, forms, _ = P.readout_table(tok, sq)
         tt = torch.as_tensor(tokens, device=dev)
         ff = torch.as_tensor(forms, device=dev)
         v = logz[ci, tt][ff].max(-1).values
         logp = torch.log_softmax(v, -1)
+        if avoid:  # contract v4 avoid-only row: push the named option down, supervise nothing else
+            labels = list(requests[i][1][qi].criteria.keys())
+            add("avoid", W_LOSS["avoid"], unlikelihood(logp, labels.index(gold["avoid_action"])))
+            continue
         if name == "target_box":
             if s_idx == 0:
                 add("presence", W_LOSS["presence"], -logp[0])

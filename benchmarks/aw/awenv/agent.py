@@ -196,6 +196,17 @@ def _raw_of(dec: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+_SYSTEM_UI = "com.android.systemui"
+
+
+def _tree_lags(before_struct, after_struct, before_hash, after_hash, after_els) -> bool:
+    """True while the accessibility tree has not caught up with the screen (see `AgentCore.fresh_wait_s`)."""
+    els = after_els or []
+    if els and all((e.get("package_name") or "") == _SYSTEM_UI for e in els):
+        return True
+    return before_struct is not None and after_struct == before_struct and after_hash != before_hash
+
+
 def _history_line(dec: Dict[str, Any], mapped: MappedAction, ok: bool) -> str:
     """The history line for one step: what EXECUTED, rendered by the training renderer.
 
@@ -217,13 +228,21 @@ def _history_line(dec: Dict[str, Any], mapped: MappedAction, ok: bool) -> str:
 
 
 def history_entry_v3_for_step(dec: Dict[str, Any], mapped: MappedAction, before_els: Optional[List[Dict[str, Any]]],
-                              after_els: Optional[List[Dict[str, Any]]]) -> str:
+                              after_els: Optional[List[Dict[str, Any]]], effect: str = "v3") -> str:
     """The contract-v3 history line for one executed step — the SAME renderer and effect test training uses
     (`ac_common.history_entry_with_label`, `ac_common.effect_changed`), so the line is identical to the one the
     model learned from (`add_history_v3`). What EXECUTED is rendered: a substituted action (invalid -> `wait`)
     names no element. The element is named by the server's `history_label` of the element the model chose."""
-    from ac_common import SPATIAL, canonical_element, effect_changed, history_entry_with_label
+    from ac_common import LABEL_CHARS, SPATIAL, canonical_element, effect_changed, effect_changed_v4, history_entry_with_label
+    if effect not in ("v3", "v4"):
+        raise ValueError("effect must be 'v3' or 'v4', not %r" % (effect,))
     substituted = mapped.invalid or (mapped.reason is not None and not mapped.done)
+    if not substituted and (dec.get("action") or "").strip().lower() == "answer":
+        # training renders `answer "<the answer element's label>"` (or the number / True / False), with no effect
+        el = dec.get("element") or {}
+        value = str(dec.get("answer_value") or "element")
+        text = (el.get("label") or el.get("history_label") or dec.get("answer_text") or "") if value == "element" else value
+        return history_entry_with_label({"action_type": "answer", "text": str(text)[:LABEL_CHARS]}, None, None)
     if substituted and mapped.actions:
         action, label = dict(mapped.actions[0]), None
     else:
@@ -232,8 +251,33 @@ def history_entry_v3_for_step(dec: Dict[str, Any], mapped: MappedAction, before_
         label = (dec.get("element") or {}).get("history_label") if action["action_type"] in SPATIAL else None
     changed = None
     if before_els is not None and after_els is not None:
-        changed = effect_changed([canonical_element(e) for e in before_els], [canonical_element(e) for e in after_els])
+        fn = effect_changed_v4 if effect == "v4" else effect_changed
+        changed = fn([canonical_element(e) for e in before_els], [canonical_element(e) for e in after_els])
     return history_entry_with_label(action, label, changed)
+
+
+def scroll_container_index(els: List[Dict[str, Any]], aw_index: Optional[int], width: int, height: int,
+                           max_area_frac: float = 0.5) -> Optional[int]:
+    """Index of the smallest scrollable element containing the chosen element's centre, if it is small (a picker or a
+    sub-list); None for a full-screen list, which the plain screen scroll already moves. Upstream treats index 0 as
+    "no index" (`if action.index:` in actuation.py), so 0 is never returned."""
+    if aw_index is None or not (0 <= int(aw_index) < len(els)):
+        return None
+    b = els[int(aw_index)].get("bbox_pixels") or {}
+    if not b:
+        return None
+    cx, cy = (b["x_min"] + b["x_max"]) / 2.0, (b["y_min"] + b["y_max"]) / 2.0
+    best, area = None, None
+    for i, e in enumerate(els):
+        eb = e.get("bbox_pixels") or {}
+        if not (e.get("is_scrollable") and eb and eb["x_min"] <= cx <= eb["x_max"] and eb["y_min"] <= cy <= eb["y_max"]):
+            continue
+        a = (eb["x_max"] - eb["x_min"]) * (eb["y_max"] - eb["y_min"])
+        if area is None or a < area:
+            best, area = i, a
+    if best is None or best == 0 or area > max_area_frac * width * height:
+        return None
+    return best
 
 
 class AgentCore:
@@ -253,6 +297,12 @@ class AgentCore:
         loop_break: bool = False,
         mask: bool = False,
         history_format: str = "v1",
+        record_state: bool = False,
+        deferred_effect: bool = False,
+        effect: str = "v3",
+        scroll_index: bool = False,
+        post_action_wait_s: float = 0.0,
+        fresh_wait_s: float = 0.0,
     ):
         self.model = model
         self.env = env
@@ -275,9 +325,39 @@ class AgentCore:
         if history_format not in ("v1", "v3"):
             raise ValueError("history_format must be 'v1' or 'v3', not %r" % (history_format,))
         self.history_format = history_format
+        # Self-play data (2026-11-11): keep, per step, exactly what the model was given and what it answered
+        # (`state_in`), so an episode can be turned back into training rows. Off unless a config asks for it.
+        self.record_state = bool(record_state)
+        # 2026-11-12 harness review (docs/research/2026-11-12-V4-WORKLOG-vi.md). All OFF unless a config asks:
+        # deferred_effect — a step's effect is decided against the NEXT observation (the training definition);
+        # effect — "v4": focus flag and keyboard elements do not count (contract v4);
+        # scroll_index — scroll inside a small scrollable element containing the chosen element (pickers);
+        # post_action_wait_s — pause after executing, as upstream agents do (M3A 2 s, T3A 1 s) before reading.
+        self.deferred_effect = bool(deferred_effect)
+        if effect not in ("v3", "v4"):
+            raise ValueError("effect must be 'v3' or 'v4', not %r" % (effect,))
+        self.effect = effect
+        self.scroll_index = bool(scroll_index)
+        self.post_action_wait_s = float(post_action_wait_s)
+        # fresh_wait_s — after an action, re-read the observation (0.5 s polls, at most this long) while the
+        # accessibility tree lags the pixels: pixels changed but the tree equals the pre-action tree, or the tree holds
+        # only the system UI. Reproduced on the device 2026-11-12: after "Internet" in Settings the tree showed the old
+        # page, then only the status bar, and the new page only after ~5.6 s, while the screenshot was already new.
+        self.fresh_wait_s = float(fresh_wait_s)
+        self._pending = None   # (executed decision, mapping, element list before it) awaiting the next observation
+        self._answers: List[str] = []
         self.history: List[str] = []
         self._seen: List[Any] = []
         self._va_empty = 0
+
+    def policy(self) -> Dict[str, Any]:
+        """Every agent-side setting that changes behaviour without changing `protocol` (2026-11-12 review): the runner
+        writes it into each episode header so a number always carries the setup that produced it."""
+        return {"track": self.track, "history_format": self.history_format, "effect": self.effect,
+                "mask": self.mask, "loop_break": bool(self.loop_break), "stuck_k": int(self.stuck_k),
+                "done_threshold": float(self.done_threshold), "allow_app_fallback": bool(self.allow_app_fallback),
+                "deferred_effect": self.deferred_effect, "scroll_index": self.scroll_index,
+                "post_action_wait_s": self.post_action_wait_s, "fresh_wait_s": self.fresh_wait_s}
 
     def _elements(self) -> Optional[List[Dict[str, Any]]]:
         """The a11y element list, or None on the V track.
@@ -342,6 +422,13 @@ class AgentCore:
         before_els = self._read_elements()
         self._before_struct = self._structure(before_els)
         before_hash = image_hash(before)
+        prev_final = None
+        if self._pending is not None:
+            # deferred effect: the previous step's line, decided against THIS observation
+            pdec, pmapped, pbefore = self._pending
+            prev_final = history_entry_v3_for_step(pdec, pmapped, pbefore, before_els, effect=self.effect)
+            self.history.append(prev_final)
+            self._pending = None
 
         started = time.time()
         sent = self._elements()
@@ -351,8 +438,10 @@ class AgentCore:
             pixels=before,
             elements=sent,
             track=self.track,
-            return_readouts=self.return_readouts or self.mask,
+            return_readouts=self.return_readouts or self.mask or self.record_state,
         )
+        state_in = ({"goal": goal, "history": list(self.history), "elements": [dict(e) for e in (sent or [])],
+                     "readouts": dec.get("readouts")} if self.record_state else None)
         model_ms = _model_ms(dec, (time.time() - started) * 1000.0)
 
         map_kw = dict(allow_app_fallback=self.allow_app_fallback, goal=goal,
@@ -370,6 +459,19 @@ class AgentCore:
             executed_dec, mapped, masked_from, mask_choice = self._mask.apply(
                 dec, mapped, key, before_els, sent, width, height, **map_kw)
 
+        if mapped.actions and mapped.actions[0].get("action_type") == "scroll" and self.scroll_index:
+            width, height = _screen_size(before, dec)
+            sidx = scroll_container_index(before_els or [], (executed_dec.get("element") or {}).get("aw_index"),
+                                          width, height)
+            if sidx is not None:
+                mapped.actions[0] = dict(mapped.actions[0], index=sidx)
+        if mapped.actions and mapped.actions[0].get("action_type") == "answer":
+            if str(executed_dec.get("answer_value") or "element") == "element":
+                self._answers.append(mapped.actions[0]["text"])
+                mapped.actions[0] = dict(mapped.actions[0], text=", ".join(self._answers))
+            else:
+                self._answers = []
+
         if mapped.done:
             record = self._record(i, raw, mapped, before_hash, None, None, model_ms, 0.0)
             record.update(q3_fields(before_els, mapped.actions))
@@ -378,6 +480,8 @@ class AgentCore:
             record["action_ok"] = None
             record["done"] = True
             self.history.append(_history_line(executed_dec, mapped, True))
+            if state_in is not None:
+                record["state_in"] = state_in
             return record
 
         # A `status` refused by the is_done gate was never executed, so it says nothing about
@@ -408,17 +512,29 @@ class AgentCore:
                     break
         except Exception as exc:  # an execution crash must not end the episode
             ok, error = False, "%s: %s" % (type(exc).__name__, exc)
+        if self.post_action_wait_s > 0:
+            time.sleep(self.post_action_wait_s)
         env_ms = (time.time() - env_started) * 1000.0
 
         after_hash = image_hash(self.env.screenshot())
+        before_struct = getattr(self, "_before_struct", None)
+        after_els = self._read_elements()
+        polls = 0
+        acted = bool(mapped.actions) and mapped.actions[0].get("action_type") not in ("wait", "answer")
+        if self.fresh_wait_s > 0 and acted:
+            for _ in range(int(round(self.fresh_wait_s / 0.5))):
+                if not _tree_lags(before_struct, self._structure(after_els), before_hash, after_hash, after_els):
+                    break
+                time.sleep(0.5)
+                polls += 1
+                after_hash = image_hash(self.env.screenshot())
+                after_els = self._read_elements()
         # `screen_changed` from a pixel hash is nearly always True, so it cannot detect "the
         # action did nothing". On ExpenseAddMultiple (2026-11-10) the model clicked 56 times in
         # the note field's band and every step reported `screen_changed=True` because the text
         # cursor blinks and the IME redraws. Compare the UI STRUCTURE instead: the set of
         # (class, text, bbox) of the a11y elements. A caret blink does not change it; navigating
         # to another screen does.
-        before_struct = getattr(self, "_before_struct", None)
-        after_els = self._read_elements()
         after_struct = self._structure(after_els)
         struct_changed = (before_struct is None) or (after_struct != before_struct)
         screen_changed = after_hash != before_hash
@@ -434,6 +550,7 @@ class AgentCore:
             ok, model_ms, env_ms,
         )
         record["actions_executed"] = list(mapped.actions)
+        record["fresh_wait_polls"] = polls
         # Q3: the element under the EXECUTED point, on the pre-action list. Measurement only.
         record.update(q3_fields(before_els, mapped.actions))
         record["masked_from"], record["mask_choice"] = masked_from, mask_choice
@@ -455,15 +572,22 @@ class AgentCore:
                 "env_reject": rejected,
                 "stuck_event": stuck_event,
                 "done": False,
-                "history_line": (history_entry_v3_for_step(executed_dec, mapped, before_els, after_els)
+                "history_line": (history_entry_v3_for_step(executed_dec, mapped, before_els, after_els, effect=self.effect)
                                  if self.history_format == "v3" else _history_line(executed_dec, mapped, ok)),
+                "prev_history_line_final": prev_final,
             }
         )
         # Exactly ONE history line per executed step, in the format training renders. The
         # 2026-11-10 "Note: the last action did not change the interface." sentence was removed the
         # same day: training never contains it, so it was a serve-only input (decision K3). Whether
         # the action changed the UI is still recorded in the trace as `ui_changed`.
-        self.history.append(record["history_line"])
+        is_answer = bool(mapped.actions) and mapped.actions[0].get("action_type") == "answer"
+        if self.deferred_effect and self.history_format == "v3" and not is_answer:
+            self._pending = (executed_dec, mapped, before_els)
+        else:
+            self.history.append(record["history_line"])
+        if state_in is not None:
+            record["state_in"] = state_in
         return record
 
     def _record(

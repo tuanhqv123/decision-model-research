@@ -1,0 +1,8 @@
+== FRAC 0.05
+v3 data: {'changed': '21614 rows, repeat 5.4%', 'no change': '412 rows, repeat 19.2%'} 0.0015275675864527792
+dropped futile-repeat targets: 52 | added rows: 1126 | total rows: 28528
+v4 trial data: {'changed': '21614 rows, repeat 5.4%', 'no change': '1486 rows, repeat 2.7%'} 0.014754277239030248
+== FRAC 0.10
+v3 data: {'changed': '21614 rows, repeat 5.4%', 'no change': '412 rows, repeat 19.2%'} 0.0015275675864527792
+dropped futile-repeat targets: 52 | added rows: 2169 | total rows: 29571
+v4 trial data: {'changed': '21614 rows, repeat 5.4%', 'no change': '2529 rows, repeat 1.6%'} 0.029607291027302352

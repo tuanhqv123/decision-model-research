@@ -1,0 +1,10 @@
+v3 seed 30, scored tasks: 114
+  fail: premature status                           35
+  fail: LOOP (timeout, >=30% no-effect steps)      26
+  fail: needs answer (out of reach)                25
+  success                                          16
+  fail: timeout, wanders (<30% no-effect)          12
+loop failures with budget <= 20 steps: 17 | > 20: 9
+masking on the loop-failure tasks: rescued 4 / 25 -> ['RecipeDeleteMultipleRecipesWithConstraint', 'TurnOnWifiAndOpenApp', 'SystemWifiTurnOn', 'SystemWifiTurnOnVerify']
+masking on those tasks, how they ended instead: {'timeout': 14, 'premature status': 7, 'success': 4}
+masking lost (v3 success -> fail): ['OpenAppTaskEval']
