@@ -143,3 +143,32 @@ Lấy số tốt nhất trên AndroidWorld, 116 bài, seed 30, giao thức chín
   - A = `aw116_v4f_s0{,_b}` (v4 + V11, fresh_wait 8 s), ghép cặp với `aw116_v4_s0` → đo phần sửa harness
   - B = `aw116_m03f_s0{,_b}` (trộn 0,3 + V11), ghép cặp với A → đo phần đổi model
   - mask hoãn lại (cũ: 4 thắng / 1 thua, p = 0,375)
+- 15:00 **thực hiện plan `docs/superpowers/plans/2026-11-12-fix-all.md`** (tất cả chạy nền, song song):
+  - A/B giữa chừng: A 17,5/103 = 16,99% (so với v4: thắng 5, thua 0); B 17/100 = 17,0% (thắng 7, thua 2)
+  - Task 2: mask cho A và B (cấu hình chia 3 phần), trên 6 emulator
+  - Task 3: `hostscripts/chrome_fre.py` (có test)
+  - Task 4: pilot học sửa sai trên máy GPU_HOST_A (RTX 4090 đang rảnh; tiến trình của khách giữ nguyên), khởi tạo từ trộn 0,3, 300 bước, 30% dòng sửa sai
+  - Task 5: hợp đồng v5 (công tắc hiển thị "on"/"off"; v3/v4 không đổi)
+  - Dữ liệu sửa sai đầy đủ: 3.851 dòng sau lọc (khoảng 9% của bộ v4). Nếu học đầy đủ thì lấy tối đa 3 lần đi nhầm khác nhau cho mỗi trạng thái (khoảng 10k)
+- 16:00 **A/B đầy đủ 116 bài:**
+  - **A (v4 + V11): 20,5/115 = 17,83%**; bỏ SMS 20/109 = 18,8%. So với v4: thắng 5, thua 0 (p = 0,062). So với v3h: thắng 9, thua 5.
+  - B (trộn 0,3 + V11): 18/114 = 15,79%. So với A: thắng 6, thua 9.
+  - → **base = A**. Trộn trọng số tốt ở offline nhưng kém trên AW (mất các bài Wi-Fi)
+  - **lỗi giám sát:** `supervise_split.sh` dùng `pgrep "stage2_chain_v4p\?.sh"` (ERE: `\?` là dấu ? thật), nên không dừng được chain cũ. Chain cũ quay vòng trên aw-emu1–4, tranh container với lượt mask (khởi động lại, lỗi a11y). Đã dừng tay lúc 05:30; mask B dừng (base là A); mask A tiếp tục.
+  - cổng 1 của pilot sửa sai: back top-1 0/7 → 3/7; P(back) 0,001 → 0,36; 4 trạng thái còn lại lên hạng 2. Cổng 2 bị OOM ở batch 8 / 30% → chấm lại ở batch 4 / 45%.
+  - kích hoạt fresh_wait mới (≥ 10% điểm ảnh đổi, chỉ so cây của app, trần 20 s): harness V12 (`awhV12.tgz` md5 8de898fc…)
+- 16:40 **SMS đã sửa (môi trường, kiểm chứng trên thiết bị):**
+  - log container: `Unable to connect character device modem: address resolution failed for ::1`. Modem giả lập kết nối tới `::1`; trong container chỉ loopback có IPv6, nên `getaddrinfo(AI_ADDRCONFIG)` từ chối (đã tái hiện bằng Python) → không SIM, OUT_OF_SERVICE, mọi tin nhắn "Not sent"
+  - bật IPv6 bằng sysctl: không có tác dụng. Chạy container trên mạng docker riêng có IPv6 (`aw6net`, ULA fd00:a11:6::/64): **SIM LOADED, T-Mobile, IN_SERVICE**; vẫn gọi được API model
+  - `hostscripts/run_arm_v2.sh` = run_arm + `--network aw6net` + `chrome_fre.py` mỗi container (kiểm chứng: lần 1 bấm 4 lần, lần 2 bấm 0 lần, Chrome mở thẳng trang chủ); chain `stage2_chain_v5{,p}.sh`
+  - các mục trước đây ghi "không sửa được" phải kiểm tra lại từng cái (người vận hành): SMS sửa được → đã sửa
+- 17:30 **người vận hành: dừng học từng phần; phân tích confidence, dữ liệu, harness rồi học MỘT lần.** Đã dừng v5a và pilot 2.
+  - **confidence (v4, 1.307 bước AW):** bài thành công có top-1 trung vị 0,97, phần tử 0,78; bài thất bại có 0,90 và phần tử 0,61.
+    - Bước có biên < 0,3: 14%. Cặp hay giằng co: click/scroll 43, scroll/status 36, click/wait 32, click/type 26, click/status 22.
+    - Markor: chỉ 6% bước có biên thấp nhưng 1/14 bài thành công → **sai một cách tự tin** (thiếu quy trình), confidence không bắt được.
+    - Chọn phần tử < 0,5 ở 100% số bước SportsTracker, 78% Tasks, 95% VLC.
+  - **dữ liệu:**
+    - Ngay sau click, nhãn là `status` ở 21% số dòng; sau wait là 37%; tỉ lệ status lên 29% ở bước 7–8 (episode AC ngắn) → nguồn của dừng sớm (49/95).
+    - Trong 880 dòng `navigate_back`: 453 ở bước 0, 244 là back liên tiếp, 83 sau open_app; chỉ 66 là "bấm rồi back", và phần lớn không phải sửa lỗi → **AC gần như không có ví dụ "nhận ra sai rồi quay lại"**
+  - **v5 (học một lần):** gấp khoảng 4 lần số episode ghép (cap 1.200 thay vì 300: episode dài, chỉ dừng khi cả goal xong); 3.500 dòng sửa sai + 3.500 dòng đối chứng (`build_v5_data.py`, có test); hiển thị v5 (nhãn id, on/off); khởi tạo từ v4
+  - đang chạy nền: agent nghiên cứu dataset khác và quy tắc dạy "quay lại"

@@ -146,7 +146,8 @@ def build_request(contract, goal, history, nodes, W, H, track):
         if track != "VA":
             raise ValueError(f"contract {contract['name']!r} is served on track 'VA' only, not {track!r}")
         if CONTRACTS[contract["name"]].get("history") == "v3":  # history = the agent's v3 entries, verbatim
-            state, kept, keep_idx = element_inputs_v3(goal, history, nodes, W, H, contract["element_rule"])
+            state, kept, keep_idx = element_inputs_v3(goal, history, nodes, W, H, contract["element_rule"],
+                                                      on_off=bool(CONTRACTS[contract["name"]].get("on_off")))
         else:
             state, kept, keep_idx = element_inputs(goal, history, nodes, W, H, contract["element_rule"])
         return {"track": "VA", "state": state, "questions": questions_for(contract, "VA", kept, apps=APPS),

@@ -220,7 +220,7 @@ def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule
             if CONTRACTS[contract].get("history") == "v3":
                 instr = (r.get("rec") or {}).get("local_goal") if with_instruction else None  # AC-Low
                 state, kept, keep_idx = element_inputs_v3(r["goal"], r["history_v3"], r["elements"], W, H, element_rule,
-                                                          instr)
+                                                          instr, on_off=bool(CONTRACTS[contract].get("on_off")))
             else:
                 state, kept, keep_idx = element_inputs(r["goal"], r.get("previous_actions") or [], r["elements"], W, H,
                                                        element_rule)

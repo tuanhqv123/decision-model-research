@@ -1,0 +1,32 @@
+== v3h
+  setup: {"policy": null, "protocol": "aw-main-v1"}
+  official SR 15.04% (score sum 17/113 scored; 17 full successes; excluded ['MarkorMergeNotes', 'MarkorTranscribeReceipt', 'SimpleSmsReplyMostRecent'])
+  without SMS tasks: 15.9% (17/107)
+  failed 96: declared done but not done 48, step budget 48
+  steps 1488, no change 512 (34%); same action after no change 303/325; failed eps with >=5 identical in a row 43
+  scrolls 247, with index 39; answer-task successes 0
+  successes: AudioRecorderRecordAudio, ClockStopWatchPausedVerify, ClockStopWatchRunning, ContactsAddContact, ExpenseDeleteMultiple, ExpenseDeleteSingle, MarkorCreateFolder, OpenAppTaskEval, OsmAndFavorite, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemBrightnessMaxVerify, SystemWifiTurnOff
+== A
+  setup: {"policy": {"allow_app_fallback": false, "deferred_effect": true, "done_threshold": 0.0, "effect": "v4", "fresh_wait_s": 8.0, "history_format": "v3", "loop_break": false, "mask": false, "post_action_wait_s": 1.5, "scroll_index": true, "stuck_k": 3, "track": "VA"}, "protocol": "aw-main-v1"}
+  official SR 17.83% (score sum 20.5/115 scored; 20 full successes; excluded ['SimpleSmsReplyMostRecent'])
+  without SMS tasks: 18.8% (20/109)
+  failed 95: declared done but not done 61, step budget 34
+  steps 1305, no change 399 (31%); same action after no change 287/348; failed eps with >=5 identical in a row 35
+  scrolls 172, with index 5; answer-task successes 3
+  successes: CameraTakePhoto, ClockStopWatchPausedVerify, ClockStopWatchRunning, ExpenseDeleteSingle, MarkorCreateFolder, NotesRecipeIngredientCount, OpenAppTaskEval, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SimpleCalendarEventsOnDate, SimpleCalendarFirstEventAfterStartTime, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemWifiTurnOff, SystemWifiTurnOffVerify, SystemWifiTurnOn, SystemWifiTurnOnVerify, TurnOnWifiAndOpenApp
+== B
+  setup: {"policy": {"allow_app_fallback": false, "deferred_effect": true, "done_threshold": 0.0, "effect": "v4", "fresh_wait_s": 8.0, "history_format": "v3", "loop_break": false, "mask": false, "post_action_wait_s": 1.5, "scroll_index": true, "stuck_k": 3, "track": "VA"}, "protocol": "aw-main-v1"}
+  official SR 15.79% (score sum 18/114 scored; 18 full successes; excluded ['OsmAndMarker', 'SimpleSmsReplyMostRecent'])
+  without SMS tasks: 16.7% (18/108)
+  failed 96: declared done but not done 53, step budget 43
+  steps 1404, no change 361 (26%); same action after no change 272/315; failed eps with >=5 identical in a row 34
+  scrolls 182, with index 31; answer-task successes 3
+  successes: AudioRecorderRecordAudio, ClockStopWatchPausedVerify, ClockStopWatchRunning, ContactsAddContact, ExpenseDeleteSingle, MarkorCreateFolder, NotesIsTodo, NotesRecipeIngredientCount, OsmAndFavorite, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SimpleCalendarLocationOfEvent, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemBrightnessMaxVerify, SystemWifiTurnOff
+  NOTE: A and v3h differ in protocol/policy (see setup lines); the paired difference is the whole setup
+== paired A vs v3h on 113 common tasks: wins 9, losses 5, sign test p=0.424
+  wins: CameraTakePhoto, NotesRecipeIngredientCount, RetroSavePlaylist, SimpleCalendarEventsOnDate, SimpleCalendarFirstEventAfterStartTime, SystemWifiTurnOffVerify, SystemWifiTurnOn, SystemWifiTurnOnVerify, TurnOnWifiAndOpenApp
+  losses: AudioRecorderRecordAudio, ContactsAddContact, ExpenseDeleteMultiple, OsmAndFavorite, SystemBrightnessMaxVerify
+  NOTE: B and v3h differ in protocol/policy (see setup lines); the paired difference is the whole setup
+== paired B vs v3h on 112 common tasks: wins 3, losses 2, sign test p=1.000
+  wins: NotesIsTodo, NotesRecipeIngredientCount, SimpleCalendarLocationOfEvent
+  losses: ExpenseDeleteMultiple, OpenAppTaskEval
