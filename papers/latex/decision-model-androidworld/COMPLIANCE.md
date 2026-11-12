@@ -9,3 +9,5 @@
 - This file uses `\usepackage[preprint]{icml2026}` (the package's own option) with anonymous author placeholders.
 - The class and style files are copied unchanged from the official zip. No margins, fonts or spacing are overridden.
 - Build: `tectonic main.tex` (XeTeX engine, runs BibTeX itself).
+- Additional packages loaded before the style file: `fontenc` (T1, so the style's Times fonts load under XeTeX), `xcolor` with the `table` option (shaded SR columns), `xurl` (line breaks in URLs). No layout parameter is changed.
+- Figures are produced by `figures/make_figures.py` and the AndroidControl comparison rows by `tables/make_ac_table.py`; both read repository artifacts.
