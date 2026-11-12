@@ -173,7 +173,8 @@ def test_agent_policy_names_every_setting_that_changes_behaviour():
     p = agent.policy()
     assert p == {"track": "VA", "history_format": "v3", "effect": "v4", "mask": True, "loop_break": False,
                  "stuck_k": 3, "done_threshold": 0.0, "allow_app_fallback": False, "deferred_effect": True,
-                 "scroll_index": True, "post_action_wait_s": 1.5, "fresh_wait_s": 0.0}
+                 "scroll_index": True, "post_action_wait_s": 1.5, "fresh_wait_s": 0.0, "answer_format": False,
+                 "hide_keyboard_after_type": False}
     json.dumps(p)                                            # must be serialisable into the trace header
 
 
@@ -183,11 +184,14 @@ def test_agent_policy_names_every_setting_that_changes_behaviour():
 # acted on a list of elements that were no longer on screen and every such step read "no change".
 
 class StaleTreeEnv(LagEnv):
-    """Pixels update at once; the element list lags `lag` reads behind after each action."""
+    """Pixels update at once (a whole new frame); the element list lags `lag` reads behind after each action."""
 
-    def __init__(self, screens, lag):
+    def __init__(self, screens, lag, pixel_step=100):
         super().__init__(screens)
-        self.lag, self._left = lag, 0
+        self.lag, self._left, self.pixel_step = lag, 0, pixel_step
+
+    def screenshot(self):
+        return np.full((H, W, 3), (self.pixel_step * self._k()) % 256, dtype=np.uint8)
 
     def elements(self):
         if self._left > 0:
@@ -230,10 +234,102 @@ def test_fresh_wait_gives_up_when_the_tree_never_changes(monkeypatch):
     monkeypatch.setattr(ag.time, "sleep", lambda s: slept.append(s))
     agent = AgentCore(FakeModel([click_save()]), StaleTreeEnv([S0, S0], lag=0), track="VA", history_format="v3",
                       fresh_wait_s=2.0)
-    rec = agent.step("g", 0)                      # a click that truly changes nothing must not wait forever
+    rec = agent.step("g", 0)                      # a big pixel change with a tree that never follows: bounded wait
     assert sum(slept) <= 2.0 + 1e-9 and rec["fresh_wait_polls"] >= 1
+
+
+def test_fresh_wait_does_not_wait_on_a_caret_blink(monkeypatch):
+    """Measured on arms A/B: 185 waits had a median pixel change of 0.000 — caret blinks, not page changes."""
+    import awenv.agent as ag
+    slept = []
+    monkeypatch.setattr(ag.time, "sleep", lambda s: slept.append(s))
+    env = StaleTreeEnv([S0, S0], lag=0, pixel_step=1)            # a tiny pixel change, same tree: a no-op click
+    rec = AgentCore(FakeModel([click_save()]), env, track="VA", history_format="v3", fresh_wait_s=20.0).step("g", 0)
+    assert rec["fresh_wait_polls"] == 0 and not slept
+
+
+def test_a_status_bar_change_does_not_end_the_wait(monkeypatch):
+    """The clock in the status bar ticks while an app page is still stale: only the APP tree counts."""
+    import awenv.agent as ag
+    monkeypatch.setattr(ag.time, "sleep", lambda s: None)
+    clock = lambda t: el(t, (0, 0, 200, 60), pkg="com.android.systemui")
+    m = SeeingModel([click_save(), {"action": "wait"}])
+    env = StaleTreeEnv([S0 + [clock("15:34")], S1 + [clock("15:35")]], lag=12)
+    agent = AgentCore(m, env, track="VA", history_format="v3", deferred_effect=True, fresh_wait_s=20.0)
+    orig = env.elements
+    def elements():                       # after the click: stale app tree, but the status-bar clock already moved on
+        els = [e for e in orig() if e.get("package_name") != "com.android.systemui"]
+        return els + [clock("15:35" if env.executed else "15:34")]
+    env.elements = elements
+    agent.step("g", 0)
+    agent.step("g", 1)
+    assert "Saved" in m.seen[1]
 
 
 def test_fresh_wait_is_off_by_default_and_in_the_policy():
     agent = AgentCore(FakeModel([]), LagEnv([S0]), track="VA", history_format="v3")
     assert agent.fresh_wait_s == 0.0 and agent.policy()["fresh_wait_s"] == 0.0
+
+
+def test_contract_v5_is_served_with_v3_history_and_v4_effect():
+    from run_bench import model_format_error
+    assert model_format_error({"contract": "v5", "img_width": 720}, "v3", effect="v4") is None
+    assert "effect" in model_format_error({"contract": "v5", "img_width": 720}, "v3", effect="v3")
+
+
+# --- answer formatting the goal asks for (2026-11-12): "Express your answer as just a single number" -------------
+# v4 answered the element "25 individuals were present"; the checker wants 25 (offline: raw 0.0, the number 1.0).
+
+def test_number_answer_is_reduced_to_the_number_when_the_goal_asks_for_one():
+    from awenv.agent import format_answer
+    g = "How many attendees were present in the meeting? Express your answer as just a single number."
+    assert format_answer(g, "25 individuals were present") == "25"
+    assert format_answer(g, "25") == "25"
+    assert format_answer(g, "between 3 and 5") == "between 3 and 5"        # two numbers: never guess
+    assert format_answer("What is the location of my event?", "100 Main St Chicago") == "100 Main St Chicago"
+
+
+def test_answer_formatting_is_applied_to_the_executed_answer_and_in_the_policy():
+    screen = [el("25 individuals were present", (0, 500, 1080, 600))]
+    env = LagEnv([screen])
+    dec = {"action": "answer", "answer_value": "element", "answer_text": "25 individuals were present",
+           "element": {"idx": 1, "history_label": "25 individuals were present", "aw_index": 0}}
+    agent = AgentCore(FakeModel([dec]), env, track="VA", history_format="v3", answer_format=True)
+    agent.step("How many attendees? Express your answer as just a single number.", 0)
+    assert env.executed[0] == {"action_type": "answer", "text": "25"}
+    assert agent.policy()["answer_format"] is True
+    assert AgentCore(FakeModel([]), LagEnv([S0]), track="VA", history_format="v3").policy()["answer_format"] is False
+
+
+# --- hide the keyboard after typing (2026-11-12, trace analysis of the failed form tasks) ----------------------------
+# RecipeAddSingleRecipe / RecipeAddMultipleRecipes / ExpenseAddMultiple: once the keyboard opened, the remaining form
+# fields left the element list and the model pressed SAVE. After an executed type, if a keyboard is on screen, the
+# harness presses Back once (Android closes the keyboard, nothing else). Declared in the policy; off by default.
+
+KEYBOARD = [el("q", (0, 1700, 108, 1800), pkg="com.google.android.inputmethod.latin")]
+FIELD = [el("Title", (0, 300, 1080, 400), cls="android.widget.EditText", editable=True, clickable=True)]
+
+
+def type_title():
+    return {"action": "type_text", "point": [540, 350], "text": "Pie",
+            "element": {"idx": 1, "history_label": "Title", "aw_index": 0}}
+
+
+def test_back_is_pressed_once_after_typing_only_when_a_keyboard_is_showing():
+    env = LagEnv([FIELD, FIELD + KEYBOARD, FIELD])
+    agent = AgentCore(FakeModel([type_title()]), env, track="VA", history_format="v3", hide_keyboard_after_type=True)
+    rec = agent.step("Add a recipe named Pie", 0)
+    kinds = [a["action_type"] for a in env.executed]
+    assert kinds[-1] == "navigate_back" and kinds.count("navigate_back") == 1
+    assert rec["keyboard_hidden"] is True and agent.policy()["hide_keyboard_after_type"] is True
+
+
+def test_no_back_without_a_keyboard_or_when_the_option_is_off():
+    env = LagEnv([FIELD, FIELD])
+    AgentCore(FakeModel([type_title()]), env, track="VA", history_format="v3", hide_keyboard_after_type=True).step("g", 0)
+    assert "navigate_back" not in [a["action_type"] for a in env.executed]
+    env2 = LagEnv([FIELD, FIELD + KEYBOARD])
+    agent = AgentCore(FakeModel([type_title()]), env2, track="VA", history_format="v3")
+    agent.step("g", 0)
+    assert "navigate_back" not in [a["action_type"] for a in env2.executed]
+    assert agent.policy()["hide_keyboard_after_type"] is False

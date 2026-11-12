@@ -10,6 +10,7 @@ fakes; ``make_android_world_agent`` is the thin integration shim loaded on the h
 """
 
 import os
+import re
 import sys
 import time
 from typing import Any, Dict, List, Optional
@@ -197,14 +198,50 @@ def _raw_of(dec: Dict[str, Any]) -> Dict[str, Any]:
 
 
 _SYSTEM_UI = "com.android.systemui"
+_WANTS_NUMBER = re.compile(r"(single number|as a number|number only|just a number)", re.I)
+_NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 
 
-def _tree_lags(before_struct, after_struct, before_hash, after_hash, after_els) -> bool:
-    """True while the accessibility tree has not caught up with the screen (see `AgentCore.fresh_wait_s`)."""
+def format_answer(goal: str, text: str) -> str:
+    """The answer in the form the goal asks for: a goal asking for a single number gets the one number in the text.
+    Text with no number or with several numbers is left as it is (never guess which number is meant)."""
+    if _WANTS_NUMBER.search(goal or ""):
+        nums = _NUMBER.findall(text or "")
+        if len(nums) == 1:
+            return nums[0]
+    return text
+
+
+PAGE_CHANGE = 0.10  # share of pixels that changed: a page transition (arms A/B 2026-11-12: caret blinks median 0.000,
+                    # page changes median 0.104 / p90 0.861)
+
+
+def _pixel_change(a, b) -> float:
+    """Share of pixels (8x subsampled, grey) whose value moved by more than 30 between two screenshots."""
+    try:
+        import numpy as np
+        x = np.asarray(a)[::8, ::8].astype(np.int16).mean(axis=-1)
+        y = np.asarray(b)[::8, ::8].astype(np.int16).mean(axis=-1)
+        if x.shape != y.shape:
+            return 1.0
+        return float((np.abs(x - y) > 30).mean())
+    except Exception:  # noqa: BLE001 - no pixels: no evidence of a page change
+        return 0.0
+
+
+def _app_fingerprint(els) -> str:
+    """The UI fingerprint without the system UI: the status-bar clock ticking is not the app's page changing."""
+    return ui_fingerprint([e for e in (els or []) if (e.get("package_name") or "") != _SYSTEM_UI])
+
+
+def _tree_lags(before_app, after_els, pixel_change) -> bool:
+    """True while the accessibility tree has not caught up with the screen (see `AgentCore.fresh_wait_s`):
+    the tree holds only the system UI, or the PAGE changed on screen (>= PAGE_CHANGE of the pixels) while the app's
+    tree is still the pre-action one. A caret blink (tiny pixel change) or a clock tick never triggers or ends a wait."""
     els = after_els or []
     if els and all((e.get("package_name") or "") == _SYSTEM_UI for e in els):
         return True
-    return before_struct is not None and after_struct == before_struct and after_hash != before_hash
+    return pixel_change >= PAGE_CHANGE and _app_fingerprint(els) == before_app
 
 
 def _history_line(dec: Dict[str, Any], mapped: MappedAction, ok: bool) -> str:
@@ -303,6 +340,8 @@ class AgentCore:
         scroll_index: bool = False,
         post_action_wait_s: float = 0.0,
         fresh_wait_s: float = 0.0,
+        answer_format: bool = False,
+        hide_keyboard_after_type: bool = False,
     ):
         self.model = model
         self.env = env
@@ -344,6 +383,13 @@ class AgentCore:
         # only the system UI. Reproduced on the device 2026-11-12: after "Internet" in Settings the tree showed the old
         # page, then only the status bar, and the new page only after ~5.6 s, while the screenshot was already new.
         self.fresh_wait_s = float(fresh_wait_s)
+        # answer_format — when the goal asks for "just a single number", an element answer that holds exactly one
+        # number is sent as that number (2026-11-12: "25 individuals were present" scored 0, "25" scores 1)
+        self.answer_format = bool(answer_format)
+        # hide_keyboard_after_type (2026-11-12): after an executed type, if a keyboard is on screen, press Back once
+        # (Android closes the keyboard and nothing else). Form fields below the keyboard otherwise leave the element list
+        # (RecipeAddSingleRecipe, RecipeAddMultipleRecipes, ExpenseAddMultiple). Off by default; declared in policy().
+        self.hide_keyboard_after_type = bool(hide_keyboard_after_type)
         self._pending = None   # (executed decision, mapping, element list before it) awaiting the next observation
         self._answers: List[str] = []
         self.history: List[str] = []
@@ -357,7 +403,8 @@ class AgentCore:
                 "mask": self.mask, "loop_break": bool(self.loop_break), "stuck_k": int(self.stuck_k),
                 "done_threshold": float(self.done_threshold), "allow_app_fallback": bool(self.allow_app_fallback),
                 "deferred_effect": self.deferred_effect, "scroll_index": self.scroll_index,
-                "post_action_wait_s": self.post_action_wait_s, "fresh_wait_s": self.fresh_wait_s}
+                "post_action_wait_s": self.post_action_wait_s, "fresh_wait_s": self.fresh_wait_s,
+                "answer_format": self.answer_format, "hide_keyboard_after_type": self.hide_keyboard_after_type}
 
     def _elements(self) -> Optional[List[Dict[str, Any]]]:
         """The a11y element list, or None on the V track.
@@ -465,6 +512,8 @@ class AgentCore:
                                           width, height)
             if sidx is not None:
                 mapped.actions[0] = dict(mapped.actions[0], index=sidx)
+        if mapped.actions and mapped.actions[0].get("action_type") == "answer" and self.answer_format:
+            mapped.actions[0] = dict(mapped.actions[0], text=format_answer(goal, mapped.actions[0].get("text") or ""))
         if mapped.actions and mapped.actions[0].get("action_type") == "answer":
             if str(executed_dec.get("answer_value") or "element") == "element":
                 self._answers.append(mapped.actions[0]["text"])
@@ -512,22 +561,33 @@ class AgentCore:
                     break
         except Exception as exc:  # an execution crash must not end the episode
             ok, error = False, "%s: %s" % (type(exc).__name__, exc)
+        keyboard_hidden = False
+        if self.hide_keyboard_after_type and ok and any(a.get("action_type") == "input_text" for a in mapped.actions):
+            try:
+                if any(_IME_PACKAGE.search(str(e.get("package_name") or "")) for e in (self.env.elements() or [])):
+                    self.env.execute({"action_type": "navigate_back"})
+                    keyboard_hidden = True
+            except Exception:  # noqa: BLE001  (a failed read or Back leaves the step as it was)
+                pass
         if self.post_action_wait_s > 0:
             time.sleep(self.post_action_wait_s)
         env_ms = (time.time() - env_started) * 1000.0
 
-        after_hash = image_hash(self.env.screenshot())
+        after_px = self.env.screenshot()
+        after_hash = image_hash(after_px)
         before_struct = getattr(self, "_before_struct", None)
         after_els = self._read_elements()
         polls = 0
         acted = bool(mapped.actions) and mapped.actions[0].get("action_type") not in ("wait", "answer")
         if self.fresh_wait_s > 0 and acted:
+            before_app = _app_fingerprint(before_els)
             for _ in range(int(round(self.fresh_wait_s / 0.5))):
-                if not _tree_lags(before_struct, self._structure(after_els), before_hash, after_hash, after_els):
+                if not _tree_lags(before_app, after_els, _pixel_change(before, after_px)):
                     break
                 time.sleep(0.5)
                 polls += 1
-                after_hash = image_hash(self.env.screenshot())
+                after_px = self.env.screenshot()
+                after_hash = image_hash(after_px)
                 after_els = self._read_elements()
         # `screen_changed` from a pixel hash is nearly always True, so it cannot detect "the
         # action did nothing". On ExpenseAddMultiple (2026-11-10) the model clicked 56 times in
@@ -551,6 +611,7 @@ class AgentCore:
         )
         record["actions_executed"] = list(mapped.actions)
         record["fresh_wait_polls"] = polls
+        record["keyboard_hidden"] = keyboard_hidden
         # Q3: the element under the EXECUTED point, on the pre-action list. Measurement only.
         record.update(q3_fields(before_els, mapped.actions))
         record["masked_from"], record["mask_choice"] = masked_from, mask_choice
@@ -648,6 +709,9 @@ class AgentCore:
         if len(self._seen) < self.stuck_k:
             return False
         return len(set(self._seen[-self.stuck_k:])) == 1
+
+
+_IME_PACKAGE = re.compile(r"inputmethod|keyboard|honeyboard|swiftkey|gboard", re.I)  # = ac_common.IME_PACKAGE
 
 
 def _screen_size(pixels: Any, dec: Dict[str, Any]):

@@ -82,7 +82,7 @@ class Checker:
         return 0
 
 
-def check_inside(c, expect_tasks, expect_contract=None):
+def check_inside(c, expect_tasks, expect_contract=None, model_url="http://172.17.0.1:8701"):
     """Everything the benchmark process can verify from inside the container."""
 
     # harness present AND the right build. A stale copy silently produces results from
@@ -148,7 +148,8 @@ def check_inside(c, expect_tasks, expect_contract=None):
 
     # model API reachable FROM THE CONTAINER: the tunnel is host-side, so only this proves the
     # whole chain (container -> host bridge -> server)
-    rc, out, _ = run('curl -s -m 10 -H "x-api-key: tok" http://172.17.0.1:8701/health', timeout=60)
+    # the URL is the run config's own model.url (2026-11-12: a second server on :8710 failed this check while healthy)
+    rc, out, _ = run('curl -s -m 10 -H "x-api-key: tok" %s/health' % model_url.rstrip("/"), timeout=60)
     c.add("model reachable", '"ok":true' in out.replace(" ", ""), out[:80])
 
     # The served checkpoint must speak the contract this run expects (2026-11-10: E2 was being served
@@ -220,11 +221,12 @@ def main():
     ap.add_argument("--run-id", required=True)
     ap.add_argument("--expect-tasks", type=int, default=116)
     ap.add_argument("--expect-contract", default="", help="contract the served checkpoint must report")
+    ap.add_argument("--model-url", default="http://172.17.0.1:8701", help="the run config's model.url")
     a = ap.parse_args()
     c = Checker()
 
     if in_container():
-        check_inside(c, a.expect_tasks, a.expect_contract or None)
+        check_inside(c, a.expect_tasks, a.expect_contract or None, a.model_url)
         return c.report()
 
     rc, out, _ = sh(["sudo", "-n", "docker", "ps", "--format", "{{.Names}}"])

@@ -90,6 +90,31 @@ Topic list (each maps to a file under `notes/`):
   - **Caveat to surface honestly:** calibration ↔ risk-gating tradeoff; multimodal adds calibration not accuracy on this benchmark.
 
 ### Program log (keep this in sync — every background run/result goes here)
+- **2026-11-12 (late): AC-HIGH IS A PER-STEP, TEACHER-FORCED NUMBER; PER GOAL IT EQUALS ANDROIDWORLD.**
+  Note: `docs/research/2026-11-12-ACHIGH-vs-AW-FINAL-vi.md`. An independent read-only agent re-derived every number below from the files.
+  - **What AC-High measures.** v4 on the AndroidControl test set (InfiGUI scorer) gets **61.7% per step (5,213/8,444)**, but only **344/1,543 = 22.3% of episodes have every step right**.
+    - This is with human history at every step: `eval_d1.py:42,48-49,220-225`.
+    - The scorer never checks whether the goal was reached.
+    - Whole-episode rate by length: 59% for 1-step episodes, **9.4% for ≥6 steps**.
+  - **AndroidWorld matches it.** v4 + harness V12 (`aw116_v4g`): **25/115 = 21.74%** (24 full successes + 2 halves). Paired against V11: wins 5 / losses 1, p = 0.22.
+  - **Same missing skill on both: stopping at the right time.**
+    - The AC test has **no** correct termination step, yet v4 predicts `terminate` on **1,171/8,444** steps.
+    - AndroidWorld: 49 premature "done" episodes, and 2 tasks where the device reached the goal state but the model never stopped. Those score 0 under the upstream rule.
+  - **AMEX (2407.17490).** It reports only per-step metrics; online evaluation was never run. Its gains come from L1/L2 element understanding. File BACK = 0.35% (12× rarer than the AC test), contradicting the paper's claim. **Not used.**
+  - **v5 OOM.** The first v5 launch hit its own 0.42 memory cap at step ~40; relaunched at 0.48.
+  - **Pre-registered gates:** AC goal-level, `terminate` count, validation, P(back); then 13 targeted AW tasks; then the full 116 on harness V13 (V12 + answer_format).
+  - **v5 was stopped at step 240** at the operator's request.
+    - Cause: v5's curation (dedupe + click cap) had cut the episode stop pair — last action + `status` row. Both rows survived in only **1,918 of 4,191** episodes.
+    - Of the 1,171 wrong `terminate` predictions on the AC test, 460 fall on an episode's last real step.
+  - **Fix: `curate_v5.is_stop_pair`**, pinned by a test. The pairs are now kept in 4,191/4,191 episodes (`compact_cur_v6`).
+  - **Run `final` is training** on that data. Plan: `docs/research/2026-11-12-FINAL-PLAN-vi.md`.
+    - Early warning at ckpt_250 on validation.
+    - v4 validation reference: step 520/827, episodes all right 14/137, false status 64/690, back misuse 16/798.
+  - **AndroidControl-Curated (2510.18488), read from its release:**
+    - Only a TEST set is released (8,435 rows / 1,540 episodes).
+    - Its history field is human-written step text.
+    - In `task-improved.json`, history contains the current step's instruction in 8,377/8,377 rows, and the eval script feeds history into the prompt.
+    - Its "SR" is a per-step AC-style number. Not used as training data: test only, different history format.
 - **2026-11-11 — WHY R1 IS AT 12–15%, AND THE FIX BEING TRAINED (v2a).** Diagnosis (`docs/research/2026-11-11-DIAGNOSIS-why-low.md`,
   summary in Vietnamese `docs/research/2026-11-11-SUMMARY-vi.md`): 25 IR tasks need `answer` (absent); the app name was copied
   from the goal, so 29–36% of R1's `open_app` names cannot be launched and 24–25 task-completion tasks never start; the model
@@ -705,6 +730,8 @@ any new phase.** If a proposed action matches the "how it happened" column, stop
 | M14 | **Let a derived assumption stand as a prediction.** Used `P(task)=p^n` to "retro-explain" a 1/8 result and to reassure that a harness bug could not have mattered. | Step independence is false: GUI steps are strongly dependent, and easy screens have far lower error than the 64% average. The 6.6x discrepancy was measurable and unremarked. | **Test the assumption with your own data before reasoning from it.** If a model predicts something we can measure, measure it. A refuted premise invalidates every conclusion drawn from it, including the comforting ones. |
 | M15 | **Tested an invariant on hand-picked inputs, not on the real population.** Episode-id uniqueness was tested on 3 unrelated short task names; the real 116 contain 6 groups sharing their first 24 characters, and 12 tasks were silently never run in any 116-task run. | The function's docstring said "collision-free" and the test agreed with the docstring, not with the data. | **Test every invariant over the actual population it must hold for** (here: all 116 registry names), and make the system refuse a violation at plan time rather than absorb it at resume time. A count that never moves (104/116 three runs in a row) is a finding, not noise. |
 | M16 | **Answered questions about a training run from memory.** Said the running model "learns whole trajectories"; its data keeps every step of only 0.6% of episodes (4,985 episodes contribute one step). | The facts of a run were scattered across curation scripts, logs and notes; nothing computed them in one place. | **Every training run has a run card generated from its data files before launch** (`benchmarks/train/run_card.py` → `docs/research/RUNCARD-<run>.md`). Questions about a run are answered from its card, not from memory. |
+
+| M17 | **Stopped two training runs on an early-warning rule whose premise was never tested.** The rule compared a ckpt_250 (10% of training, peak LR) against a fully trained v4; final launches 1 and 2 were killed on it. | v3's own checkpoint trend was on disk the whole time: back misuse 34 at ckpt_450 → 18 at the end, false status 49–52 mid-run → 31 at the end. Early checkpoints of a continued fine-tune dip and recover; the rule fired on all three launches. | **Before a stopping rule is pre-registered, check on a past run that the early metric predicts the final one.** Compare like with like (final vs final). Mid-run checkpoints are a trend to watch, not a verdict. |
 
 **The three meta-rules behind all of them:**
 

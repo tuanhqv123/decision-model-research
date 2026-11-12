@@ -1,0 +1,5 @@
+task	steps	answer_emitted	why_it_worked
+NotesRecipeIngredientCount	6	3/4 cup	search typed goal span; single element holds the exact answer; no reasoning
+SimpleCalendarEventsOnDate	7	Trivia Night	absolute date in goal -> date picker; day had exactly 1 event
+SimpleCalendarFirstEventAfterStartTime	7	Grocery Shopping	day had exactly 1 event (17:20); no time comparison needed in practice
+SimpleCalendarLocationOfEvent	6	100 Main St Chicago	search typed goal span; single element answer

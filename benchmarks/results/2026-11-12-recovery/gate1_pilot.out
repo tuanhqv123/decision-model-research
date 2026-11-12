@@ -1,0 +1,11 @@
+# Gate 1, recovery pilot (300 steps from merge 0.3, 30% recovery rows) vs its init; recorded v3h AW states right after
+# a wrong navigation (back is the right next action). 7 of 9 listed states present in the run dirs.
+MarkorDeleteAllNotes  step 2 | init P(back) 0.001 rank 7 | pilot 0.388 rank 2
+MarkorDeleteNewestNote step 2 | init 0.001 rank 7 | pilot 0.022 rank 2
+MarkorDeleteNote      step 2 | init 0.000 rank 7 | pilot 0.009 rank 2
+MarkorMoveNote        step 3 | init 0.001 rank 7 | pilot 0.108 rank 2
+MarkorMoveNote        step 5 | init 0.001 rank 7 | pilot 0.982 rank 1 (top-1)
+ExpenseAddMultipleFromGallery step 3 | init 0.003 rank 5 | pilot 0.771 rank 1 (top-1)
+NotesTodoItemCount    step 2 | init 0.004 rank 6 | pilot 0.975 rank 1 (top-1)
+# back top-1: init 0/7, pilot 3/7; mean P(back): init 0.001, pilot 0.36 (on the 7 measured). Gate (>= 5/8) NOT passed yet;
+# the 4 others moved from rank 5-7 to rank 2.

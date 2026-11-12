@@ -382,6 +382,8 @@ def agent_kwargs(plan: Plan) -> Dict[str, Any]:
         scroll_index=bool(harness.get("scroll_index", False)),
         post_action_wait_s=float(harness.get("post_action_wait_s", 0.0)),
         fresh_wait_s=float(harness.get("fresh_wait_s", 0.0)),
+        answer_format=bool(harness.get("answer_format", False)),
+        hide_keyboard_after_type=bool(harness.get("hide_keyboard_after_type", False)),
     )
 
 

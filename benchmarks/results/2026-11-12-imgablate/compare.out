@@ -1,0 +1,10 @@
+rows 827 | real 519 | grey 337 | real-only right 216 | grey-only right 34
+  click          n=420 real 234 grey 121
+  status         n=137 real 123 grey 115
+  scroll         n= 86 real  40 grey   7
+  wait           n= 56 real  22 grey  39
+  type_text      n= 53 real  37 grey   3
+  open_app       n= 45 real  45 grey  45
+  navigate_back  n= 29 real  18 grey   7
+  long_press     n=  1 real   0 grey   0
+identical decision (action and element) 305/827

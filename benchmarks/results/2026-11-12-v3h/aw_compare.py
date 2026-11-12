@@ -3,7 +3,7 @@
     python3 aw_compare.py NAME=run_dir[,run_dir...] NAME=...   (first NAME is the reference for pairing)
 
 Reads `episodes/*.jsonl` (not `.abandoned.`), last `result` row per task; SR via awenv.metrics.official_sr.
-SMS tasks are reported separately: the emulator has no working SIM (modem simulator unresponsive, 2026-11-12)."""
+SMS tasks are reported separately (runs before the 2026-11-12 IPv6 network fix had no working SIM)."""
 import glob, json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "aw"))
 from awenv.metrics import official_sr  # noqa: E402

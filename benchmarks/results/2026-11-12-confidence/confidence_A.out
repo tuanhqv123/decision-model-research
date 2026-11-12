@@ -1,0 +1,37 @@
+steps with readouts: 1307
+successful episodes  n= 110  action top1 median 0.97  margin<0.3: 9%  element top1 median 0.78  element<0.5: 23%
+failed episodes      n=1197  action top1 median 0.90  margin<0.3: 14%  element top1 median 0.61  element<0.5: 36%
+
+CONFUSED ACTION PAIRS (margin < 0.3), share of all steps: 178/1307 = 14%
+  click        vs scroll       43
+  scroll       vs status       36
+  click        vs wait         32
+  click        vs type_text    26
+  click        vs status       22
+  answer       vs click        5
+  answer       vs scroll       4
+  answer       vs status       4
+  status       vs wait         2
+  click        vs navigate_back 2
+
+BY APP: steps, low-margin share, low element-confidence share (<0.5), episodes ok
+  SimpleCalendar   252   12%   35%  ok_eps=2/17
+  Markor           219    6%   12%  ok_eps=1/14
+  Recipe           126   13%   21%  ok_eps=3/13
+  System            90    4%    6%  ok_eps=7/13
+  Expense           89   24%   37%  ok_eps=1/9
+  Vlc               76    0%   95%  ok_eps=0/2
+  Retro             71   14%   35%  ok_eps=0/4
+  Browser           62   11%   15%  ok_eps=0/3
+  SportsTracker     53   43%  100%  ok_eps=0/6
+  Tasks             46   33%   78%  ok_eps=0/6
+  SimpleSms         35   17%   20%  ok_eps=0/5
+  OsmAnd            29   41%   59%  ok_eps=0/3
+  Files             29   10%   21%  ok_eps=0/2
+  Turn              28   18%   48%  ok_eps=1/2
+  other             23   17%   30%  ok_eps=1/3
+  Notes             22   23%   68%  ok_eps=1/4
+  Contacts          21    5%    5%  ok_eps=0/2
+  Clock             17    6%   41%  ok_eps=2/3
+  AudioRecorder     13    8%   54%  ok_eps=0/2
+  Camera             6    0%   17%  ok_eps=1/2

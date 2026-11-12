@@ -101,3 +101,84 @@ def test_answer_text_is_the_full_text_of_the_chosen_element_or_the_value():
     assert A.answer_text(ans, nodes, kept, idx) == ("element", long)        # not the 40-char label
     assert A.answer_text({"answer_value": {"choice": "7"}, "target_el": {"choice": "2"}}, nodes, kept, idx) == ("7", "7")
     assert A.answer_text({"answer_value": {"choice": "element"}}, nodes, kept, idx) == ("element", "")
+
+
+# --- contract v5 (2026-11-12, plan fix-all Task 5): checkable elements say "on" / "off" explicitly ---------------------
+# SystemBluetoothTurnOffVerify: the switch was already off, rendered only as "checkable" (no "checked"), and the model
+# clicked it on. v3/v4 rendering must not change; v5 renders the state as a word.
+
+def test_checkable_renders_on_and_off_only_under_v5():
+    sw_off = _el("", (839, 675, 985, 801), cls="android.widget.Switch", checkable=True, checked=False, clickable=True)
+    sw_on = dict(sw_off, is_checked=True)
+    kept, _ = A.select_elements([sw_off], 1080, 2400, "all_reading_noime")
+    v4_line = A.render_elements(kept, 1080, 2400)[0]
+    assert "| click,checkable |" in v4_line and " off" not in v4_line                     # unchanged for v3/v4
+    assert "| click,checkable,off |" in A.render_elements(kept, 1080, 2400, on_off=True)[0]
+    kept_on, _ = A.select_elements([sw_on], 1080, 2400, "all_reading_noime")
+    assert "| click,checkable,on |" in A.render_elements(kept_on, 1080, 2400, on_off=True)[0]
+    assert A.CONTRACTS["v5"]["on_off"] is True and not A.CONTRACTS["v4"].get("on_off")
+    s5, _, _ = A.element_inputs_v3("g", [], [sw_off], 1080, 2400, "all_reading_noime", on_off=True)
+    s4, _, _ = A.element_inputs_v3("g", [], [sw_off], 1080, 2400, "all_reading_noime")
+    assert "checkable,off" in s5 and "checkable,off" not in s4
+
+
+# --- contract v5: unlabelled INTERACTIVE elements are named by their resource id (2026-11-12) --------------------------
+# On arm A, 15% of interactive elements had no text and 92% of those had a resource id ('menu', 'overflow_menu_icon',
+# 'completeBox', ...); the model saw "(no label)". Non-interactive containers keep no label (the list must not grow).
+
+def test_rid_rule_names_unlabelled_interactive_elements_only():
+    btn = dict(_el("", (900, 100, 1000, 200), cls="android.widget.ImageButton", clickable=True),
+               resource_name="org.fossify.calendar:id/overflow_menu_icon")
+    box = dict(_el("", (0, 300, 1080, 900), cls="android.widget.FrameLayout"), resource_name="app:id/main_container")
+    txt = dict(_el("Save", (0, 1000, 300, 1100), cls="android.widget.Button", clickable=True), resource_name="app:id/save_btn")
+    kept, _ = A.select_elements([btn, box, txt], 1080, 2400, "all_reading_noime_rid")
+    labels = [e["label"] for e in kept]
+    assert "[id: overflow menu icon]" in labels and "Save" in labels and len(kept) == 2
+    kept4, _ = A.select_elements([btn, box, txt], 1080, 2400, "all_reading_noime")
+    assert "" in [e["label"] for e in kept4]                                   # v4 unchanged
+    assert A.CONTRACTS["v5"]["element_rule"] == "all_reading_noime_rid"
+
+
+def test_rid_label_is_humanised_from_camel_and_snake_case():
+    assert A.rid_label("com.app:id/miniPlayerPlayPauseButton") == "[id: mini player play pause button]"
+    assert A.rid_label("completeBox") == "[id: complete box]"
+    assert A.rid_label("") == ""
+
+
+# --- contract v6: an unlabelled interactive element also shows the text on its own row (2026-11-12) -------------------
+# Trace analysis of the failed AndroidWorld tasks: Settings switches are "[id: switch widget]" with the setting's name
+# in a separate TextView on the same row (TurnOffWifiAndTurnOnBluetooth re-enabled Wi-Fi); Retro Music's per-song menu
+# button has no label. The row text is shown in the element list and option texts ONLY: history labels stay v5's,
+# because the training rows' history lines were rendered with v5 labels.
+
+def test_v6_shows_row_text_for_unlabelled_interactive_elements_but_keeps_history_labels():
+    sw = dict(_el("", (900, 1230, 1040, 1330), cls="android.widget.Switch", clickable=True, checkable=True),
+              resource_name="android:id/switch_widget")
+    name = _el("Airplane mode", (190, 1250, 520, 1310), cls="android.widget.TextView")
+    far = _el("Internet", (190, 650, 400, 700), cls="android.widget.TextView")
+    kept, _ = A.select_elements([far, name, sw], 1080, 2400, A.CONTRACTS["v6"]["element_rule"])
+    s = next(e for e in kept if e["class_short"] == "Switch")
+    line = [l for l in A.render_elements(kept, 1080, 2400, on_off=True) if "Switch" in l][0]
+    assert "[id: switch widget] · Airplane mode | Switch" in line
+    assert A.history_label(s) == "[id: switch widget]"                      # history unchanged from v5
+    assert any("Airplane mode" in t for t in A.option_texts(kept).values() if "switch" in t)
+    kept5, _ = A.select_elements([far, name, sw], 1080, 2400, A.CONTRACTS["v5"]["element_rule"])
+    assert all("·" not in l for l in A.render_elements(kept5, 1080, 2400, on_off=True))     # v5 unchanged
+    assert A.CONTRACTS["v6"] == dict(A.CONTRACTS["v5"], element_rule=A.CONTRACTS["v6"]["element_rule"])
+
+
+def test_v6_row_text_ignores_labelled_elements_and_other_rows():
+    btn = _el("Save", (800, 100, 1000, 200), cls="android.widget.Button", clickable=True)
+    menu = dict(_el("", (980, 900, 1060, 980), cls="android.widget.ImageView", clickable=True), resource_name="app:id/menu")
+    other = _el("Golden Days", (150, 300, 700, 360), cls="android.widget.TextView")
+    kept, _ = A.select_elements([btn, menu, other], 1080, 2400, A.CONTRACTS["v6"]["element_rule"])
+    lines = A.render_elements(kept, 1080, 2400)
+    assert any(l.startswith("[1] Save |") or "] Save |" in l for l in lines)
+    assert any("[id: menu] |" in l for l in lines)                          # no text on its row: nothing appended
+
+
+def test_v6_row_text_is_not_given_to_large_scroll_containers():
+    lst = dict(_el("", (0, 300, 1080, 1500), cls="android.widget.ScrollView", scrollable=True), resource_name="app:id/list")
+    title = _el("Save to", (100, 320, 500, 380), cls="android.widget.TextView")
+    kept, _ = A.select_elements([lst, title], 1080, 2400, A.CONTRACTS["v6"]["element_rule"])
+    assert all("·" not in l for l in A.render_elements(kept, 1080, 2400))

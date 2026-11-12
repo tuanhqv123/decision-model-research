@@ -189,7 +189,8 @@ def make_sample_elements(rec, data, track, spec):
             raise ValueError(f"contract {RUN['contract']!r} needs rows with `history_v3` (add_history_v3.py)")
         instruction = (rec.get("local_goal") if spec.get("instruction") and instruction_included(rec) else None)
         state, kept, keep_idx = element_inputs_v3(rec["goal"], rec["history_v3"], rec["elements"], rec["W"],
-                                                  rec["H"], spec["element_rule"], instruction)
+                                                  rec["H"], spec["element_rule"], instruction,
+                                                  on_off=bool(spec.get("on_off")))
     else:
         state, kept, keep_idx = element_inputs(rec["goal"], rec.get("history"), rec["elements"], rec["W"], rec["H"],
                                                spec["element_rule"])

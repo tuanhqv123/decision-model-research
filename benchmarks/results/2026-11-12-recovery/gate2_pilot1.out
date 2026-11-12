@@ -1,0 +1,6 @@
+# Gate 2, recovery pilot 1 (300 steps from merge 0.3, 30% recovery rows, NO twins) vs its init. Same rows for both.
+validation_v4 (827):       init 65.18%  -> pilot 57.68%  (-7.5)   back predicted where gold is not back: 1.9% -> 10.0%
+AC-High sample (2,012):    init 56.21%  -> pilot 49.65%  (-6.6)   type acc 79.3% -> 69.7%; back misuse 0.7% -> 9.4%
+# GATE FAILED: the model learned to go back on ordinary screens (labels ~50% clean, no counter-examples).
+# Pilot 2: 15% recovery rows + an equal number of matched twins (same screen, the goal it IS on the path of, that
+# episode's gold) so the goal decides back vs continue; init v4 (base A).

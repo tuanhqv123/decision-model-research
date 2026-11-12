@@ -1,0 +1,20 @@
+== A
+  setup: {"policy": {"allow_app_fallback": false, "deferred_effect": true, "done_threshold": 0.0, "effect": "v4", "fresh_wait_s": 8.0, "history_format": "v3", "loop_break": false, "mask": false, "post_action_wait_s": 1.5, "scroll_index": true, "stuck_k": 3, "track": "VA"}, "protocol": "aw-main-v1"}
+  official SR 17.83% (score sum 20.5/115 scored; 20 full successes; excluded ['SimpleSmsReplyMostRecent'])
+  without SMS tasks: 18.8% (20/109)
+  failed 95: declared done but not done 61, step budget 34
+  steps 1305, no change 399 (31%); same action after no change 287/348; failed eps with >=5 identical in a row 35
+  scrolls 172, with index 5; answer-task successes 3
+  successes: CameraTakePhoto, ClockStopWatchPausedVerify, ClockStopWatchRunning, ExpenseDeleteSingle, MarkorCreateFolder, NotesRecipeIngredientCount, OpenAppTaskEval, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SimpleCalendarEventsOnDate, SimpleCalendarFirstEventAfterStartTime, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemWifiTurnOff, SystemWifiTurnOffVerify, SystemWifiTurnOn, SystemWifiTurnOnVerify, TurnOnWifiAndOpenApp
+== AG
+  setup: {"policy": {"allow_app_fallback": false, "deferred_effect": true, "done_threshold": 0.0, "effect": "v4", "fresh_wait_s": 20.0, "history_format": "v3", "loop_break": false, "mask": false, "post_action_wait_s": 1.5, "scroll_index": true, "stuck_k": 3, "track": "VA"}, "protocol": "aw-main-v1"}
+  official SR 21.74% (score sum 25/115 scored; 24 full successes; excluded ['OsmAndMarker'])
+  without SMS tasks: 19.9% (21/108)
+  failed 91: declared done but not done 51, step budget 40
+  steps 1335, no change 341 (26%); same action after no change 193/219; failed eps with >=5 identical in a row 36
+  scrolls 165, with index 5; answer-task successes 4
+  successes: CameraTakePhoto, ClockStopWatchPausedVerify, ClockStopWatchRunning, ExpenseDeleteSingle, MarkorCreateFolder, NotesRecipeIngredientCount, OpenAppTaskEval, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SimpleCalendarEventsOnDate, SimpleCalendarFirstEventAfterStartTime, SimpleCalendarLocationOfEvent, SimpleSmsReply, SimpleSmsReplyMostRecent, SimpleSmsSend, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemBrightnessMaxVerify, SystemWifiTurnOff, SystemWifiTurnOn, SystemWifiTurnOnVerify, TurnOnWifiAndOpenApp
+  NOTE: AG and A differ in protocol/policy (see setup lines); the paired difference is the whole setup
+== paired AG vs A on 114 common tasks: wins 5, losses 1, sign test p=0.219
+  wins: MarkorCreateNoteAndSms, SimpleCalendarLocationOfEvent, SimpleSmsReply, SimpleSmsSend, SystemBrightnessMaxVerify
+  losses: SystemWifiTurnOffVerify

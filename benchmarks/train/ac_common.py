@@ -265,7 +265,16 @@ def _true(v):
     return v is True or v == 1 or (isinstance(v, str) and v.strip().lower() == "true")
 
 
-def canonical_element(d):
+def rid_label(resource_name):
+    """`pkg:id/overflow_menu_icon` -> "[id: overflow menu icon]" (contract v5 label of an unlabelled interactive element)."""
+    rid = str(resource_name or "").rsplit("/", 1)[-1]
+    if not rid:
+        return ""
+    words = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", rid).replace("_", " ").replace("-", " ").lower().split()
+    return ("[id: %s]" % " ".join(words))[:LABEL_CHARS] if words else ""
+
+
+def canonical_element(d, rid=False):
     """One element in the ONE form contract v2 reads, from any of the shapes that reach it:
 
       * the R2 corpus (`aw_extract.element_record`): `class_name`, `bbox_pixels` {x_min..}, `is_*`, None for
@@ -290,8 +299,11 @@ def canonical_element(d):
                if isinstance(flat, (list, tuple)) and len(flat) == 4 else None)
     flags = {f: _true(d.get(f"is_{f}")) for f in ELEMENT_FLAGS}
     flags["clickable"] = flags["clickable"] or _true(d.get("clickable"))
+    own = bool(label)
+    if rid and not label and any(flags[f] for f in INTERACTIVE_FLAGS):
+        label = rid_label(d.get("resource_name") or d.get("resource_id"))
     return {"label": label, "class_short": cls.rsplit(".", 1)[-1], "bbox": box, "flags": flags,
-            "package_name": str(d.get("package_name") or "")}
+            "package_name": str(d.get("package_name") or ""), "own_text": own}
 
 
 def _app_on_screen(e, W, H):
@@ -380,18 +392,55 @@ ELEMENT_RULES = {
     "cap40_reading_noime": rule_cap40_reading_noime,
     "cap40_priority_noime": rule_cap40_priority_noime,
     "all_reading_noime": rule_all_reading_noime,
+    "all_reading_noime_rid": rule_all_reading_noime,   # contract v5: same selection, unlabelled interactive -> id label
+    "all_reading_noime_rid_row": rule_all_reading_noime,  # contract v6: v5 + the text on an unlabelled element's row
 }
+
+
+ROW_MAX_PX = 300
+
+
+def add_row_context(canon, idx):
+    """Contract v6: an unlabelled interactive element gets `row` = the nearest element WITH its own text whose vertical
+    centre lies inside the element's vertical span (the same row): "[id: switch widget]" + "Airplane mode". Shown in
+    the element list and option texts only; `label` (and so the history label) is unchanged."""
+    for i in idx:
+        e = canon[i]
+        if e.get("own_text") or not _interactive(e) or e["bbox"] is None:
+            continue
+        b = e["bbox"]
+        # a row-sized control only: not a scroll container (scrollable and nothing else) and not taller than a row
+        if (e["flags"]["scrollable"] and not (e["flags"]["clickable"] or e["flags"]["checkable"])) or \
+                b["y_max"] - b["y_min"] > ROW_MAX_PX:
+            continue
+        best = None
+        for j, o in enumerate(canon):
+            ob = o["bbox"]
+            if j == i or not o.get("own_text") or ob is None or o["package_name"] != e["package_name"]:
+                continue
+            cy = (ob["y_min"] + ob["y_max"]) / 2
+            if not (b["y_min"] <= cy <= b["y_max"]) or (ob["y_max"] - ob["y_min"]) > 3 * max(1, b["y_max"] - b["y_min"]):
+                continue
+            gap = max(0, b["x_min"] - ob["x_max"], ob["x_min"] - b["x_max"])
+            if best is None or gap < best[0]:
+                best = (gap, o["label"])
+        if best:
+            e["row"] = best[1][:LABEL_CHARS]
 
 
 def select_elements(elements, W, H, rule):
     """Raw element dicts (any shape) -> (kept canonical elements in kept order, their indices in `elements`)."""
-    canon = [canonical_element(d) for d in elements or []]
+    canon = [canonical_element(d, rid=rule in RID_RULES) for d in elements or []]
     idx = ELEMENT_RULES[rule](canon, W, H)
+    if rule in ROW_RULES:
+        add_row_context(canon, idx)
     return [canon[i] for i in idx], idx
 
 
 def element_label(e):
-    return e["label"] or NO_LABEL
+    """The label as the element list and option texts show it (contract v6 appends the row text)."""
+    base = e["label"] or NO_LABEL
+    return "%s · %s" % (base, e["row"]) if e.get("row") else base
 
 
 def option_texts(kept):
@@ -399,11 +448,12 @@ def option_texts(kept):
     the element's centre in pixels ("OK at (150,450)"). Measured before this rule: on 17.2% of spatial train rows
     the gold option's text equalled another option's (mostly "(no label)"), so only list order told them apart."""
     from collections import Counter
-    counts = Counter(e["label"] for e in kept)
+    shown = lambda e: element_label(e) if e["label"] else ""  # noqa: E731  (v6 row text; v2-v5 unchanged)
+    counts = Counter(shown(e) for e in kept)
     out, seen = {}, Counter()
     for i, e in enumerate(kept, 1):
         b = e["bbox"]
-        text = e["label"] if (e["label"] and counts[e["label"]] == 1) else (
+        text = shown(e) if (shown(e) and counts[shown(e)] == 1) else (
             "%s at (%d,%d)" % (element_label(e), (b["x_min"] + b["x_max"]) // 2, (b["y_min"] + b["y_max"]) // 2))
         seen[text] += 1
         out[str(i)] = text if seen[text] == 1 else "%s #%d" % (text, seen[text])
@@ -420,12 +470,16 @@ def _pct(v, size):
     return round(100 * min(max(v, 0), size) / size)
 
 
-def render_elements(kept, W, H):
-    """`[i] label | class_short | flags | x:a-b% y:c-d%`, i = 1..n in kept order. The ONE renderer."""
+def render_elements(kept, W, H, on_off=False):
+    """`[i] label | class_short | flags | x:a-b% y:c-d%`, i = 1..n in kept order. The ONE renderer.
+    `on_off` (contract v5): a checkable element ends its flags with "on" or "off" instead of leaving "off" implicit."""
     lines = []
     for i, e in enumerate(kept, 1):
         b = e["bbox"]
-        flags = ",".join(FLAG_WORDS[f] for f in ELEMENT_FLAGS if e["flags"][f]) or "-"
+        words = [FLAG_WORDS[f] for f in ELEMENT_FLAGS if e["flags"][f]]
+        if on_off and e["flags"]["checkable"]:
+            words = [w for w in words if w != FLAG_WORDS["checked"]] + ["on" if e["flags"]["checked"] else "off"]
+        flags = ",".join(words) or "-"
         lines.append(f"[{i}] {element_label(e)} | {e['class_short'] or '-'} | {flags} | "
                      f"x:{_pct(b['x_min'], W)}-{_pct(b['x_max'], W)}% y:{_pct(b['y_min'], H)}-{_pct(b['y_max'], H)}%")
     return lines
@@ -579,7 +633,7 @@ def current_app(elements):
     return f"{AW_APP_BY_PACKAGE[pkg]} ({pkg})" if pkg in AW_APP_BY_PACKAGE else pkg
 
 
-def build_state_v3(goal, entries, kept, W, H, app, instruction=None):
+def build_state_v3(goal, entries, kept, W, H, app, instruction=None, on_off=False):
     n = len(entries)
     lines = [f"Goal: {goal}"] + ([f"Step instruction: {instruction}"] if instruction else []) + [
         f"Progress: step {n + 1}, {n} actions done", f"Current app: {app}"]
@@ -591,15 +645,15 @@ def build_state_v3(goal, entries, kept, W, H, app, instruction=None):
         lines += [f"Step {n - len(shown) + i}: {e}" for i, e in enumerate(shown, 1)]
     else:
         lines.append("Previous actions: none")
-    return "\n".join(lines + [V2_ELEMENTS_HEADER] + render_elements(kept, W, H))
+    return "\n".join(lines + [V2_ELEMENTS_HEADER] + render_elements(kept, W, H, on_off=on_off))
 
 
-def element_inputs_v3(goal, entries, elements, W, H, rule, instruction=None):
+def element_inputs_v3(goal, entries, elements, W, H, rule, instruction=None, on_off=False):
     """(state, kept, kept indices) for one screen under contract v3 — train, eval and serve call this.
     `instruction` (contract v3i only): AndroidControl's low-level step instruction, shown after the goal."""
     canon = [canonical_element(d) for d in elements or []]
     kept, idx = select_elements(elements, W, H, rule)
-    return build_state_v3(goal, list(entries or []), kept, W, H, current_app(canon), instruction), kept, idx
+    return build_state_v3(goal, list(entries or []), kept, W, H, current_app(canon), instruction, on_off=on_off), kept, idx
 
 
 def instruction_included(rec):
@@ -683,9 +737,16 @@ CONTRACTS = {
            "element_rule": "all_reading_noime", "app_choice": True, "history": "v3", "effect": "v4",
            "option_texts": "v3", "instruction": True, "answer": True},
 }
+# contract v5 (2026-11-12, plan fix-all Task 5): v4 + checkable elements state "on"/"off" explicitly + unlabelled
+# interactive elements named by their resource id
+CONTRACTS["v5"] = dict(CONTRACTS["v4"], on_off=True, element_rule="all_reading_noime_rid")
+# contract v6 (2026-11-12, final plan): v5 + an unlabelled interactive element shows the text of its row
+CONTRACTS["v6"] = dict(CONTRACTS["v5"], element_rule="all_reading_noime_rid_row")
+RID_RULES = {"all_reading_noime_rid", "all_reading_noime_rid_row"}
+ROW_RULES = {"all_reading_noime_rid_row"}
 DEFAULT_CONTRACT = "v1"
 # Contracts that exist for one track only (a v2 state is meaningless without the element list).
-CONTRACT_TRACKS = {"v2": ("VA",), "v2a": ("VA",), "v3": ("VA",), "v3i": ("VA",), "v4": ("VA",)}
+CONTRACT_TRACKS = {"v2": ("VA",), "v2a": ("VA",), "v3": ("VA",), "v3i": ("VA",), "v4": ("VA",), "v5": ("VA",), "v6": ("VA",)}
 ANSWER_COUNT_MAX = 20
 
 

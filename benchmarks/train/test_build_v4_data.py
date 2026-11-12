@@ -112,3 +112,17 @@ def test_futile_repeat_targets_are_dropped():
     rep = [dict(ep[2], step=2), dict(ep[2], step=3), dict(ep[3], step=4, elements=app_screen())]
     rows, stats = B.build(ep[:2] + rep, RULE)
     assert stats["drop"] == 1
+
+
+def test_answer_questions_never_name_a_key_by_its_resource_id():
+    """2026-11-12 smoke of the final data: 'read the value of '[id: alarm recycler view]''. A key is screen text only."""
+    import ac_common
+    rule = ac_common.CONTRACTS["v5"]["element_rule"]
+    mk = lambda t, b, **f: dict({"text": t, "class_name": "android.widget.TextView", "package_name": "com.example.clock",
+                                 "is_visible": True, "bbox_pixels": dict(zip(("x_min", "y_min", "x_max", "y_max"), b))},
+                                **{"is_%s" % k: v for k, v in f.items()})
+    key = dict(mk("", (40, 500, 300, 560), scrollable=True), class_name="androidx.recyclerview.widget.RecyclerView",
+               resource_name="com.example.clock:id/alarm_recycler_view")
+    val = mk("5:30 AM", (320, 500, 600, 560))
+    row = {"elements": [key, val], "W": 1080, "H": 2400}
+    assert all(not k["label"].startswith("[id:") for k, _, _ in B.key_value_pairs(row, rule))

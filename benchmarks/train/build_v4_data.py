@@ -217,6 +217,8 @@ def key_value_pairs(row, rule):
     pairs = []
     for i, k in enumerate(kept):
         kl = k["label"] or ""
+        if not k.get("own_text", True):   # a contract-v5 id label ("[id: ...]") is not screen text: never a key
+            continue
         if not kl or len(kl) > 30 or k["flags"]["clickable"] or k["flags"]["editable"] or re.fullmatch(r"[\d\W]+", kl):
             continue
         kb = k["bbox"]
