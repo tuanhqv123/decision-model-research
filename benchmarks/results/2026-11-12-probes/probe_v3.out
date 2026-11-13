@@ -1,0 +1,18 @@
+P1 no change | P(same element)                               n=119  mean 0.179  median 0.090
+P1 no change | P(same type)                                  n=124  mean 0.537  median 0.585
+P1 screen changed | P(same element)                          n=119  mean 0.182  median 0.089
+P1 screen changed | P(same type)                             n=124  mean 0.548  median 0.581
+P2 failed 1x | P(click same element)                         n=119  mean 0.179  median 0.090
+P2 failed 2x | P(click same element)                         n=119  mean 0.169  median 0.091
+P2 failed 3x | P(click same element)                         n=119  mean 0.189  median 0.117
+P2 failed 4x | P(click same element)                         n=119  mean 0.192  median 0.124
+P3 +0 wait lines at start | P(status)                        n=124  mean 0.022  median 0.001
+P3 +10 wait lines at start | P(status)                       n=124  mean 0.041  median 0.003
+P3 +3 wait lines at start | P(status)                        n=124  mean 0.031  median 0.003
+P3 +6 wait lines at start | P(status)                        n=124  mean 0.036  median 0.003
+P4 done state, goal + unfinished clause | P(status)          n= 15  mean 0.455  median 0.403
+P4 done state, goal as is | P(status)                        n= 15  mean 0.535  median 0.557
+P5 as served (no focus) | P(type_text)                       n= 31  mean 0.735  median 0.808
+P5 field marked focused | P(type_text)                       n= 31  mean 0.768  median 0.873
+
+[exited with code 0]

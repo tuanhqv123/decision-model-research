@@ -74,7 +74,7 @@ costs ~10 minutes of wall clock.
 
 ## Reproduce
 ```bash
-# on Model_Training_Server
+# on GPU_HOST_A
 cd ~/d1-api
 AW_URL=http://127.0.0.1:5051 D1_URL=http://127.0.0.1:8700 \
   venv/bin/python aw_smoke.py --tasks ClockStopWatchRunning,ContactsAddContact --max-steps 12

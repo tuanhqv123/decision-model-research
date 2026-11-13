@@ -1,0 +1,932 @@
+{
+ "source": "AndroidWorld task SystemWifiTurnOnVerify (seed 30), step 2, recorded by our harness on 2026-11-12",
+ "goal": "Turn wifi on.",
+ "history": [
+  "open_app settings \u2192 screen changed"
+ ],
+ "elements": [
+  {
+   "bbox": [
+    0,
+    128,
+    1080,
+    2337
+   ],
+   "bbox_pixels": {
+    "center": [
+     540.0,
+     1232.5
+    ],
+    "height": 2209,
+    "width": 1080,
+    "x_max": 1080,
+    "x_min": 0,
+    "y_max": 2337,
+    "y_min": 128
+   },
+   "class": "android.widget.ScrollView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 0,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": true,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "com.android.settings:id/settings_homepage_container",
+   "text": ""
+  },
+  {
+   "bbox": [
+    891,
+    275,
+    1017,
+    401
+   ],
+   "bbox_pixels": {
+    "center": [
+     954.0,
+     338.0
+    ],
+    "height": 126,
+    "width": 126,
+    "x_max": 1017,
+    "x_min": 891,
+    "y_max": 401,
+    "y_min": 275
+   },
+   "class": "android.widget.ImageView",
+   "clickable": true,
+   "content_description": "Profile picture, double tap to open Google Account",
+   "hint_text": "",
+   "id": 1,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": true,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "com.android.settings:id/account_avatar",
+   "text": ""
+  },
+  {
+   "bbox": [
+    63,
+    401,
+    408,
+    528
+   ],
+   "bbox_pixels": {
+    "center": [
+     235.5,
+     464.5
+    ],
+    "height": 127,
+    "width": 345,
+    "x_max": 408,
+    "x_min": 63,
+    "y_max": 528,
+    "y_min": 401
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 2,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "com.android.settings:id/homepage_title",
+   "text": "Settings"
+  },
+  {
+   "bbox": [
+    0,
+    770,
+    1080,
+    2337
+   ],
+   "bbox_pixels": {
+    "center": [
+     540.0,
+     1553.5
+    ],
+    "height": 1567,
+    "width": 1080,
+    "x_max": 1080,
+    "x_min": 0,
+    "y_max": 2337,
+    "y_min": 770
+   },
+   "class": "android.widget.ScrollView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 3,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": true,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "com.android.settings:id/main_content_scrollable_container",
+   "text": ""
+  },
+  {
+   "bbox": [
+    200,
+    624,
+    553,
+    695
+   ],
+   "bbox_pixels": {
+    "center": [
+     376.5,
+     659.5
+    ],
+    "height": 71,
+    "width": 353,
+    "x_max": 553,
+    "x_min": 200,
+    "y_max": 695,
+    "y_min": 624
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 4,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "com.android.settings:id/search_action_bar_title",
+   "text": "Search settings"
+  },
+  {
+   "bbox": [
+    189,
+    824,
+    625,
+    895
+   ],
+   "bbox_pixels": {
+    "center": [
+     407.0,
+     859.5
+    ],
+    "height": 71,
+    "width": 436,
+    "x_max": 625,
+    "x_min": 189,
+    "y_max": 895,
+    "y_min": 824
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 5,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/title",
+   "text": "Network & internet"
+  },
+  {
+   "bbox": [
+    189,
+    895,
+    540,
+    946
+   ],
+   "bbox_pixels": {
+    "center": [
+     364.5,
+     920.5
+    ],
+    "height": 51,
+    "width": 351,
+    "x_max": 540,
+    "x_min": 189,
+    "y_max": 946,
+    "y_min": 895
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 6,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/summary",
+   "text": "Mobile, Wi\u2011Fi, hotspot"
+  },
+  {
+   "bbox": [
+    189,
+    1055,
+    636,
+    1126
+   ],
+   "bbox_pixels": {
+    "center": [
+     412.5,
+     1090.5
+    ],
+    "height": 71,
+    "width": 447,
+    "x_max": 636,
+    "x_min": 189,
+    "y_max": 1126,
+    "y_min": 1055
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 7,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/title",
+   "text": "Connected devices"
+  },
+  {
+   "bbox": [
+    189,
+    1126,
+    476,
+    1177
+   ],
+   "bbox_pixels": {
+    "center": [
+     332.5,
+     1151.5
+    ],
+    "height": 51,
+    "width": 287,
+    "x_max": 476,
+    "x_min": 189,
+    "y_max": 1177,
+    "y_min": 1126
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 8,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/summary",
+   "text": "Bluetooth, pairing"
+  },
+  {
+   "bbox": [
+    189,
+    1286,
+    311,
+    1357
+   ],
+   "bbox_pixels": {
+    "center": [
+     250.0,
+     1321.5
+    ],
+    "height": 71,
+    "width": 122,
+    "x_max": 311,
+    "x_min": 189,
+    "y_max": 1357,
+    "y_min": 1286
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 9,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/title",
+   "text": "Apps"
+  },
+  {
+   "bbox": [
+    189,
+    1357,
+    774,
+    1408
+   ],
+   "bbox_pixels": {
+    "center": [
+     481.5,
+     1382.5
+    ],
+    "height": 51,
+    "width": 585,
+    "x_max": 774,
+    "x_min": 189,
+    "y_max": 1408,
+    "y_min": 1357
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 10,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/summary",
+   "text": "Assistant, recent apps, default apps"
+  },
+  {
+   "bbox": [
+    189,
+    1517,
+    489,
+    1588
+   ],
+   "bbox_pixels": {
+    "center": [
+     339.0,
+     1552.5
+    ],
+    "height": 71,
+    "width": 300,
+    "x_max": 489,
+    "x_min": 189,
+    "y_max": 1588,
+    "y_min": 1517
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 11,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/title",
+   "text": "Notifications"
+  },
+  {
+   "bbox": [
+    189,
+    1588,
+    745,
+    1639
+   ],
+   "bbox_pixels": {
+    "center": [
+     467.0,
+     1613.5
+    ],
+    "height": 51,
+    "width": 556,
+    "x_max": 745,
+    "x_min": 189,
+    "y_max": 1639,
+    "y_min": 1588
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 12,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/summary",
+   "text": "Notification history, conversations"
+  },
+  {
+   "bbox": [
+    189,
+    1748,
+    357,
+    1819
+   ],
+   "bbox_pixels": {
+    "center": [
+     273.0,
+     1783.5
+    ],
+    "height": 71,
+    "width": 168,
+    "x_max": 357,
+    "x_min": 189,
+    "y_max": 1819,
+    "y_min": 1748
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 13,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/title",
+   "text": "Battery"
+  },
+  {
+   "bbox": [
+    189,
+    1819,
+    279,
+    1870
+   ],
+   "bbox_pixels": {
+    "center": [
+     234.0,
+     1844.5
+    ],
+    "height": 51,
+    "width": 90,
+    "x_max": 279,
+    "x_min": 189,
+    "y_max": 1870,
+    "y_min": 1819
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 14,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/summary",
+   "text": "100%"
+  },
+  {
+   "bbox": [
+    189,
+    1979,
+    371,
+    2050
+   ],
+   "bbox_pixels": {
+    "center": [
+     280.0,
+     2014.5
+    ],
+    "height": 71,
+    "width": 182,
+    "x_max": 371,
+    "x_min": 189,
+    "y_max": 2050,
+    "y_min": 1979
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 15,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/title",
+   "text": "Storage"
+  },
+  {
+   "bbox": [
+    189,
+    2050,
+    580,
+    2101
+   ],
+   "bbox_pixels": {
+    "center": [
+     384.5,
+     2075.5
+    ],
+    "height": 51,
+    "width": 391,
+    "x_max": 580,
+    "x_min": 189,
+    "y_max": 2101,
+    "y_min": 2050
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 16,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/summary",
+   "text": "46% used - 4.31 GB free"
+  },
+  {
+   "bbox": [
+    189,
+    2210,
+    601,
+    2281
+   ],
+   "bbox_pixels": {
+    "center": [
+     395.0,
+     2245.5
+    ],
+    "height": 71,
+    "width": 412,
+    "x_max": 601,
+    "x_min": 189,
+    "y_max": 2281,
+    "y_min": 2210
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 17,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/title",
+   "text": "Sound & vibration"
+  },
+  {
+   "bbox": [
+    189,
+    2281,
+    707,
+    2332
+   ],
+   "bbox_pixels": {
+    "center": [
+     448.0,
+     2306.5
+    ],
+    "height": 51,
+    "width": 518,
+    "x_max": 707,
+    "x_min": 189,
+    "y_max": 2332,
+    "y_min": 2281
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "",
+   "hint_text": "",
+   "id": 18,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.settings",
+   "resource_name": "android:id/summary",
+   "text": "Volume, haptics, Do Not Disturb"
+  },
+  {
+   "bbox": [
+    50,
+    1,
+    148,
+    128
+   ],
+   "bbox_pixels": {
+    "center": [
+     99.0,
+     64.5
+    ],
+    "height": 127,
+    "width": 98,
+    "x_max": 148,
+    "x_min": 50,
+    "y_max": 128,
+    "y_min": 1
+   },
+   "class": "android.widget.TextView",
+   "clickable": false,
+   "content_description": "15:34",
+   "hint_text": "",
+   "id": 19,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.systemui",
+   "resource_name": "com.android.systemui:id/clock",
+   "text": "15:34"
+  },
+  {
+   "bbox": [
+    148,
+    1,
+    206,
+    128
+   ],
+   "bbox_pixels": {
+    "center": [
+     177.0,
+     64.5
+    ],
+    "height": 127,
+    "width": 58,
+    "x_max": 206,
+    "x_min": 148,
+    "y_max": 128,
+    "y_min": 1
+   },
+   "class": "android.widget.ImageView",
+   "clickable": false,
+   "content_description": "Android System notification: ",
+   "hint_text": "",
+   "id": 20,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.systemui",
+   "resource_name": "",
+   "text": ""
+  },
+  {
+   "bbox": [
+    885,
+    35,
+    931,
+    93
+   ],
+   "bbox_pixels": {
+    "center": [
+     908.0,
+     64.0
+    ],
+    "height": 58,
+    "width": 46,
+    "x_max": 931,
+    "x_min": 885,
+    "y_max": 93,
+    "y_min": 35
+   },
+   "class": "android.widget.FrameLayout",
+   "clickable": false,
+   "content_description": "Wifi signal full.,No internet",
+   "hint_text": "",
+   "id": 21,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.systemui",
+   "resource_name": "com.android.systemui:id/wifi_combo",
+   "text": ""
+  },
+  {
+   "bbox": [
+    931,
+    35,
+    970,
+    93
+   ],
+   "bbox_pixels": {
+    "center": [
+     950.5,
+     64.0
+    ],
+    "height": 58,
+    "width": 39,
+    "x_max": 970,
+    "x_min": 931,
+    "y_max": 93,
+    "y_min": 35
+   },
+   "class": "android.widget.FrameLayout",
+   "clickable": false,
+   "content_description": "Phone signal full.",
+   "hint_text": "",
+   "id": 22,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.systemui",
+   "resource_name": "com.android.systemui:id/mobile_combo",
+   "text": ""
+  },
+  {
+   "bbox": [
+    986,
+    1,
+    1006,
+    128
+   ],
+   "bbox_pixels": {
+    "center": [
+     996.0,
+     64.5
+    ],
+    "height": 127,
+    "width": 20,
+    "x_max": 1006,
+    "x_min": 986,
+    "y_max": 128,
+    "y_min": 1
+   },
+   "class": "android.widget.LinearLayout",
+   "clickable": false,
+   "content_description": "Battery charging, 100 percent.",
+   "hint_text": "",
+   "id": 23,
+   "is_checkable": false,
+   "is_checked": false,
+   "is_clickable": false,
+   "is_editable": false,
+   "is_enabled": true,
+   "is_focused": false,
+   "is_long_clickable": false,
+   "is_scrollable": false,
+   "is_selected": false,
+   "is_visible": true,
+   "package_name": "com.android.systemui",
+   "resource_name": "com.android.systemui:id/battery",
+   "text": ""
+  }
+ ],
+ "recorded": {
+  "action": "click",
+  "action_probability": 0.9875959451317615,
+  "target_el": "6",
+  "target_el_probability": 0.7759870331872937,
+  "executed": {
+   "action_type": "click",
+   "x": 407,
+   "y": 860
+  }
+ }
+}

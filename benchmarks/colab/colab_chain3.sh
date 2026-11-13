@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Chain 3: VM pulls public data itself, then 10-step smoke on T4.
 set -u
-cd /Users/macbookpro/Workspace/research
+cd ~/Workspace/research
 S=d12b
 log() { echo "=== [$1] ==="; }
 

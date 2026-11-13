@@ -1,0 +1,65 @@
+retries: {'consecutive rows': 23257, 'same step instruction as previous row': 3191, '  ... and previous action changed the screen': 3094, '  ... and previous action had no change': 97}
+
+after a click labelled no change (n=126): gold, and was the step instruction the same (a retry)?
+   ('click', 'new instruction') 43
+   ('click SAME element', 'same instruction') 21
+   ('status', 'new instruction') 21
+   ('wait', 'same instruction') 18
+   ('click', 'same instruction') 10
+   ('type_text SAME element', 'new instruction') 3
+   ('type_text', 'new instruction') 3
+   ('navigate_back', 'new instruction') 3
+   ('scroll', 'new instruction') 3
+   ('click SAME element', 'new instruction') 1
+
+25 random cases:
+- ep 16424 s18 px 0.000 | prev click 'PM' (CompoundButton) [Select the PM option on the right side.]
+      gold click 'OK' [Click on OK at the bottom right of the clock.]
+- ep 6679 s5 px 0.000 | prev click '' (ImageView) [Select the fifth photo.]
+      gold wait None [Select the fifth photo.]
+- ep 13478 s3 px 0.127 | prev click '' (RatingBar) [Click on the 5th heart to rate 5 for the recipe]
+      gold click 'RATE' [Click on the Rate button in the pop up]
+- ep 16991 s3 px 0.000 | prev click '' (ImageView) [Click on the Contact on the screen.]
+      gold wait None [Click on the Contact on the screen.]
+- ep 7137 s3 px 0.000 | prev click '00' (TextView) [set minute as 0]
+      gold click 'AM' [click on Am option]
+- ep 714 s6 px 0.053 | prev click '1' (TextView) [Enter the amount 10000 ]
+      gold click '0' [Enter the amount 10000 ]
+- ep 4682 s4 px 0.000 | prev click 'What would you like to do?' (EditText) [Click on what would you like to do?]
+      gold type_text 'What would you like to do?' [Type Rent is due]
+- ep 9808 s3 px 0.000 | prev click 'Share' (TextView) [Click on the share ]
+      gold wait None [Click on the share ]
+- ep 8619 s3 px 0.000 | prev click '' (ImageView) [Click on the square button to select the shape to draw a rectangle.]
+      gold scroll None [Scroll down with the top end of the line to draw a rectangle.]
+- ep 6906 s1 px 0.000 | prev click '' (ImageView) [Click on the Download button of the "A Look Back on Secret santa"]
+      gold wait None [Click on the Download button of the "A Look Back on Secret santa"]
+- ep 14127 s2 px 0.158 | prev click 'Don’t allow' (Button) [Click on the Don't allow button in the pop up window]
+      gold click 'Don’t allow' [Click on the Don't allow button in the pop up window]
+- ep 15959 s2 px 0.000 | prev click '' (ImageView) [Rate the recipe with four stars.]
+      gold click 'Submit' [At the top right of the screen, click on Submit.]
+- ep 5000 s7 px 0.002 | prev click 'SAVE' (TextView) [Click on save]
+      gold status None []
+- ep 8137 s3 px 0.000 | prev click '' (ImageView) [Click on the fifth star button]
+      gold click 'Submit' [Click on the submit button on the top right of the screen]
+- ep 6074 s4 px 0.036 | prev click 'Date' (TextView) [Click on the date option in sort by section]
+      gold navigate_back None [Go back to the previous screen]
+- ep 11233 s4 px 0.018 | prev click '' (ImageView) [Click on the back space key of the key board to clear the title sectio]
+      gold type_text 'My playlist #1' [Type Classical Music in the title section to set the name of this play]
+- ep 2858 s4 px 0.000 | prev click None (None) [click on the note body section]
+      gold click 'Type something…' [click on the note body section]
+- ep 8910 s2 px 0.215 | prev click '' (View) [Click on the video at the top of the screen]
+      gold click '' [Click on the video at the top of the screen]
+- ep 1761 s6 px 0.037 | prev click '10 Minutes' (View) [Select the 10 minutes timer]
+      gold click 'Start Meditate' [Click on the start meditate button]
+- ep 4823 s3 px 0.059 | prev click '' (ImageView) [Click on the back space button ]
+      gold type_text 'My recording 1' [Enter a name as  yoga class ]
+- ep 16253 s4 px 0.001 | prev click '0' (TextView) [Enter the Amount 90 USD]
+      gold click 'Add Transaction' [Click on the Add Transaction]
+- ep 13297 s3 px 0.000 | prev click '8:10' (TextView) [Click on the search bar at the top of the screen.]
+      gold click 'Search…' [Click on the search bar at the top of the screen.]
+- ep 1199 s16 px 0.033 | prev click '' (TextView) [Click on the Male ]
+      gold click '' [Click on the Save & continue button at the bottom right of the screen]
+- ep 11562 s3 px 0.000 | prev click 'contacts_2023_11_24_14_28_59.vcf' (TextView) [Click on the first file option.]
+      gold wait None [Click on the first file option.]
+- ep 4682 s3 px 0.000 | prev click 'What would you like to do?' (EditText) [Click on what would you like to do?]
+      gold click 'What would you like to do?' [Click on what would you like to do?]

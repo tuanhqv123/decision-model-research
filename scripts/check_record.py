@@ -39,7 +39,7 @@ def read(p):
 
 
 # ------------------------------------------------------------------ artifacts
-PURE = "backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl"
+PURE = "backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl"
 SERVED = "backup-2026-11-06/offline/e2-pure-hist.jsonl"
 GROUNDB = "backup-2026-10-29/ckpt-groundB/eval-step1406-V.jsonl"
 VAL = "benchmarks/results/2026-10-29-evals/E2-val.jsonl"

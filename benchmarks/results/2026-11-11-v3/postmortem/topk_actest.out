@@ -1,0 +1,4 @@
+action type, n=8444: top1 81.0%  top2 93.5%  top3 97.8%
+click target element, n=5077 (gold reachable in the 40-list: 83.3%): top1 60.4%  top2 70.2%  top3 73.9%  top5 77.1%
+rows without a target_el readout: 43
+mean probability on a correct element (= success rate of one sample at temperature 1): 51.2%

@@ -232,16 +232,16 @@ Every row is a primary artifact in this workspace, read or executed directly. Pa
 | # | Source | Path | Key claim | Type | Confidence |
 |---|---|---|---|---|---|
 | 1 | `benchmarks/results/2026-10-29-evals/E3-300-VA.jsonl` | `benchmarks/results/2026-10-29-evals/E3-300-VA.jsonl` | 398 rows; 221 correct = 55.53%; element grounding 106/223 = 47.53%, box grounding 98/223 = 43.95% | primary | high |
-| 2 | `runs/E2-nomem/eval-E2final-nomem-V.jsonl` | `backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl` | 398 rows; 255 correct = 64.07%; same keys/order as #1 | primary | high |
-| 3 | `runs/E3-cur24k-mix/eval-step300-V.jsonl` | `backup-2026-10-29/prd-survey-x1-5090/acwork/runs/E3-cur24k-mix/eval-step300-V.jsonl` | same checkpoint as #1 in V mode; 197 correct = 49.50%; grounding 85/184 = 46.20% | primary | high |
-| 4 | `runs/E3-cur24k-mix/train.log` | `backup-2026-10-29/prd-survey-x1-5090/acwork/runs/E3-cur24k-mix/train.log` | matched step-300 EVAL pair (50.0% vs 55.5%); run ends step 320 of 1500; `acc_target_el` 0.53@s180 → 0.71@s310 (still climbing) | primary | high |
-| 5 | `runs/E3-cur24k-mix/args.json` | `backup-2026-10-29/prd-survey-x1-5090/acwork/runs/E3-cur24k-mix/args.json` | `steps:1500, train_set:cur24k, track:mix, lr:1e-5, warmup:30, micro:2, accum:8, mem_frac:0.55, save_every:1500` | primary | high |
+| 2 | `runs/E2-nomem/eval-E2final-nomem-V.jsonl` | `backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl` | 398 rows; 255 correct = 64.07%; same keys/order as #1 | primary | high |
+| 3 | `runs/E3-cur24k-mix/eval-step300-V.jsonl` | `backup-2026-10-29/GPU_HOST_C/acwork/runs/E3-cur24k-mix/eval-step300-V.jsonl` | same checkpoint as #1 in V mode; 197 correct = 49.50%; grounding 85/184 = 46.20% | primary | high |
+| 4 | `runs/E3-cur24k-mix/train.log` | `backup-2026-10-29/GPU_HOST_C/acwork/runs/E3-cur24k-mix/train.log` | matched step-300 EVAL pair (50.0% vs 55.5%); run ends step 320 of 1500; `acc_target_el` 0.53@s180 → 0.71@s310 (still climbing) | primary | high |
+| 5 | `runs/E3-cur24k-mix/args.json` | `backup-2026-10-29/GPU_HOST_C/acwork/runs/E3-cur24k-mix/args.json` | `steps:1500, train_set:cur24k, track:mix, lr:1e-5, warmup:30, micro:2, accum:8, mem_frac:0.55, save_every:1500` | primary | high |
 | 6 | `ckpt-E2-final/args.json` (run `E2-cur15k-V`) | `backup-2026-10-29/ckpt-E2-final/args.json` | V baseline recipe: `steps:938, train_set:cur15k, track:V, lr:1e-5, warmup:30, micro:2, accum:8, mem_frac:0.92` | primary | high |
-| 7 | `ac_common.py` | `backup-2026-10-29/prd-survey-x1-5090/acwork/ac_common.py` | `pick_candidates` smallest-first dedupe; `gold_candidate` falls back to smallest **containing** candidate; both train and eval import this module | primary | high |
-| 8 | `run_acv2.py:160-215` (`score_row`) | `backup-2026-10-29/prd-survey-x1-5090/acwork/run_acv2.py` | spatial branch requires exact action-type match and the point inside the **smallest** node containing the gold point; grounding forced `False` on type mismatch | primary | high |
-| 9 | `eval_d1.py:60-115` | `backup-2026-10-29/prd-survey-x1-5090/acwork/eval_d1.py` | `pt` overwritten by `el_pt`; `el_pt` stores only the bbox centre, no `idx`; `correct_box_only` ablation computed on the same rows | primary | high |
-| 10 | `train_d1.py:70-90` | `backup-2026-10-29/prd-survey-x1-5090/acwork/train_d1.py` | `track=="mix"` → VA on 50% of samples; empty candidate list silently downgrades the row to V | primary | high |
-| 11 | `compact_ac.py` | `backup-2026-10-29/prd-survey-x1-5090/acwork/compact_ac.py` | training `cands` produced by `ac_common.pick_candidates` — same function as eval | primary | high |
+| 7 | `ac_common.py` | `backup-2026-10-29/GPU_HOST_C/acwork/ac_common.py` | `pick_candidates` smallest-first dedupe; `gold_candidate` falls back to smallest **containing** candidate; both train and eval import this module | primary | high |
+| 8 | `run_acv2.py:160-215` (`score_row`) | `backup-2026-10-29/GPU_HOST_C/acwork/run_acv2.py` | spatial branch requires exact action-type match and the point inside the **smallest** node containing the gold point; grounding forced `False` on type mismatch | primary | high |
+| 9 | `eval_d1.py:60-115` | `backup-2026-10-29/GPU_HOST_C/acwork/eval_d1.py` | `pt` overwritten by `el_pt`; `el_pt` stores only the bbox centre, no `idx`; `correct_box_only` ablation computed on the same rows | primary | high |
+| 10 | `train_d1.py:70-90` | `backup-2026-10-29/GPU_HOST_C/acwork/train_d1.py` | `track=="mix"` → VA on 50% of samples; empty candidate list silently downgrades the row to V | primary | high |
+| 11 | `compact_ac.py` | `backup-2026-10-29/GPU_HOST_C/acwork/compact_ac.py` | training `cands` produced by `ac_common.pick_candidates` — same function as eval | primary | high |
 | 12 | `benchmarks/data/acv2/500_steps_filtered.json` | `benchmarks/data/acv2/500_steps_filtered.json` | 398 rows, no precomputed `cands`; a11y trees rebuild to median N=24 (mean 29.6, max 245) | primary | high |
 | 13 | `benchmarks/results/2026-10-29-evals/E2-938-V.jsonl` | `benchmarks/results/2026-10-29-evals/E2-938-V.jsonl` | 258/398 = 64.82% — **a different file from #2** (255/398); the "V baseline" is ambiguous in the record | primary | high |
 
@@ -250,16 +250,16 @@ Every row is a primary artifact in this workspace, read or executed directly. Pa
 ## Sources
 
 1. `benchmarks/results/2026-10-29-evals/E3-300-VA.jsonl` — VA track, 398 rows, step 300.
-2. `backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl` — V baseline, 398 rows.
-3. `backup-2026-10-29/prd-survey-x1-5090/acwork/runs/E3-cur24k-mix/eval-step300-V.jsonl` — same checkpoint, V track.
-4. `backup-2026-10-29/prd-survey-x1-5090/acwork/runs/E3-cur24k-mix/train.log` — training/eval log with both step-300 EVAL lines.
-5. `backup-2026-10-29/prd-survey-x1-5090/acwork/runs/E3-cur24k-mix/args.json` — VA arm hyperparameters.
+2. `backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl` — V baseline, 398 rows.
+3. `backup-2026-10-29/GPU_HOST_C/acwork/runs/E3-cur24k-mix/eval-step300-V.jsonl` — same checkpoint, V track.
+4. `backup-2026-10-29/GPU_HOST_C/acwork/runs/E3-cur24k-mix/train.log` — training/eval log with both step-300 EVAL lines.
+5. `backup-2026-10-29/GPU_HOST_C/acwork/runs/E3-cur24k-mix/args.json` — VA arm hyperparameters.
 6. `backup-2026-10-29/ckpt-E2-final/args.json` — V baseline hyperparameters (run `E2-cur15k-V`).
-7. `backup-2026-10-29/prd-survey-x1-5090/acwork/ac_common.py` — `pick_candidates`, `gold_candidate`, `gold_answers`.
-8. `backup-2026-10-29/prd-survey-x1-5090/acwork/run_acv2.py` — `score_row`, the official-scorer port.
-9. `backup-2026-10-29/prd-survey-x1-5090/acwork/eval_d1.py` — eval harness, `pt`/`el_pt` handling, `correct_box_only`.
-10. `backup-2026-10-29/prd-survey-x1-5090/acwork/train_d1.py` — `make_sample`, mixed-track sampling.
-11. `backup-2026-10-29/prd-survey-x1-5090/acwork/compact_ac.py` — training candidate construction.
+7. `backup-2026-10-29/GPU_HOST_C/acwork/ac_common.py` — `pick_candidates`, `gold_candidate`, `gold_answers`.
+8. `backup-2026-10-29/GPU_HOST_C/acwork/run_acv2.py` — `score_row`, the official-scorer port.
+9. `backup-2026-10-29/GPU_HOST_C/acwork/eval_d1.py` — eval harness, `pt`/`el_pt` handling, `correct_box_only`.
+10. `backup-2026-10-29/GPU_HOST_C/acwork/train_d1.py` — `make_sample`, mixed-track sampling.
+11. `backup-2026-10-29/GPU_HOST_C/acwork/compact_ac.py` — training candidate construction.
 12. `benchmarks/data/acv2/500_steps_filtered.json` — the 398-row eval set with a11y trees.
 13. `benchmarks/results/2026-10-29-evals/E2-938-V.jsonl` — the *other* 938-step V file (258/398).
 
@@ -273,7 +273,7 @@ Every row is a primary artifact in this workspace, read or executed directly. Pa
     }
   ],
   "changedFiles": [
-    "/Users/macbookpro/.pi/agent/sessions/--Users-macbookpro-Workspace-research--/subagent-artifacts/outputs/dc70455a-ac30-4cf6-8334-622437159719/docs/research/R4-candidate-interface-postmortem.md"
+    "~/.pi/agent/sessions/--Users-[user]-Workspace-research--/subagent-artifacts/outputs/dc70455a-ac30-4cf6-8334-622437159719/docs/research/R4-candidate-interface-postmortem.md"
   ],
   "testsAddedOrUpdated": [],
   "commandsRun": [

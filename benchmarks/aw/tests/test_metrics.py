@@ -155,3 +155,41 @@ def test_terminal_status_step_is_not_in_the_action_denominator():
     assert asr.num == 1 and asr.den == 1
     assert invalid_action_rate([ok_step, status_step]).den == 1
     assert emitted_actions([ok_step, status_step]) == 1
+
+
+# ---------------------------------------------------------------- official SR (suite_utils)
+# android_world@55ddaf5: a task that raised gets NaN (suite_utils.py:544-558) and pandas mean()
+# skips it; SR = mean over task templates of the per-task mean float score (suite_utils.py:684-716).
+from awenv.metrics import official_sr  # noqa: E402
+from awenv.metrics import summarize as _summarize  # noqa: E402
+from awenv.report import format_markdown as _format_markdown  # noqa: E402
+
+
+def test_official_sr_skips_raised_tasks_and_keeps_partial_credit():
+    eps = [
+        {"task_name": "A", "score": 1.0},
+        {"task_name": "B", "score": 0.5},
+        {"task_name": "C", "score": None, "setup_error": "boom"},
+        {"task_name": "D", "score": None, "unscored": True},
+        {"task_name": "E", "score": 0.0},
+    ]
+    out = official_sr(eps)
+    assert out["sr"] == 0.5
+    assert out["n_tasks_scored"] == 3
+    assert out["n_tasks_excluded"] == 2
+    assert out["excluded"] == ["C", "D"]
+    assert out["per_task"] == {"A": 1.0, "B": 0.5, "E": 0.0}
+
+
+def test_official_sr_reads_old_success_only_records():
+    out = official_sr([{"task_name": "A", "success": True}, {"task_name": "B", "success": False}])
+    assert out["per_task"] == {"A": 1.0, "B": 0.0}
+    assert out["sr"] == 0.5
+
+
+def test_official_sr_is_printed_first_in_the_report():
+    eps = [{"task_name": "A", "episode_id": "a", "score": 1.0, "success": True, "n_steps": 2},
+           {"task_name": "C", "episode_id": "c", "score": None, "setup_error": "boom"}]
+    md = _format_markdown(_summarize(eps, []))
+    assert "Official SR (suite_utils): 100.0% over 1 tasks; 1 excluded (raised): C" in md
+    assert md.index("Official SR") < md.index("| metric | value |")

@@ -60,4 +60,4 @@ Brier + AUROC and say the decomposition is omitted.
 ## Compute reality
 6-9 runs × ~40 min (400 steps) ≈ **4-6 h** on one 4090. If the emulator loop is also running, sequence
 them: emulator smoke first (needs the d1 API served), then N1 in the free GPU window.
-Second GPU option: `s4090-1x-100` (15 GB free; use `--mem-frac 0.55 --micro 1`). Prod shares that card.
+Second GPU option: `GPU_HOST_B` (15 GB free; use `--mem-frac 0.55 --micro 1`). Prod shares that card.

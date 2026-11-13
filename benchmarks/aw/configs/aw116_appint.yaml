@@ -3,7 +3,7 @@ agent: d1_appint
 checkpoint: appint_full@938
 model:
   url: http://172.17.0.1:8700
-  token: awgate2026
+  token: SET_AT_RUN_TIME
   track: V
   return_readouts: true
 environment:

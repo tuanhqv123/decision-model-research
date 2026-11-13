@@ -1,0 +1,6 @@
+P1 screen changed -> P1 no change | P(same element)                    n=119  diff -0.003  95% [-0.007, -0.000]  states in expected direction: 25/119 (expect down)
+P1 screen changed -> P1 no change | P(same type)                       n=124  diff -0.011  95% [-0.015, -0.006]  states in expected direction: 70/124 (expect down)
+P2 failed 1x -> P2 failed 4x | P(click same element)                   n=119  diff +0.013  95% [+0.000, +0.026]  states in expected direction: 17/119 (expect down)
+P3 +0 wait lines at start -> P3 +10 wait lines at start | P(status)    n=124  diff +0.019  95% [+0.012, +0.026]  states in expected direction: 89/124 (expect flat)
+P4 done state, goal as is -> P4 done state, goal + unfinished clause | P(status) n= 15  diff -0.080  95% [-0.147, -0.026]  states in expected direction: 10/15 (expect down)
+P5 as served (no focus) -> P5 field marked focused | P(type_text)      n= 31  diff +0.033  95% [+0.005, +0.056]  states in expected direction: 20/31 (expect up)

@@ -16,7 +16,7 @@ are NOT silently dropped (dropping them would inflate accuracy exactly like the 
 
 USAGE
     python3 benchmarks/train/build_candidate_supervision.py \
-      --data backup-2026-10-29/s4090-1x-100/acwork/acdata \
+      --data backup-2026-10-29/GPU_HOST_B/acwork/acdata \
       --train compact_cur15k.jsonl --val compact_validation.jsonl \
       --out benchmark/results/2026-11-07-candidate-supervision
 

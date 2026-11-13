@@ -9,10 +9,10 @@ Asked to check whether we are silently holding VRAM. Checked, read-only. **Nothi
 | used | **2,176 MiB** |
 | free | **21,917 MiB** |
 | our processes | **none** |
-| the 2,176 MiB | `pid 2641764`, owner `masan2025`, `python -m src.main` — **pre-existing, not ours** |
+| the 2,176 MiB | `pid 2641764`, owner `[user]`, `python -m src.main` — **pre-existing, not ours** |
 
-12 containers are up, all pre-existing (vtraks-worker, ocr-tunnel, cf-tunnel, syngenta + its db, loki, grafana,
-prometheus, masan_postgres, display-tracking-db, deployment-postgres, survey-management-db). The syngenta display
+12 containers are up, all pre-existing ([service], ocr-tunnel, cf-tunnel, [service] + its db, loki, grafana,
+prometheus, [service], display-tracking-db, deployment-postgres, survey-management-db). The [service] display
 container is `Restarting (1)` — that is a **pre-existing fault documented in `STOPPED_CONTAINERS.md`**, not
 something this session did.
 
@@ -60,7 +60,7 @@ While two experiments run in parallel:
 
 | host | prod (not ours) | ours | free |
 |---|---|---|---|
-| A (4090, 24.5 GB) | 2,176 MiB (`masan2025`, `python -m src.main`) | **12.0 GB** (`arm_best`) | 9.9 GB |
+| A (4090, 24.5 GB) | 2,176 MiB (`[user]`, `python -m src.main`) | **12.0 GB** (`arm_best`) | 9.9 GB |
 | B (5090, 32.6 GB) | **18,168 MiB** (4 × root `gunicorn`) | **12.0 GB** (`arm_ctrl`) | **1.9 GB** |
 
 Host B is at **30.2 / 32.6 GB**. The control run is alive at step 360/938 but has under 2 GB of headroom, so a
@@ -70,5 +70,5 @@ transient allocation can still kill it mid-run — the same failure mode that co
 knowledge that prod's 18.1 GB could grow. A safer default is 0.35, or wait for host A (9.9 GB spare with a 12 GB
 job already running, so also tight).
 
-**Nothing was stopped.** The four gunicorn workers and the `masan2025` process are pre-existing prod and were left
+**Nothing was stopped.** The four gunicorn workers and the `[user]` process are pre-existing prod and were left
 untouched.

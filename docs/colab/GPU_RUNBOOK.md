@@ -69,18 +69,37 @@ GPU options greyed out / CPU-only even on **web UI** because the account is **no
 - The recurring `SyntaxError: invalid syntax` was **NOT the base64** — it was **cell.source as a LIST of lines lacking a trailing `\n`**. nbconvert joins the list with `''` (no separator), so `makedirs(x)open(y)` collapse into one token.
 - **Fix:** build each cell's `source` as a SINGLE STRING with explicit `\n` between statements. Verify with `ast.parse(source)` in the builder before push.
 
-## 2026-10-29 — own-server fleet (prd-survey-x1-5090, Model_Training_Server, s4090-1x-100) — hard-won rules
+## 2026-10-29 — own-server fleet (GPU_HOST_C, GPU_HOST_A, GPU_HOST_B) — hard-won rules
 - **Launching remote jobs:** `ssh -f host "cd ~/acwork && setsid nohup <cmd> > log 2>&1 < /dev/null &"`. Plain
   `ssh host 'nohup … &'` can hang the local ssh and a delayed second launch then ran a DUPLICATE replica on the
   5090 (prod GPU). Always `pgrep -af "^train-venv/bin/python"` before launching; kill with the `^` anchor
   (`pkill -f "^train-venv/bin/python train_d1.py"`) — an unanchored `pkill -f` kills its own ssh shell.
-- **Prod GPU (5090) cap:** `--mem-frac 0.55` (17.25GB of 31.4; prod masan processes use ~10.6GB). The cap made our
+- **Prod GPU (5090) cap:** `--mem-frac 0.55` (17.25GB of 31.4; prod [service] processes use ~10.6GB). The cap made our
   duplicate OOM instead of the prod services — keep it on every run there.
-- **Disk:** Model_Training_Server is ~96–98% full and hosts prod postgres → keep only its replica's transient sync
-  files there; the local-SGD hub and checkpoints live on s4090-1x-100. `vllm-venv` removed everywhere (unused).
+- **Disk:** GPU_HOST_A is ~96–98% full and hosts prod postgres → keep only its replica's transient sync
+  files there; the local-SGD hub and checkpoints live on GPU_HOST_B. `vllm-venv` removed everywhere (unused).
 - **Server-to-server copies:** `ssh-add -t <sec> <keys>` on the Mac + `ssh -A`, never copy private keys to servers.
-  5090 ↔ 49.213.89.x moves ~3.8GB in ~1–2 min; both 4090s share 49.213.89.0/24.
+  5090 ↔ [ip] moves ~3.8GB in ~1–2 min; both 4090s share [ip]/24.
 - **RAM:** never load the full a11y records (8GB JSON) into Python on a prod host — use `compact_*.jsonl` (lazy strings).
 - **d1-2B training:** grad-ckpt cuts peak 17.1→8.2GB/sample; the backward MUST run inside `state_attention` (gate:
   `test_gradckpt.py`, rel grad diff 6e-4). 4090 ≈ 2.2 samples/s (micro 2, ~2.5k tokens/sample).
 - **Checkpoint:** `save_pretrained` rewrites config.json with a wrong auto_map → keep the release's config.json.
+
+## 2026-11-10 — remote process control (learned twice in one day)
+- **Never `pgrep -f` / `pkill -f` a pattern over `ssh host '...'`**: the remote `bash -c` carries the pattern in its
+  own command line, so it matches itself and the kill takes out your shell (and anything after it in that command).
+  List with `ps -eo pid,args | grep "[s]tage1_chain2"` (the bracket stops the grep matching itself), check the PID's
+  command line, then `kill <pid>`.
+- **`ssh host 'A && B & ...'` hangs the ssh client**: the backgrounded `A && B` subshell keeps the ssh channel open even
+  when `B`'s own output is redirected. Start detached jobs as one simple command:
+  `ssh host 'setsid nohup bash script.sh > log 2>&1 < /dev/null &'`.
+  Third time (20:39): a preamble `cd .. && mv .. && kill .. && setsid nohup bash chain.sh .. &` — the `&` binds to
+  the whole `&&` list, so the preamble and the launch went to the background together and the ssh client hung for
+  the job's lifetime (setsid still protected the job). **Preamble in one ssh call, launch alone in the next.**
+  Worse, the leftover `bash -c "cd ~/aw && cp run_arm.sh …"` stayed alive as chain7's parent, and its command line
+  contains `run_arm.sh`, so chain5's `ps -eo args | grep "[r]un_arm.sh"` ("is a run going?") matched it: chain5 waited
+  on it, it waited on chain7, chain7 waited on chain5 — a deadlock, 8 min lost before the verified kill. A
+  "process running?" test by command-line substring matches any shell that merely mentions the name.
+- **docker image IDs are not comparable across docker versions**: docker 29 with the containerd snapshotter reports
+  the manifest digest, docker 28 with overlay2 the config digest. To prove two hosts run the same image, compare
+  `sha256(json .RootFS.Layers)` and `sha256(json .Config)`.

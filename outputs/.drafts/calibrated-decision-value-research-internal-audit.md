@@ -18,7 +18,7 @@ and §5.7's "**non-overlapping** Wilson intervals" for the online invalid-action
 
 ## 0. Method and scope
 
-Commands run (all from repo root `/Users/macbookpro/Workspace/research`, Python 3 / numpy 2.0.2 /
+Commands run (all from repo root `~/Workspace/research`, Python 3 / numpy 2.0.2 /
 scikit-learn 1.6.1, no GPU):
 
 | # | Command | Purpose |
@@ -46,7 +46,7 @@ follow) · **not on disk** (no artifact) · **contradicted** (artifact says othe
 
 | # | Claim | Paper value | Re-derived value | Command / artifact | Status | Action |
 |---|---|---|---|---|---|---|
-| 1 | AC-v2 pure Pass@1 | **64.32% (256/398)** | **64.07% (255/398)** in-process; **63.82% (254/398)** served API. No 256 anywhere | C8 on `backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl`; C9 over all 41 eval JSONLs on disk | **cannot reproduce** | Restate to 64.07 (255/398); quote 63.82 as the served-API cross-check |
+| 1 | AC-v2 pure Pass@1 | **64.32% (256/398)** | **64.07% (255/398)** in-process; **63.82% (254/398)** served API. No 256 anywhere | C8 on `backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl`; C9 over all 41 eval JSONLs on disk | **cannot reproduce** | Restate to 64.07 (255/398); quote 63.82 as the served-API cross-check |
 | 2 | AC-v2 groundB Pass@1 | 64.82% (258/398) | 258/398 = 0.6482 | `backup-2026-10-29/ckpt-groundB/eval-step1406-V.jsonl` | **reproduces** | keep |
 | 3 | Type accuracy | 84.17% | 335/398 = 0.8417 — on **both** the mem and the nomem artifact | C2 | **reproduces** | keep (note: identical for pure and hinted) |
 | 4 | Grounding (headline row) | **56.50% (126/223)** | @938-mem **128/223 = 57.40%**; nomem **125/223 = 56.05%**; @705 **126/223 = 56.50%** | C2 on the three artifacts | **reproduces, different checkpoint** | 56.50 belongs to step 705, not to the headline checkpoint. Restate the row |
@@ -66,7 +66,7 @@ follow) · **not on disk** (no artifact) · **contradicted** (artifact says othe
 | 18 | §5.3 px distances | median 437 px, mean 663, 86.8% >150 px, 4.4% ≤50 px, median y-bias 0.5 px | 437.0 / 663.1 / 86.8% (59/68) / 4.4% (3/68) / median signed dy = 0.50 | C9 (20-line numpy on `E2-938-V` bucket A) | **reproduces — from the hinted artifact**; pure artifact gives 417.7 / 649.4 / 85.9% / 4.2% / 0.60 | Label the source run, or recompute on the pure artifact |
 | 19 | §5.3.1 candidate coverage | **1.0000** (n=398) | 216/223 = **0.9686** (`coverage` field: 216 True, 7 False, 175 null) | C9 on `benchmarks/results/d12bax-acv2-d12bax-2026-10-28.jsonl` | **contradicted** | Retract 1.0000; restate 96.9% (216/223) |
 | 20 | §5.3.1 a11y grounding / step acc | 50.0% (n=204) / 28.39% | 102/204 = 0.5000 / 113/398 = 0.2839 | C9 on the same file | **reproduces** | keep |
-| 21 | §5.5 procedural-memory ablation | 58.79% (−6.0) | 234/398 = 0.58794 | `backup-2026-10-29/Model_Training_Server/acwork/runs/R2a-V-traj/eval-step938-V.jsonl` | **reproduces** | keep (`−6.0` is vs 64.82; it is −5.3 vs the pure 64.07) |
+| 21 | §5.5 procedural-memory ablation | 58.79% (−6.0) | 234/398 = 0.58794 | `backup-2026-10-29/GPU_HOST_A/acwork/runs/R2a-V-traj/eval-step938-V.jsonl` | **reproduces** | keep (`−6.0` is vs 64.82; it is −5.3 vs the pure 64.07) |
 | 22 | §5.6 latency | 103–108 ms/step | p50 103.0 (938) / 108.1 (705) | C9 on `latency_ms` | **reproduces** | keep |
 | 23 | §5.2 ECE / AUROC / selective table | 0.231 / 0.204; 0.626 / 0.631; 96.5→41.0% cov | 0.2308 / 0.2038; 0.6255 / 0.6315; 96.5/34.6, 79.9/31.1, 67.6/29.0, 51.0/26.1, 41.0/24.5 | C9 on `conf` | **reproduces** | keep |
 | 24 | §5.2 "p×box ECE ~0.29–0.36" | 0.29–0.36 | 0.3669 (@705), 0.4047 (@938) | C9 | **cannot reproduce** (understated) | Restate 0.37–0.40 |
@@ -301,8 +301,8 @@ ALL CHECKS PASS — every published number matches the saved artifacts.
 
 ```
 $ python3 benchmarks/repro_manifest.py \
-    --test backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl \
-    --val  backup-2026-10-29/Model_Training_Server/acwork/runs/E2-val/eval-E2final-V-val.jsonl
+    --test backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl \
+    --val  backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-val/eval-E2final-V-val.jsonl
 artifact: backup-2026-10-29/.../E2-nomem/eval-E2final-nomem-V.jsonl
   n=398  correct=255  Pass@1=64.07%  95% CI [59.2, 68.6]
   type=84.17%  grounding=56.05% (223 spatial rows)
@@ -459,12 +459,12 @@ or executed directly in this session.
 | 5 | `paired_705_vs_938.txt` | same dir | Point estimate +3.52 pts, b=8, c=22, p=0.0161 reproduce; CI [+1.01,+6.28] does **not** (rerun: [+0.76,+6.35]) | primary, stale | high |
 | 6 | `E2-938-V.jsonl`, `E2-705-V.jsonl`, `E2-val.jsonl` | `benchmarks/results/2026-10-29-evals/` | The three input artifacts; 258/398 (md5-identical to the s4090 `eval-step938-V`), 244/398, 519/827 | primary | high |
 | 7 | `verify_paper.py` | `benchmarks/train/verify_paper.py` | 69/69 PASS, exit 0; scope limited to stage-0 JSON + the interface paper | primary | high |
-| 8 | Pure-protocol artifacts | `backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl` (255/398); `backup-2026-11-06/offline/e2-pure-hist.jsonl` (254/398); `…/e2-pure.jsonl` (132/398, no history) | No artifact on disk equals 256/398; pure = 64.07% or 63.82% | primary | high |
+| 8 | Pure-protocol artifacts | `backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl` (255/398); `backup-2026-11-06/offline/e2-pure-hist.jsonl` (254/398); `…/e2-pure.jsonl` (132/398, no history) | No artifact on disk equals 256/398; pure = 64.07% or 63.82% | primary | high |
 | 9 | groundB artifact | `backup-2026-10-29/ckpt-groundB/eval-step1406-V.jsonl` | 258/398, type 0.8216, grounding 134/223 = 60.09%, bucket A 58 | primary | high |
 | 10 | AndroidWorld run DBs | `backup-2026-11-06/gate_runs/aw_runs_20261106/{pure8,fallback8}/index.db` | SR 1/8 both; crash 2/8 both; invalid 20/72 steps and 10/70 steps (20/71 and 10/68 executed); model p50 122.8 / 124.2 | primary | high |
 | 11 | AndroidWorld reports | `backup-2026-11-06/reports/aw_reports.tgz` → `pure8.json`, `fallback8.json`, `pure4.json`, `fallback4.json`, `gb_run1.json`, `gb_run2.json`, `gate_a.log` | model p50 122.9/124.3; env_p50 294.2/135.3 (and 1064.8 for `pure4`); instance params differ 5/8; Gate A "32 passed, 1 skipped"; Gate B 5/5 identical | primary | high |
 | 12 | a11y diagnostic artifact | `benchmarks/results/d12bax-acv2-d12bax-2026-10-28.jsonl` (+ `.md`) | 113/398 = 28.39%; grounding 102/204 = 50.0%; coverage 216 True / 7 False → 96.86%, **not** 1.0000 | primary | high |
-| 13 | Ablation artifact | `backup-2026-10-29/Model_Training_Server/acwork/runs/R2a-V-traj/eval-step938-V.jsonl` | 234/398 = 58.79% (the §5.5 negative ablation) | primary | high |
+| 13 | Ablation artifact | `backup-2026-10-29/GPU_HOST_A/acwork/runs/R2a-V-traj/eval-step938-V.jsonl` | 234/398 = 58.79% (the §5.5 negative ablation) | primary | high |
 | 14 | `repro_manifest.py` | `benchmarks/repro_manifest.py` | Second provenance tool; exits 1 on the pure artifact with 6 MISMATCHes; classifier keys on `correct == 256/258` (circular) | primary | high |
 | 15 | Paper under audit | `papers/single-pass-decision-acv2.md` §5.1–§5.7; `papers/calibrated-decision-interface-2026.md` §2.2–§6.2 | The claims being checked | secondary (self-report) | high |
 | 16 | Internal bookkeeping | `notes/GOAL.md` §2–§4, C3; `docs/compute/REPRO-2026-11-06.md`; `docs/compute/AW_PROTOCOL.md`; `benchmarks/results/2026-10-29-d1-acv2-sft.md`; `benchmarks/results/2026-11-03-acv2-error-budget-and-routed-gate.md` | Prior disclosures (pure artifact missing; 46-vs-69 assertion count; "E2@705 … Ground 56.50"; mandatory AW fields) | secondary | high |
@@ -478,12 +478,12 @@ or executed directly in this session.
 5. `benchmarks/results/2026-11-03-stage0/paired_705_vs_938.txt` (+ `benchmarks/train/paired_eval.py`)
 6. `benchmarks/results/2026-10-29-evals/{E2-938-V,E2-705-V,E2-val}.jsonl`
 7. `benchmarks/train/verify_paper.py`
-8. `backup-2026-10-29/Model_Training_Server/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl`; `backup-2026-11-06/offline/e2-pure-hist.jsonl`; `backup-2026-11-06/offline/e2-pure.jsonl`; `benchmarks/regen_pure.py`
+8. `backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-nomem/eval-E2final-nomem-V.jsonl`; `backup-2026-11-06/offline/e2-pure-hist.jsonl`; `backup-2026-11-06/offline/e2-pure.jsonl`; `benchmarks/regen_pure.py`
 9. `backup-2026-10-29/ckpt-groundB/eval-step1406-V.jsonl`
 10. `backup-2026-11-06/gate_runs/aw_runs_20261106/{pure8,fallback8}/index.db` (tables `runs`, `episodes`, `steps`)
 11. `backup-2026-11-06/reports/aw_reports.tgz` (`pure8.json`, `fallback8.json`, `pure4.json`, `fallback4.json`, `gb_run1.json`, `gb_run2.json`, `gate_a.log`)
 12. `benchmarks/results/d12bax-acv2-d12bax-2026-10-28.jsonl` (+ `.md`)
-13. `backup-2026-10-29/Model_Training_Server/acwork/runs/R2a-V-traj/eval-step938-V.jsonl`
+13. `backup-2026-10-29/GPU_HOST_A/acwork/runs/R2a-V-traj/eval-step938-V.jsonl`
 14. `benchmarks/repro_manifest.py`
 15. `papers/single-pass-decision-acv2.md`; `papers/calibrated-decision-interface-2026.md`
 16. `notes/GOAL.md`; `docs/compute/REPRO-2026-11-06.md`; `docs/compute/AW_PROTOCOL.md`; `docs/compute/TODO-2026-11-06.md`; `benchmarks/results/2026-10-29-d1-acv2-sft.md`; `benchmarks/results/2026-11-02-d1-acv2-groundB.md`; `benchmarks/results/2026-11-03-acv2-error-budget-and-routed-gate.md`; `notes/2026-11-06-online-interface-defect.md`

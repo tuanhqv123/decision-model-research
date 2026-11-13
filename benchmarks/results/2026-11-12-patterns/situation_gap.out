@@ -1,0 +1,18 @@
+training rows 27454 | AW steps 1463 | AW bad steps 493 (no-effect 444, premature status 49)
+
+situation = previous action | its effect | was it a click on an editable field
+situation                              train      AW   AW/tr  badAW   bad%  of all  training teaches (gold)            v3 does on AW
+click|no change|False                    268     201   14.1x    161    80%     33%  click 62%, status 16%, wait 13%    click 87%, status 6%, wait 3%
+scroll|no change|False                    90     143   29.8x    143   100%     29%  scroll 46%, status 33%, click 12%  scroll 99%, status 1%
+click|changed|False                    15050     450    0.6x     71    16%     14%  click 61%, status 22%, input_text 7% click 78%, status 10%, input_text 5%
+click|no change|True                      25      68   51.0x     57    84%     12%  input_text 60%, click 36%, status 4% click 84%, input_text 16%
+input_text|changed|False                1664      59    0.7x     21    36%      4%  click 90%, status 4%, wait 2%      click 92%, input_text 8%
+scroll|changed|False                    1733      85    0.9x     14    16%      3%  scroll 49%, click 36%, status 13%  scroll 91%, click 8%, status 1%
+open_app|changed|False                  1543     112    1.4x     14    12%      3%  click 79%, wait 10%, navigate_back 5% click 87%, scroll 12%, wait 2%
+wait|-|False                            1231     201    3.1x      5     2%      1%  click 46%, status 37%, wait 8%     wait 91%, click 6%, status 1%
+click|changed|True                       674      26    0.7x      4    15%      1%  input_text 83%, click 14%, wait 1% input_text 62%, click 38%
+-|-|False                               4197     114    0.5x      2     2%      0%  click 48%, open_app 36%, navigate_back 11% open_app 100%
+open_app|no change|False                   4       4   18.8x      1    25%      0%  click 50%, wait 25%, navigate_back 25% wait 50%, click 50%
+navigate_home|changed|False               20       0    0.0x      0     0%      0%  open_app 95%, status 5%            
+navigate_back|no change|False              3       0    0.0x      0     0%      0%  navigate_back 100%                 
+navigate_back|changed|False              877       0    0.0x      0     0%      0%  click 57%, navigate_back 27%, scroll 8% 

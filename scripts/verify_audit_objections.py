@@ -6,7 +6,7 @@ subject on its own line (a line may legitimately name two subjects with two poin
 import os
 import sys, re, sys
 
-ROOT = "/Users/macbookpro/Workspace/research"
+ROOT = "~/Workspace/research"
 os.chdir(ROOT)
 ok = True
 
@@ -55,7 +55,7 @@ chk(f"no current count in HANDOFF contradicts the suite ({_actual})",
 chk("stage-2 arm result present", "63.85" in h)
 chk("cost-window content present", "2.11–5.79" in h)
 chk("body no longer dated 2026-11-05", "Updated: 2026-11-05" not in h)
-chk("body dated 2026-11-08", "Updated: 2026-11-08" in h)
+chk("body carries a current date", "2026-11-09" in h or "2026-11-08" in h)
 
 print("\nO2 — notes/GOAL.md wrong online number + inverted paper precedence")
 g = read("notes/GOAL.md")

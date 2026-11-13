@@ -1,0 +1,37 @@
+# DIAGNOSTIC (2026-11-11): v3 final checkpoint served with element rule cap40_priority_noime (trained with
+# cap40_reading_noime) on the 9 non-answer tasks whose element list the old rule cut (v3: 1/9). No masking, as v3.
+# v3 seed 0 online (2026-11-11): contract v3 — v2a + state with progress, current app and previous actions with element and
+# effect (history_format v3), keyboard excluded from the list, v3 option texts. Track VA (elements sent). Harness awhV5.
+# Preflight with --expect-contract v3; run_bench refuses to start unless /health says contract v3 and img_width 720.
+protocol: aw-main-v1
+agent: d1_v3_s0_prio
+checkpoint: v3_s0_ckpt1824
+model:
+  url: http://172.17.0.1:8701
+  token: tok  # localhost-only API behind an SSH tunnel; not a secret
+  track: VA
+  return_readouts: true
+  history_format: v3
+  img_width: 720
+  done_threshold: 0.0
+environment:
+  url: http://127.0.0.1:5000
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+  emulator_setup: false
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  step_budgets_file: /tmp/budgets.json
+  tasks:
+    - OsmAndFavorite
+    - SimpleCalendarAddOneEvent
+    - SimpleCalendarAddOneEventInTwoWeeks
+    - SimpleCalendarAddOneEventRelativeDay
+    - SimpleCalendarAddOneEventTomorrow
+    - SimpleCalendarAddRepeatingEvent
+    - SimpleCalendarDeleteEvents
+    - SimpleCalendarDeleteEventsOnRelativeDay
+    - SimpleCalendarDeleteOneEvent

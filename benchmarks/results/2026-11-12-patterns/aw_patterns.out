@@ -1,0 +1,24 @@
+S1 AW after a click on an editable field: n=37
+  next action: {'input_text': 28, 'click': 9}
+  history line of that click says: {'no change': 12, 'changed': 25}
+  next screen has a focused editable element: {False: 37}
+  (click_target example keys: ['bbox', 'class_short', 'flags', 'idx', 'label'] )
+
+S2 AW after a no-change step: n=625, exact repeat 540 (86%)
+
+S3 AW premature status: n=49, at step median 5 (p75 8)
+   {'prev click': 47, 'prev effect changed': 37, 'prev effect no change': 12, 'prev scroll': 2}
+   by budget: {'11-20': 19, '>20': 14, 'budget <=10': 16}
+{'els': 18470, 'focused': 0, 'editable': 453}
+['is_checkable', 'is_checked', 'is_clickable', 'is_editable', 'is_enabled', 'is_focused', 'is_long_clickable', 'is_scrollable', 'is_selected', 'is_visible']
+('changed', 'click') 10
+('changed', 'click SAME field') 2
+('changed', 'input_text') 16
+('no change', 'click') 1
+('no change', 'click SAME field') 120
+('no change', 'input_text') 11
+{'screens': 730, 'screens with IME elements': 140}
+('keyboard before', False, 'after', True, 'changed') 20
+('keyboard before', True, 'after', True, 'no change') 12
+('keyboard before', True, 'after', True, 'changed') 4
+('keyboard before', True, 'after', False, 'changed') 1

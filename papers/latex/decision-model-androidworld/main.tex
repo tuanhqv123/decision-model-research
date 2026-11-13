@@ -1,0 +1,568 @@
+%% ICML 2026 style (preprint option), anonymous authors. Build: tectonic main.tex
+\documentclass{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[table]{xcolor}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xurl}
+\usepackage{hyperref}
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+\usepackage[preprint]{icml2026}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[capitalize,noabbrev]{cleveref}
+
+\definecolor{srbg}{HTML}{FFF2CC}
+\definecolor{grpbg}{HTML}{ECECEC}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\ours}{DMA-2B}
+\newcommand{\base}{d1-2B}
+\makeatletter\newcommand{\inputrows}[1]{\@@input #1 }\makeatother
+
+\icmltitlerunning{Calibrated Single-Pass Action Selection for Mobile GUI Agents}
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{Calibrated Single-Pass Action Selection for Mobile GUI Agents}
+
+  \begin{icmlauthorlist}
+    \icmlauthor{Anonymous Author(s)}{anon}
+  \end{icmlauthorlist}
+  \icmlaffiliation{anon}{Anonymous institution}
+  \icmlcorrespondingauthor{Anonymous Author(s)}{anonymous@example.com}
+  \icmlkeywords{GUI agents, decision models, calibration, selective prediction, AndroidWorld, AndroidControl}
+  \vskip 0.3in
+]
+
+\printAffiliationsAndNotice{}
+
+\begin{abstract}
+Mobile GUI agents are usually built on vision-language models that decode a reasoning trace and an action
+string at every step. Such agents must parse their own output, pay a sequential decoding cost per step, and
+expose no calibrated probability for the action they take. We study the alternative of a \emph{decision
+model}, which reads the screen state once and returns a probability distribution over typed answers in a
+single forward pass without generating tokens. We fine-tune the 2B decision model d1-2B on AndroidControl and
+evaluate the resulting agent, \ours{}, on AndroidControl and on the official AndroidWorld protocol. \ours{}
+reaches a step success rate of 89.3\% on AndroidControl-Low and 61.7\% on AndroidControl-High (from 59.8\%
+and 40.2\% before fine-tuning), and a task success rate of 21.7\% on AndroidWorld, at a median latency of
+135\,ms per decision. Its action probability ranks its own errors (AUROC 0.758 on 8{,}444 AndroidControl-High
+steps), and a split-conformal threshold on that probability keeps the error rate of the accepted steps below
+20\% while acting on 49\% of them. On AndroidWorld, the probability attached to the model's own termination
+decision separates correct from premature terminations (AUROC 0.746): escalating terminations below 0.9 would
+intercept 36 of 49 premature ones at the cost of 11 of 26 correct ones. We further show that per-step accuracy
+overstates task success by roughly a factor of three, and estimate that two fifths of the AndroidWorld failures
+require computation that a single forward pass does not provide.
+\end{abstract}
+
+%% ==================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Most mobile GUI agents are generative. At each step a vision-language model (VLM) reads a screenshot, writes
+a thought, and emits an action as text, which the harness parses and executes
+\citep{androidworld2024,uitars2025,mobileagentv3,mobilerl2025}. This design has three costs that matter for an
+agent running on a device. First, the action is a string, so a malformed or out-of-schema output is a runtime
+error. Second, decoding is sequential, and its cost grows with the length of the reasoning trace. Third, the
+agent does not expose a calibrated probability for the action it selected, so the surrounding software cannot
+decide whether to act, to ask the user, or to stop.
+
+A decision model removes all three costs by construction \citep{typesafe2026,liquidd12026}. It receives a
+state and a set of typed questions, and returns, for each question, a probability distribution over a
+closed answer set in one forward pass. Its output cannot violate the schema, its cost is one forward pass, and
+each answer comes with a probability. Whether such a model can operate a phone, and whether its probabilities
+are informative enough to decide when it should not act, has not been measured.
+
+This paper reports that measurement. We define a decision interface for mobile control, fine-tune the 2B
+decision model d1-2B \citep{liquidd12026} on AndroidControl \citep{androidcontrol2024}, and evaluate the
+resulting agent, \ours{}, on AndroidControl and on AndroidWorld \citep{androidworld2024}. Our contributions are
+the following.
+\begin{enumerate}
+  \item A single-pass decision interface for mobile GUI control (\cref{sec:method}), in which the action, the
+        target element, the scroll direction, the app and any typed text are answered jointly from one forward
+        pass, and the text state is produced by the same renderer at training and at inference.
+  \item An evaluation on AndroidControl in the standard Type / Grounding / SR format against published models,
+        including the untrained base model, and on the official AndroidWorld protocol (\cref{sec:results}).
+  \item An analysis of the model's confidence as a control signal (\cref{sec:confidence}): how well it ranks
+        errors before and after fine-tuning, what selective risk a split-conformal threshold achieves, and how
+        well it separates correct from premature task termination on AndroidWorld.
+  \item A decomposition of the gap between per-step accuracy and task success, based on a trace-level reading of
+        all failed AndroidWorld tasks (\cref{sec:gap}).
+\end{enumerate}
+
+%% ==================================================================
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Mobile GUI agents.}
+AndroidControl \citep{androidcontrol2024} and AndroidWorld \citep{androidworld2024} are the two standard
+Android benchmarks: the first scores individual steps against human demonstrations, the second scores task
+completion in a live emulator. Recent agents are VLMs trained with supervised fine-tuning on GUI trajectories
+\citep{osatlas,aguvis,uitars2025} and, increasingly, with reinforcement learning from rule-based or
+environment rewards \citep{uir1,guir1,infiguir1,uigenie,mobilerl2025}. Several of them are small: UI-TARS-2B,
+OS-Atlas-4B, UI-R1-3B, GUI-R1-3B and InfiGUI-R1-3B all report AndroidControl results (\cref{tab:ac}). All of
+these models generate text, and several generate an explicit reasoning trace before the action. Multi-agent
+systems add planners, reflectors and verifiers around the VLM \citep{mobileagentv3,vdroid2025,androidgen2025}.
+
+\paragraph{Decision models.}
+TypeSafe's Jev and LiquidAI's d1 family answer typed questions (choice, yes/no, score, span, box) in one pass
+and return probabilities rather than text \citep{typesafe2026,liquidd12026}. TypeSafe's documentation advises
+keeping ``math in code, which includes counting and date comparison'' \citep{typesafelimits2026}; our failure
+analysis arrives at the same boundary from the agent side.
+
+\paragraph{Calibration and selective prediction.}
+A classifier is calibrated when its confidence matches its accuracy \citep{guo2017calibration}. Selective
+prediction lets a model abstain where its confidence is low and trades coverage for risk
+\citep{geifman2017selective}. Learn-then-Test \citep{angelopoulos2021ltt} and conformal risk control
+\citep{angelopoulos2024crc} turn a confidence score into a threshold with a finite-sample guarantee on the risk
+of the accepted decisions. CORA \citep{cora2026} applies conformal risk control to mobile GUI automation, gating
+the actions of a generative agent with a separate guardian model. We apply the same statistical tools to the
+probability that the acting model itself produces.
+
+%% ==================================================================
+\section{Method}
+\label{sec:method}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig_pipeline.pdf}
+  \caption{Generative agents and the decision interface. (a) A generative VLM agent decodes a reasoning trace
+  and an action string, which is parsed into an action. (b) The decision model reads the screenshot and a text
+  state once and returns a distribution for every typed question; a confidence gate decides between acting and
+  escalating. The screenshot, the state and both distributions are taken from one recorded AndroidWorld step
+  (task ``Turn wifi on.'', step 2); the model took 130\,ms for this decision.}
+  \label{fig:pipeline}
+\end{figure*}
+
+\subsection{Problem formulation}
+At step $t$ the agent observes a screenshot $x_t$ and the accessibility tree of the screen, and knows the goal
+$g$ and its own previous actions $h_{<t}$. A deterministic renderer turns $(g, h_{<t}, \text{tree})$ into a
+text state $z_t$ that lists the goal, the current app, the previous actions with their observed effects, and the
+visible elements $\mathcal{E}_t = \{e_1,\dots,e_{n_t}\}$ with label, type, state and position. The model
+receives $s_t = (x_t, z_t)$ and a fixed set of typed questions, and returns in one forward pass
+\begin{equation}
+  p(a \mid s_t),\; p(e \mid s_t),\; p(d \mid s_t),\; p(m \mid s_t),\; p(\sigma \mid s_t),
+\end{equation}
+where $a$ ranges over ten action types (click, long press, type, scroll, wait, back, home, open app, done,
+answer), $e \in \mathcal{E}_t$ is the target element, $d$ the scroll direction, $m$ the app to open, chosen
+from the installed apps, and $\sigma$ a span of $z_t$ that is copied as the text to type or the answer to
+report. The executed action is assembled from the arg-max answers: $\hat a = \arg\max_a p(a\mid s_t)$ together
+with the answers that $\hat a$ requires. Because spans are copied from the text state, the model cannot produce
+text that appears only in the pixels (\cref{sec:gap}).
+
+\subsection{Model and training}
+The decision model is d1-2B \citep{liquidd12026}, a 1.92B-parameter vision-language decision model whose
+readout heads project the backbone state onto the token groups of each question's options. We fine-tune all
+parameters except the tied input embedding and output head, including the vision encoder, with a cross-entropy
+loss on every question that the gold action defines. We call the fine-tuned model \ours{}.
+
+The training set contains 37{,}977 decisions from the AndroidControl training split \citep{androidcontrol2024},
+rebuilt from the original release with all test episodes excluded and restricted to task kinds that also occur in
+AndroidWorld. Each history line carries the effect observed after the action (``screen changed'' or ``no
+change''). We add rows in which an action had no effect and the gold answer is a different action, rows that end
+an episode with an answer, and, on a fixed half of the rows, the AndroidControl step instruction. We also add
+1{,}736 rows that map goals produced by AndroidWorld's task generator to the app to open. These rows cover 97 of
+the 116 evaluated task templates; they contain no AndroidWorld screen, trajectory or success checker, but they do
+expose the model to AndroidWorld's goal phrasing. Training runs for one epoch (2{,}482 steps, 16 rows per step,
+learning rate $10^{-5}$).
+
+\subsection{Confidence and escalation}
+\label{sec:gate}
+We use the probability of the selected action, $c(s_t) = p(\hat a \mid s_t)$, as the step confidence, and
+compare it with two combinations that include the element probability $p(\hat e \mid s_t)$ on steps whose
+action targets an element (their product and their minimum). An escalation gate acts if $c(s_t) \geq \tau$ and
+asks otherwise. For $n$ scored steps with correctness $y_i \in \{0,1\}$, coverage and selective risk are
+\begin{align}
+  \mathrm{cov}(\tau) &= \frac{1}{n}\sum_{i=1}^{n} \mathbf{1}[c_i \geq \tau], \\
+  R(\tau) &= \frac{\sum_{i} \mathbf{1}[c_i \geq \tau]\,(1-y_i)}{\sum_{i} \mathbf{1}[c_i \geq \tau]}.
+\end{align}
+To choose $\tau$ for a target risk $\delta$ we follow Learn-then-Test with fixed-sequence testing
+\citep{angelopoulos2021ltt}: on a calibration set we lower $\tau$ from the most confident decision and stop
+before the first threshold at which the one-sided Clopper--Pearson upper bound on $R(\tau)$ at level
+$\alpha = 0.05$ exceeds $\delta$.
+
+%% ==================================================================
+\section{Experimental Setup}
+\label{sec:setup}
+
+\paragraph{AndroidControl.}
+The test split has 8{,}444 steps in 1{,}543 episodes \citep{androidcontrol2024}. In the Low setting the model
+sees the step instruction; in the High setting it sees only the goal. In both settings the history is the
+demonstrator's, so every step is evaluated from the correct prefix. We score with the evaluation code of
+InfiGUI-R1 \citep{infiguir1} without modification and report the three usual metrics: \emph{Type}, the
+action-type accuracy; \emph{Grounding}, the share of click and long-press steps with the correct type whose
+predicted point falls inside the target element; and \emph{SR}, the step success rate. We additionally report
+the \emph{episode success rate} (ESR), the share of episodes in which every step is correct.
+
+\paragraph{AndroidWorld.}
+We run the 116 tasks with seed 30 and one attempt per task under the official success checkers
+\citep{androidworld2024}. The agent decides by itself when the task is done; there is no oracle stop. The
+\emph{task success rate} (TSR) is the sum of task scores divided by the number of scored tasks, so a partial
+score of 0.5 counts as half a success. One task (OsmAndMarker) failed during environment setup and is excluded,
+leaving 115 scored tasks. Decoding is greedy, but the emulator is not deterministic: in an earlier check, 6 of 20
+replays on the same host produced different trajectories.
+
+\paragraph{Confidence metrics.}
+We measure how well a confidence score ranks correct above incorrect steps by AUROC, its calibration by the
+expected calibration error (ECE, 15 equal-width bins) \citep{guo2017calibration}, and its use for selection by
+the risk at fixed coverage and the area under the risk--coverage curve (AURC) \citep{geifman2017selective}.
+
+%% ==================================================================
+\section{Results}
+\label{sec:results}
+
+\begin{table*}[t]
+\centering
+\caption{Results on the AndroidControl test set \citep{androidcontrol2024} (8{,}444 steps). Type: action-type
+accuracy; Grounding: target accuracy on click and long-press steps with the correct type; SR: step success rate.
+Rows in the first three groups are copied from the cited tables, which use different prompts, action spaces and
+evaluation code; they are comparable with each other and with ours only approximately, and the same model can
+differ across groups (e.g.\ OS-Atlas-4B). Our rows use the InfiGUI-R1 scorer. Bold: best; underline: second
+best; ``--'': not reported.}
+\label{tab:ac}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}l c ccc ccc@{}}
+\toprule
+& & \multicolumn{3}{c}{AndroidControl-Low} & \multicolumn{3}{c}{AndroidControl-High} \\
+\cmidrule(lr){3-5}\cmidrule(l){6-8}
+Model & Size & Type & Grounding & SR & Type & Grounding & SR \\
+\midrule
+\inputrows{tables/tab_ac_rows.tex}
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{AndroidControl}
+\label{sec:ac}
+\Cref{tab:ac} places \ours{} among published models. Fine-tuning raises step success from 59.8\% to 89.3\% on
+AndroidControl-Low and from 40.2\% to 61.7\% on AndroidControl-High, and episode success from 18.8\% to 60.4\%
+(Low) and from 9.4\% to 22.3\% (High). On AndroidControl-Low, \ours{} matches UI-TARS-2B (89.3\% SR) and exceeds
+OS-Atlas-4B and Aguvis-7B as reported by InfiGUI-R1, while InfiGUI-R1-3B and the 7B--72B models of the MobileRL
+group remain ahead. On AndroidControl-High, \ours{} is above every model evaluated by GUI-R1 under its shared
+zero-shot prompt, including the 7B models, and level with Aguvis-7B (61.5\%); UI-TARS-2B (68.9\%), OS-Atlas-4B
+as reported by InfiGUI-R1 (67.5\%) and InfiGUI-R1-3B (71.1\%) remain ahead. Its High grounding (78.4\%) equals
+that of UI-TARS-2B and exceeds those of InfiGUI-R1-3B and of both MobileRL models, so the remaining High gap lies
+mainly in the action type. Every other model in \cref{tab:ac} generates text; \ours{} generates none.
+
+\subsection{AndroidWorld}
+\label{sec:aw}
+\ours{} solves 24 of the 115 scored tasks and receives half credit on two more, a TSR of 25/115 = 21.7\%.
+\Cref{tab:aw} breaks the result down by the difficulty labels and optimal step counts of the AndroidWorld task
+metadata, and by complexity level, defined as in MobileRL as the ceiling of a task's complexity value. Success
+is concentrated in easy and level-1 tasks. On the tasks it solves, the agent uses more steps than the optimum
+(5.5 against 3.2 on easy tasks, 6.7 against 5.0 on medium tasks).
+
+\begin{table}[t]
+\centering
+\caption{AndroidWorld task success of \ours{} (seed 30, pass@1, 115 scored tasks). Steps: mean steps taken;
+Opt.: mean optimal steps from the task metadata.}
+\label{tab:aw}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}l r r r r r@{}}
+\toprule
+Split & Tasks & Score & TSR (\%) & Steps & Opt. \\
+\midrule
+Easy   & 61 & 21.0 & 34.4 & 8.5  & 5.0 \\
+Medium & 36 & 3.0  & 8.3  & 13.0 & 9.0 \\
+Hard   & 18 & 1.0  & 5.6  & 19.3 & 18.5 \\
+\midrule
+Level 1 & 45 & 19.0 & 42.2 & -- & -- \\
+Level 2 & 40 & 5.5  & 13.8 & -- & -- \\
+Level 3 & 9  & 0.0  & 0.0  & -- & -- \\
+Level $\geq$4 & 21 & 0.5 & 2.4 & -- & -- \\
+\midrule
+All    & 115 & 25.0 & 21.7 & 11.6 & 8.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Cref{tab:awctx} lists AndroidWorld results reported by other systems. They are not a ranking: none was obtained
+with our harness, and the systems differ in size, number of model calls per step, generated reasoning, extra
+components and use of AndroidWorld-derived training data. The closest settings, single-model 2B agents without
+tools, are MAI-UI-2B (49.1\%) \citep{maiui2025} and UI-Venus-1.5-2B (55.6\%) \citep{uivenus15}; both generate
+text, and we have not run a generative model of the same size in our harness.
+
+\begin{table*}[t]
+\centering
+\caption{AndroidWorld task success rates reported by each system's authors, for context only. None was obtained
+with our harness. Calls: model calls per step; AW data: AndroidWorld-derived training data; ``--'': not checked in
+the source.}
+\label{tab:awctx}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}l c c c L{3.2cm} L{2.8cm} r@{}}
+\toprule
+System & Size & Calls & Text & AW data & Extra components & TSR (\%) \\
+\midrule
+\textbf{\ours{} (ours)} & 2B & 1 & no & goal-to-app rows from the task generator & none & \textbf{21.7} \\
+M3A, GPT-4 Turbo \citep{androidworld2024} & -- & $\geq$2 & yes & no & step summary as memory & 30.6 \\
+UI-TARS \citep{uitars2025} & -- & 1 & yes & not stated & -- & 46.6 \\
+AndroidGen, GPT-4o \citep{androidgen2025} & -- & $>$1 & yes & trajectories collected in AndroidWorld & planner, retrieval, checks & 46.8 \\
+MAI-UI-2B \citep{maiui2025} & 2B & 1 & yes & not stated & none & 49.1 \\
+UI-Venus-1.5-2B \citep{uivenus15} & 2B & 1 & yes & not stated & -- & 55.6 \\
+V-Droid \citep{vdroid2025} & 8B + LLM & $>$1 & yes & AndroidWorld apps and tasks & verifier over candidates & 59.5 \\
+GUI-Owl-7B \citep{mobileagentv3} & 7B & 1 & yes & not stated & -- & 66.4 \\
+Mobile-Agent-v3 \citep{mobileagentv3} & 32B & $>$1 & yes & not stated & manager, worker, reflector, notetaker & 73.3 \\
+MAI-UI-235B-A22B \citep{maiui2025} & 235B & 1 & yes & not stated & none & 76.7 \\
+MobileRL-9B \citep{mobilerl2025} & 9B & 1 & yes & online RL on generated task variants & -- & 80.2 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{Latency.}
+Over 1{,}335 AndroidWorld steps the model takes 135\,ms per decision at the median and 181\,ms at the 95th
+percentile (one forward pass on a shared 24\,GB GPU, served over HTTP, no tokens generated). The emulator step
+takes 1{,}624\,ms at the median, so the device, not the model, dominates the agent loop.
+
+%% ==================================================================
+\section{Confidence as a Control Signal}
+\label{sec:confidence}
+
+\subsection{Does the confidence rank errors?}
+\Cref{tab:calib} and \cref{fig:calibration} compare the step confidence of the base model and of \ours{} on
+AndroidControl-High. Fine-tuning improves both accuracy and ranking: AUROC rises from 0.721 to 0.758 and the
+risk at 50\% coverage falls from 44.2\% to 19.0\%. Both models are over-confident (mean confidence exceeds
+accuracy by 0.23 and 0.19), so the raw probability is a ranking signal rather than a calibrated estimate of
+correctness. For the action type alone, the probability of \ours{} is close to calibrated (ECE 0.073) and ranks
+type errors with AUROC 0.800.
+
+\begin{table}[t]
+\centering
+\caption{Step confidence $c = p(\hat a\mid s)$ on AndroidControl-High (8{,}444 steps). Risk@50: error rate on the
+50\% most confident steps. Last row: AUROC of the lowest step confidence in an episode for episode success.}
+\label{tab:calib}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}l c c@{}}
+\toprule
+& \base{} (base) & \ours{} (ours) \\
+\midrule
+SR (\%)              & 40.2 & 61.7 \\
+Mean confidence (\%) & 62.7 & 81.1 \\
+ECE $\downarrow$     & 0.226 & 0.194 \\
+AUROC $\uparrow$     & 0.721 & 0.758 \\
+Risk@50 (\%) $\downarrow$ & 44.2 & 19.0 \\
+AURC $\downarrow$    & 0.420 & 0.196 \\
+\midrule
+Type: AUROC / ECE    & 0.668 / 0.059 & 0.800 / 0.073 \\
+Episode: AUROC       & 0.772 & 0.733 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/fig_calibration.pdf}
+  \caption{AndroidControl-High, base model and \ours{}. (a) Error rate among the steps the gate accepts, as the
+  threshold is lowered. (b) Step accuracy against binned confidence; the dashed line is perfect calibration.}
+  \label{fig:calibration}
+\end{figure}
+
+The best way to combine the action and element probabilities depends on how correctness is defined. Under the
+InfiGUI-R1 scorer, which accepts a click inside any of the candidate boxes of the target, the action probability
+alone ranks best (AUROC 0.758, against 0.701 for the product with the element probability and 0.717 for the
+minimum). Under a stricter scorer that requires the point to lie inside the smallest gold element, accuracy falls
+to 52.5\% and the order reverses (0.715, 0.721, 0.732); on the 827-step validation split, scored the same strict
+way, the product reaches 0.757 against 0.701 for the action probability. A gate must therefore be calibrated
+against the success criterion of the deployment, not against a proxy.
+
+\subsection{Risk-controlled gating}
+We split the AndroidControl-High test episodes into two halves 200 times, choose $\tau$ on one half with the
+procedure of \cref{sec:gate}, and apply it to the other. For a target risk $\delta = 20\%$ a threshold exists in
+every split; the gate then acts on 49.1\% of the held-out steps with a mean error rate of 18.6\%. For
+$\delta = 15\%$ a threshold exists in 169 of 200 splits (coverage 33.3\%, risk 12.4\%), and for $\delta = 10\%$
+in only 55 (coverage 14.5\%, risk 7.2\%). The guarantee concerns the expected risk; on a half-size test set the
+realised risk still exceeds $\delta$ in 11--15\% of the splits, and splitting by step rather than by episode
+gives a similar rate. A threshold chosen on the validation split instead is valid but very conservative: for
+$\delta = 20\%$ it accepts only 10.0\% of the test steps (risk 4.1\%), because the validation split is scored by
+the strict criterion and has a different action mix.
+
+\subsection{Confidence at termination on AndroidWorld}
+The most frequent AndroidWorld failure is a premature ``done''. Of the 115 scored episodes, 75 end with the
+model's own termination; 26 of these earn credit and 49 do not. The probability that the model assigns to its
+termination separates the two groups (AUROC 0.746; mean 0.884 against 0.704; \cref{fig:termination}).
+Escalating every termination with $p(\text{done}\mid s) < 0.9$ would intercept 36 of the 49 premature
+terminations and 11 of the 26 credited ones; at 0.95 the counts are 40 and 13. These thresholds are chosen on
+the same 75 episodes and are descriptive, and what an intercepted episode would achieve depends on the answer to
+the escalation, which we do not measure. Two further signals behave similarly: the lowest step confidence in an
+episode predicts task success with AUROC 0.777, and step confidence predicts whether the action changed the
+screen with AUROC 0.746 (1{,}119 steps).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/fig_termination.pdf}
+  \caption{AndroidWorld terminations of \ours{}. (a) Distribution of $p(\text{done}\mid s)$ for terminations that
+  earn credit and for premature ones. (b) Share of each group that a gate escalates, as the threshold varies.}
+  \label{fig:termination}
+\end{figure}
+
+%% ==================================================================
+\section{Where the Gap Comes From}
+\label{sec:gap}
+
+\paragraph{Per-step accuracy and episodes.}
+The AndroidControl scorer feeds the demonstrator's history at every step and never checks the goal, so errors
+do not compound. \Cref{fig:episode} shows the episode success rate by episode length: \ours{} completes 59\% of
+one-step episodes but 5\% of episodes with ten or more steps. Its High episode success rate (22.3\%) is close to
+its AndroidWorld TSR (21.7\%), although the two differ in kind: AndroidWorld requires the agent to stop by itself
+and contains 13 apps without training goals, but accepts any path to the goal state. The AndroidControl test set
+also contains no step whose correct action is ``done'', yet \ours{} predicts ``done'' on 1{,}171 of the 8{,}444
+steps, 460 of them on an episode's last step.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/fig_episode.pdf}
+  \caption{AndroidControl-High: share of episodes in which every step is correct, by episode length (1{,}543
+  episodes).}
+  \label{fig:episode}
+\end{figure}
+
+\paragraph{The 91 failed AndroidWorld tasks.}
+Of the 91 tasks without full success, 51 ended with a premature termination (49 with no credit, 2 with half
+credit) and 40 exhausted the step budget. For each failure we located the first wrong step in the trace and the
+screenshots and checked the upstream success condition (\cref{app:failures}). About 36 failures, an estimate
+from the group-level reading, need abilities that a single pass under our constraints does not provide:
+arithmetic and date computation, memory across screens (counting, duplicates, transcription), text that exists
+only in pixels, colour or icon semantics without training labels, and state that the accessibility tree does not
+expose. These are the operations that TypeSafe assigns to code rather than to the model
+\citep{typesafelimits2026}.
+
+\paragraph{Harness and environment.}
+With the checkpoint fixed, harness corrections raised the TSR from 15.5/115 to 25/115 (\cref{app:harness}):
+answers had not reached the checker, the accessibility tree lagged behind the screenshot, the SIM was
+unavailable, and first-run screens of Chrome, Markor and OsmAnd blocked tasks. Each defect produced failures
+that looked like model failures.
+A last revision (D) leaves the score unchanged at 25/116, with the OsmAnd marker task now scorable
+(2 wins, 2 losses).
+
+\paragraph{Vision.}
+Replacing every screenshot with a uniform grey image lowers validation step accuracy from 519/827 to 337/827 and
+action-type accuracy from 80.0\% to 50.8\% (\cref{app:ablation}); the model uses the image mainly to decide which
+kind of action to take.
+
+%% ==================================================================
+\section{Limitations}
+All AndroidWorld numbers come from one seed and one attempt per task; a difference of five tasks is within
+noise (sign test $p \approx 0.2$ at five wins and one loss). The goal-to-app training rows use AndroidWorld's goal
+templates. The comparison rows in \cref{tab:ac,tab:awctx} come from other papers and other harnesses. The
+conformal analysis assumes that calibration and deployment steps are exchangeable, which does not hold across
+scorers or splits (\cref{sec:confidence}), and the termination thresholds are fitted in-sample. The failure
+taxonomy was produced by LLM agents reading traces, one per group, without a second annotator.
+
+\section{Conclusion}
+A 2B decision model that answers typed questions in one forward pass can operate a phone at 135\,ms per decision
+and reaches 89.3\% and 61.7\% step success on AndroidControl-Low and High. Its action probability is
+over-confident but ranks its own errors well enough to act on about half of the steps at an error rate below
+20\%, and to flag most premature terminations on AndroidWorld. Task success (21.7\%) is limited less by
+individual steps than by termination, by harness and environment defects, and by computation that a single pass
+should not be asked to perform. The next steps follow from these findings: verify progress on the next screen
+before terminating, re-rank candidate elements with per-candidate questions, and move counting, arithmetic and
+formatting into code that consumes the model's per-item judgments.
+
+\bibliography{refs}
+\bibliographystyle{icml2026}
+
+%% ==================================================================
+\newpage
+\appendix
+\onecolumn
+
+\section{Failure analysis of the AndroidWorld run}
+\label{app:failures}
+The 91 failed tasks were divided into four groups. One LLM agent per group, with no shared context, located the
+first wrong step from the trace and the screenshots and checked the upstream success condition. Counts are tasks.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}l L{13.0cm}@{}}
+\toprule
+Group (tasks) & First wrong step \\
+\midrule
+Information retrieval (21) & answer visible but not reported (4); answer format (1); wrong navigation (4); date, time or colour reasoning (4); counting across screens (2); answer not expressible as a span (6) \\
+Easy (27) & long press required (5); verification tasks already satisfied (3); premature termination (4); wrong element (4); target scrolled out of view (3); typing replaced instead of appended (2); clipboard chip absent from the element list (2); environment or app knowledge (4) \\
+Medium and hard (34) & app procedure (7); values that must be computed, such as dates and end times (6); stopped after the first of several items (4); environment (3); form fields left empty (3); duplicates across screens (3); long note content (2); media library not loaded (2); single cases (4) \\
+Visual (9) & navigation without reading (2); drawing or maze pages (2); text only in pixels (4); arithmetic (1) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Harness revisions}
+\label{app:harness}
+Same checkpoint and seed; paired comparisons are per task (sign test).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}l c L{11.0cm}@{}}
+\toprule
+Revision & Score & Change with respect to the previous revision \\
+\midrule
+A & 15.5/115 & -- \\
+B & 20.5/115 & answers forwarded to the checker; a fresh observation when the accessibility tree lags the screenshot (up to 8\,s). 5 wins, 0 losses ($p = 0.062$). \\
+C & 25/115 & fresh observation also after a page change (up to 20\,s); working SIM; Chrome first-run screens cleared before the suite. 5 wins, 1 loss ($p = 0.22$). \\
+D & 25/116 & numeric answer format; Back closes the keyboard after typing; Markor and OsmAnd first-run state repaired. The 39 affected tasks are re-run (37 scored); OsmAnd's marker task becomes scorable. 2 wins, 2 losses. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Environment defects found from traces: Markor opened on its first-run screens in all six Markor episodes on one
+emulator; a database query run as root on a missing OsmAnd database left an empty, root-owned file that OsmAnd
+could not open; VLC's media library remained at ``Loading'' on every emulator (cause inferred from the log); and
+running \texttt{uiautomator dump} stops AndroidWorld's accessibility forwarder.
+
+\section{Ablations and negative results}
+\label{app:ablation}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}l c c@{}}
+\toprule
+Validation split (827 steps) & Real screenshot & Grey screenshot \\
+\midrule
+Step accuracy & 519/827 & 337/827 \\
+Action-type accuracy & 80.0\% & 50.8\% \\
+Element accuracy given the correct type & 271/414 & 124/207 \\
+Type-text steps correct & 37/53 & 3/53 \\
+Scroll steps correct & 40/86 & 7/86 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}L{5.0cm} L{10.5cm}@{}}
+\toprule
+Attempt & Result \\
+\midrule
+Threshold on $p(\text{done})$ that switches to the next action & harmful at every threshold on an earlier offline split \\
+Separate ``task done?'' question & redundant: its label equals ``action = done'' on 137 of 137 validation rows \\
+Masking an action already marked ``no change'' & 2 wins, 2 losses on AndroidWorld; more premature terminations \\
+Weight averaging (0.3/0.7) with an earlier checkpoint & 6 wins, 9 losses on AndroidWorld \\
+Recovery (``go back'') rows & 300-step pilot: validation step accuracy 65.2\% $\rightarrow$ 57.7\%; back predicted where it is wrong 1.9\% $\rightarrow$ 10.0\% \\
+Per-candidate yes/no re-ranking of the top-5 elements, zero-shot & worse than the trained choice (261 vs.\ 286 of 430 validation targets), although the gold element is in the top 5 for 388 \\
+Next-screen progress question, zero-shot & AUROC 0.76 on an AndroidControl sample, but with only 26 negative transitions \\
+Retraining with every episode's final action and ``done'' row kept (2,313 steps from \ours) & no gain: AndroidControl-Low SR 89.3 $\rightarrow$ 88.8 (paired $p = 0.007$), High 61.7 $\rightarrow$ 61.3 ($p = 0.19$); premature ``done'' on validation 64 $\rightarrow$ 72 of 690; back where it is wrong 16 $\rightarrow$ 23 of 798 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Artifacts}
+All numbers are recomputed from files in the project repository: AndroidControl per-step verdicts and
+confidences (\path{benchmarks/results/2026-11-12-calibration/conf-*-achigh.jsonl}), the calibration analysis
+(\path{benchmarks/train/calib_current.py}), AndroidWorld traces (\path{benchmarks/results/2026-11-12-maskenv/}),
+the difficulty and level tables (\path{benchmarks/aw/aw_report.py}), the figure and table scripts
+(\path{figures/make_figures.py}, \path{tables/make_ac_table.py}), and the AndroidWorld task metadata
+(\path{references/raw/androidworld-task_metadata.json}).
+
+\end{document}

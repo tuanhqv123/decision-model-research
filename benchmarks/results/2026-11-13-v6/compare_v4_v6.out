@@ -1,0 +1,8 @@
+AC-Low v4 {'type': 96.6, 'ground': 90.1, 'sr': 89.3, 'ep_all': '932/1543'} v6 {'type': 96.4, 'ground': 89.4, 'sr': 88.8, 'ep_all': '934/1543'}
+  paired v6 wins 104 losses 148 p=0.00664
+AC-High v4 {'type': 74.3, 'ground': 78.4, 'sr': 61.7, 'ep_all': '344/1543'} v6 {'type': 73.3, 'ground': 78.4, 'sr': 61.3, 'ep_all': '323/1543'}
+  paired v6 wins 442 losses 483 p=0.188
+v4 AC-High terminate predicted 1171 / 8444 | back predicted 249 gold back 343
+v6 AC-High terminate predicted 1100 / 8444 | back predicted 444 gold back 343
+v4 val step 520 / 827 ep_all 14 / 137 false_status 64 / 690 back_misuse 16 / 798 true_status 123 / 137
+v6 val step 521 / 827 ep_all 19 / 137 false_status 72 / 690 back_misuse 23 / 798 true_status 125 / 137

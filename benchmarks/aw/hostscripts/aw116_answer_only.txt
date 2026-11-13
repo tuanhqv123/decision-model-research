@@ -1,0 +1,29 @@
+# The 25 AndroidWorld tasks scored ONLY on the `answer` text (interaction_cache): every registry class that
+# subclasses android_world.task_evals.information_retrieval.information_retrieval.InformationRetrieval.
+# Derived 2026-11-10 inside the emulator container from TaskRegistry().get_registry(ANDROID_WORLD_FAMILY)
+# (116 tasks, 25 matches), equal to the audit's count (2026-11-10-AUDIT-androidworld-contract.md, §1).
+NotesIsTodo
+NotesMeetingAttendeeCount
+NotesRecipeIngredientCount
+NotesTodoItemCount
+SimpleCalendarAnyEventsOnDate
+SimpleCalendarEventOnDateAtTime
+SimpleCalendarEventsInNextWeek
+SimpleCalendarEventsInTimeRange
+SimpleCalendarEventsOnDate
+SimpleCalendarFirstEventAfterStartTime
+SimpleCalendarLocationOfEvent
+SimpleCalendarNextEvent
+SimpleCalendarNextMeetingWithPerson
+SportsTrackerActivitiesCountForWeek
+SportsTrackerActivitiesOnDate
+SportsTrackerActivityDuration
+SportsTrackerLongestDistanceActivity
+SportsTrackerTotalDistanceForCategoryOverInterval
+SportsTrackerTotalDurationForCategoryThisWeek
+TasksCompletedTasksForDate
+TasksDueNextWeek
+TasksDueOnDate
+TasksHighPriorityTasks
+TasksHighPriorityTasksDueOnDate
+TasksIncompleteTasksOnDate

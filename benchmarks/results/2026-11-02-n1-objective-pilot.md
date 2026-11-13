@@ -50,7 +50,7 @@ discrimination, and all three are strongly overconfident.** Reported as a null, 
 - The objective comparison is **flat enough that a full-budget, 3-seed run is the only way to resolve
   it** — which is exactly the experiment the paper needs, and it is now one command.
 
-## Artifacts (on `Model_Training_Server`, backed up locally before cleanup)
+## Artifacts (on `GPU_HOST_A`, backed up locally before cleanup)
 `runs/n1m-{ce,brier,joint}` checkpoints · `results/n1-n1m-{ce,brier,joint}.json` ·
 `logs/n1m.log`, `logs/n1eval.log`, `logs/evjoint.log`.
 

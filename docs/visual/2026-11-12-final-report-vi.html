@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>d1-mobile: lỗi, phân tích, sửa và mục tiêu</title>
+<style>
+:root { --bg:#fbfaf7; --fg:#1d1d1b; --muted:#6b6a65; --line:#e3e0d8; --accent:#2f5d8a; --good:#2e7d4f; --bad:#a63d32; --warn:#9a6a12; --card:#ffffff; }
+@media (prefers-color-scheme: dark) { :root { --bg:#16171a; --fg:#e7e5df; --muted:#9a988f; --line:#2c2e33; --accent:#7fb0e0; --good:#6cc08f; --bad:#e38377; --warn:#e0b360; --card:#1d1f23; } }
+* { box-sizing:border-box }
+body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width:980px; margin:0 auto; padding:28px 16px 80px; }
+h1 { font-size:26px; margin:0 0 4px } h2 { font-size:20px; margin:36px 0 10px; padding-top:12px; border-top:1px solid var(--line) }
+h3 { font-size:16px; margin:18px 0 6px }
+.sub { color:var(--muted); margin:0 0 18px }
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:14px 0 }
+.kpi { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px }
+.kpi b { display:block; font-size:24px } .kpi span { color:var(--muted); font-size:13px }
+table { width:100%; border-collapse:collapse; margin:8px 0 14px; background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; font-size:14px }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top }
+th { background:color-mix(in srgb, var(--accent) 10%, var(--card)); font-weight:600 }
+tr:last-child td { border-bottom:none }
+.tag { display:inline-block; padding:1px 7px; border-radius:6px; font-size:12px; font-weight:600 }
+.ok { color:var(--good); background:color-mix(in srgb, var(--good) 14%, transparent) }
+.no { color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, transparent) }
+.wip { color:var(--warn); background:color-mix(in srgb, var(--warn) 16%, transparent) }
+.note { background:var(--card); border-left:4px solid var(--accent); padding:10px 14px; border-radius:6px; margin:10px 0 }
+code { font-size:13px; background:color-mix(in srgb, var(--fg) 8%, transparent); padding:1px 5px; border-radius:4px }
+.bar { height:10px; background:var(--accent); border-radius:5px; display:inline-block; vertical-align:middle }
+.wrap { overflow-x:auto }
+</style>
+</head>
+<body><main>
+
+<h1>d1-mobile: lỗi, phân tích, sửa dựa trên gì, mục tiêu</h1>
+<p class="sub">Bản tổng hợp ngày 2026-11-12. Mọi con số đều tính lại từ file trong repo, kèm mẫu số. Các nguồn chi tiết được ghi ở cuối trang.</p>
+
+<h2>1. Model là gì</h2>
+<p>d1-mobile là bản fine-tune của <b>d1-2B</b> (LiquidAI). Đây là một <b>decision model</b>: mỗi bước chỉ đọc đầu vào <b>một lượt</b> và <b>không sinh token nào</b>.</p>
+<p>Đầu vào mỗi bước gồm:</p>
+<ul>
+<li>ảnh màn hình, rộng 720 px;</li>
+<li>mục tiêu;</li>
+<li>lịch sử các bước trước, ghi kèm việc màn hình có đổi hay không;</li>
+<li>danh sách phần tử trên màn hình, lấy từ cây accessibility.</li>
+</ul>
+<p>Đầu ra mỗi bước là:</p>
+<ul>
+<li>một hành động: click, gõ, nhấn giữ, vuốt, chờ, quay lại, về màn hình chính, mở app, xong, trả lời;</li>
+<li>phần tử mà hành động nhắm tới;</li>
+<li>chữ cần gõ, được chép từ phần chữ của đầu vào.</li>
+</ul>
+<p>Ràng buộc: chỉ một model, không planner, không model ngoài, chỉ train trên dữ liệu AndroidControl. Không học từ app hay rollout của AndroidWorld, vì như vậy là học trước đề thi.</p>
+<p>Benchmark chính là <b>AndroidWorld</b>: 116 bài, giao thức chính thức, seed 30.</p>
+
+<h2>2. Hiện trạng đo được (model tốt nhất hiện có: v4 + harness V12)</h2>
+<div class="kpis">
+<div class="kpi"><b>25 / 115 = 21,7%</b><span>AndroidWorld: 24 bài thành công trọn vẹn + 2 bài nửa điểm. 1 bài bị loại do lỗi môi trường, đã sửa (mục 5).</span></div>
+<div class="kpi"><b>61,7%</b><span>AC-High: đúng từng bước (5.213/8.444)</span></div>
+<div class="kpi"><b>22,3%</b><span>AC-High: số bài đúng <i>mọi</i> bước (344/1.543)</span></div>
+<div class="kpi"><b>89,3% · 60,4%</b><span>AC-Low: đúng từng bước · đúng cả bài (932/1.543)</span></div>
+</div>
+<div class="note"><b>Vì sao AC-High điểm cao mà AndroidWorld thấp?</b>
+<ul>
+<li>AC-High chấm <b>từng bước</b>, và ở mỗi bước model được đưa sẵn lịch sử cùng màn hình <b>của người làm mẫu</b> (teacher forcing). Không bước nào kiểm tra mục tiêu đã đạt hay chưa.</li>
+<li>Nếu tính theo cả bài thì AC-High chỉ có <b>22,3%</b>, ngang AndroidWorld (21,7%).</li>
+<li>Bài càng dài càng tụt: 1 bước 59%, từ 6 bước trở lên chỉ 9,4%.</li>
+</ul></div>
+
+<h3>AndroidWorld theo độ khó chính thức (<code>task_metadata.json</code>)</h3>
+<table><tr><th>Độ khó</th><th>Số bài</th><th>Thành công</th><th>SR</th><th>Số bước TB</th><th>TB khi thành công</th><th>Số bước tối ưu TB</th></tr>
+<tr><td>easy</td><td>61</td><td>21</td><td>34,4% <span class="bar" style="width:69px"></span></td><td>8,5</td><td>5,5</td><td>5,0</td></tr>
+<tr><td>medium</td><td>36</td><td>3</td><td>8,3% <span class="bar" style="width:17px"></span></td><td>13,0</td><td>6,7</td><td>9,0</td></tr>
+<tr><td>hard</td><td>18</td><td>1,0</td><td>5,6% <span class="bar" style="width:11px"></span></td><td>19,3</td><td>–</td><td>18,5</td></tr></table>
+
+<h2>3. Phân tích lỗi: dựa trên gì</h2>
+<p><b>Đọc trace, không đoán.</b> Bốn agent độc lập đọc trace và ảnh màn hình của <b>cả 91 bài thất bại</b>, mỗi agent một nhóm. Với từng bài, agent ghi:</p>
+<ul>
+<li>bước sai đầu tiên;</li>
+<li>model đã làm gì, và lẽ ra phải làm gì;</li>
+<li>bằng chứng: nhãn phần tử, lịch sử, ảnh;</li>
+<li>logic checker của AndroidWorld, đọc từ code upstream.</li>
+</ul>
+<p>Ngoài ra có thêm:</p>
+<ul>
+<li>phân tích độ tin cậy (confidence) của model;</li>
+<li>thí nghiệm thay ảnh bằng ảnh xám;</li>
+<li>đọc lại các file dữ liệu và các paper khác so với file thật.</li>
+</ul>
+<div class="wrap"><table>
+<tr><th>Nhóm (số bài thất bại)</th><th>Nguyên nhân chính, có bằng chứng</th></tr>
+<tr><td>Hỏi thông tin (21)</td><td>Thấy đáp án nhưng không trả lời (4). Chỉ 6/21 bài có lệnh trả lời. Sai định dạng (1). Đi sai chỗ (4). Cần suy luận ngày/giờ/màu (4). Phải đếm qua nhiều màn hình (2). Đáp án mà cơ chế trả lời không biểu diễn được (6).</td></tr>
+<tr><td>Dễ (27)</td><td>Cần nhấn giữ nhưng model cho xác suất nhấn giữ chỉ ~0,0005 (5). Bài Verify đã đúng sẵn nhưng model bật/tắt ngược lại (3). Báo xong sớm (4). Chọn sai phần tử (4). Phần tử nằm ngoài màn hình (3). Gõ chữ luôn xóa nội dung ô (2). Clipboard bị bộ lọc phần tử bỏ đi (2). Lỗi môi trường / thiếu kiến thức app (4).</td></tr>
+<tr><td>Vừa/khó (34)</td><td>Sai cách thao tác app, ví dụ bấm thay vì nhấn giữ (7). Phải tính ngày/giờ (6). Làm xong mục 1 rồi dừng (4). Markor chưa được setup trên một emulator (3). Ô form bị bàn phím che (3). Tìm bản trùng (3). Nội dung ghi chú quá dài (2). VLC (2). Lỗi lẻ (4).</td></tr>
+<tr><td>Cần ảnh (9)</td><td>Đi lạc dù không cần đọc ảnh (2). Trang web có mê cung hoặc phải vẽ (2). Phải gõ chữ chỉ có trong ảnh (4). Phải làm phép nhân (1).</td></tr>
+</table></div>
+<p><b>Ba con số nổi bật.</b></p>
+<ul>
+<li><b>Dừng sai lúc.</b> Trên AC test không có bước "xong" nào là đúng, vậy mà model đòi dừng ở 1.171/8.444 bước. Trên AndroidWorld có 49 bài báo xong khi chưa xong.</li>
+<li><b>Ảnh quan trọng.</b> Thay ảnh bằng ảnh xám thì số bước đúng tụt từ 519 xuống 337/827.</li>
+<li><b>Giới hạn của cơ chế gõ chữ.</b> Code của d1 cho thấy câu hỏi dạng chữ/số/ngày chỉ chép được từ phần chữ của đầu vào, không đọc được chữ trong ảnh.</li>
+</ul>
+
+<h2>4. Sửa gì, dựa trên bằng chứng nào</h2>
+<h3>Dữ liệu train (bản final: 35.414 + 1.736 dòng, 1 epoch)</h3>
+<div class="wrap"><table>
+<tr><th>Sửa</th><th>Bằng chứng dẫn tới cách sửa</th><th></th></tr>
+<tr><td>Giữ đủ 4.191/4.191 cặp "bước cuối → xong"</td><td>Bước khử trùng lặp của v5 đã cắt mất một nửa số cặp, chỉ còn 1.918. 460/1.171 lần đòi dừng sai rơi đúng vào bước cuối.</td><td><span class="tag ok">đã làm</span></td></tr>
+<tr><td>Nối 2 bài thành một chuỗi: ở màn hình đã xong A, mục tiêu "A rồi B" thì không được dừng</td><td>Model làm xong mục 1 rồi dừng. Đây cũng là ý "tiền tố mục tiêu" của paper AndroidGen.</td><td><span class="tag ok">đã làm</span></td></tr>
+<tr><td>Nhấn giữ và bước ngay sau, lặp ×4 (444 dòng)</td><td>Có 5 bài dễ và 7 bài vừa/khó cần nhấn giữ. AndroidControl chỉ có 56 dòng nhấn giữ.</td><td><span class="tag ok">đã làm</span></td></tr>
+<tr><td>154 dòng "trạng thái đã đúng sẵn thì báo xong"</td><td>Các bài Verify bắt đầu ở trạng thái đã đúng, nhưng model lại bật/tắt ngược.</td><td><span class="tag ok">đã làm</span></td></tr>
+<tr><td>Thêm 350 bài có câu trả lời; bỏ câu hỏi dùng nhãn id</td><td>Chỉ 6/21 bài hỏi thông tin có lệnh trả lời. Lần chạy thử phát hiện câu hỏi kiểu "giá trị của [id: …]".</td><td><span class="tag ok">đã làm</span></td></tr>
+<tr><td>Dữ liệu dạy quay lại: giảm từ 3.468 xuống 600 cặp</td><td>Checkpoint 250 của final lần 1 quay lại sai 44/798 (v4 là 16/798). Đây là lần thứ hai dữ liệu này gây hại.</td><td><span class="tag ok">đã làm</span></td></tr>
+<tr><td>Contract v6: phần tử không nhãn hiện thêm chữ cùng hàng (<code>[id: switch widget] · Airplane mode</code>)</td><td>Bài TurnOffWifiAndTurnOnBluetooth bật Wi-Fi lại. Nút menu của từng bài hát trong Retro không có nhãn.</td><td><span class="tag ok">đã làm</span></td></tr>
+</table></div>
+<h3>Harness và môi trường (không cần train lại)</h3>
+<div class="wrap"><table>
+<tr><th>Sửa</th><th>Bằng chứng</th><th></th></tr>
+<tr><td>Markor trên aw-emu3 kẹt ở màn hình giới thiệu → chạy setup chính thức khi phát hiện</td><td>6/6 bài Markor trên aw-emu3 mở vào màn hình giới thiệu; các máy khác vào thẳng danh sách file.</td><td><span class="tag ok">đã sửa</span></td></tr>
+<tr><td>OsmAnd: bảng <code>map_markers</code></td><td>Bài OsmAndMarker lỗi setup ở 3/4 lần chạy. Nguyên nhân: lệnh <code>sqlite3</code> chạy bằng quyền root để lại file 0 byte thuộc root, OsmAnd không mở được. Cả 6 máy đã được kiểm tra.</td><td><span class="tag ok">đã sửa</span></td></tr>
+<tr><td>SIM / SMS (mạng IPv6)</td><td>Ba bài SMS trước đây lỗi vì không có SIM. Giờ cả ba đều thành công.</td><td><span class="tag ok">đã sửa</span></td></tr>
+<tr><td>Script khởi động server ép quy tắc phần tử của v4</td><td>Nếu không sửa, nhãn <code>[id: …]</code> sẽ biến mất khi chạy thật.</td><td><span class="tag ok">đã sửa</span></td></tr>
+<tr><td>V13: định dạng câu trả lời dạng số</td><td>Chấm lại offline thì thêm được 1 bài (NotesMeetingAttendeeCount).</td><td><span class="tag ok">đã làm</span></td></tr>
+<tr><td>Ẩn bàn phím sau khi gõ</td><td>Ô form bị bàn phím che (3 bài).</td><td><span class="tag wip">thử sau</span></td></tr>
+<tr><td>VLC kẹt "Loading" thư viện</td><td>Xảy ra trên mọi emulator như nhau.</td><td><span class="tag wip">chưa rõ</span></td></tr>
+</table></div>
+
+<h2>5. Những gì bị ràng buộc chặn (khoảng 36/91 bài)</h2>
+<ul>
+<li><b>Tính ngày/giờ</b> ("Thứ Năm tới", "+1 tiếng"), <b>cộng tổng, đổi đơn vị</b>: model một lượt không có bước tính toán, và dữ liệu AndroidControl không dạy điều này.</li>
+<li><b>Tìm bản trùng qua nhiều màn hình</b>: model không nhớ nội dung của các màn hình trước.</li>
+<li><b>Gõ chữ chỉ có trong ảnh</b> (hóa đơn, ảnh chi tiêu): cơ chế gõ chữ của d1 chỉ chép từ phần chữ đầu vào. Dùng OCR thì là thêm model ngoài.</li>
+<li><b>Màu hoặc biểu tượng</b> mang ý nghĩa (độ ưu tiên, loại hoạt động): AndroidControl không có nhãn cho chúng.</li>
+<li><b>Gợi ý clipboard trên bàn phím</b>: id trong AndroidControl bị che nên không có dữ liệu học.</li>
+</ul>
+
+<h2>6. Mục tiêu và cách kiểm tra</h2>
+<div class="kpis">
+<div class="kpi"><b>~28–31 / 115</b><span>Ước lượng AndroidWorld cho final (24–27%). Khoảng hợp lý 22–32. Đây không phải lời hứa.</span></div>
+<div class="kpi"><b>&lt; 1.171</b><span>Số lần đòi dừng sai trên AC test phải giảm rõ</span></div>
+<div class="kpi"><b>≥ 344 / 1.543</b><span>AC-High: số bài đúng cả bài không được giảm</span></div>
+<div class="kpi"><b>≤ v4 + 0,02</b><span>P(quay lại | đáp án không phải quay lại): ngưỡng dừng sớm ở checkpoint 250</span></div>
+</div>
+<p><b>Thứ tự kiểm tra (đặt trước khi có kết quả; không qua thì giữ v4 + V13):</b></p>
+<ol>
+<li>Kiểm tra sớm ở checkpoint 250 trên validation.</li>
+<li>Cổng 1: AC-High, AC-Low, validation.</li>
+<li>13 bài AndroidWorld chọn sẵn.</li>
+<li>Đủ 116 bài trên 6 emulator đã sửa. Báo cáo theo độ khó, theo C1–C4, số bước, và so sánh từng cặp bài với v4 + V12.</li>
+</ol>
+<p><b>Muốn vượt mức khoảng 30%</b> thì phải xử lý phần trả lời câu hỏi và các app chưa từng thấy. Việc đó cần dữ liệu ngoài AndroidControl, và phải bàn lại về ràng buộc.</p>
+
+<h2>7. Đã học gì từ các paper khác</h2>
+<table><tr><th>Paper</th><th>Điểm chính, đã đối chiếu với file thật</th></tr>
+<tr><td>AndroidControl-Curated / Magma-R1</td><td>Chỉ phát hành tập test. Con số "SR" là theo từng bước. Trong file task-improved, lịch sử chứa luôn câu hướng dẫn của bước hiện tại (8.377/8.377 dòng). Bài học: chất lượng hơn số lượng, cân theo loại hành động.</td></tr>
+<tr><td>AMEX</td><td>Chỉ có điểm theo từng bước. Thao tác quay lại chỉ chiếm 0,35%, trái với lời paper. Lợi ích nằm ở dữ liệu hiểu màn hình, không phải chuỗi thao tác.</td></tr>
+<tr><td>AndroidGen</td><td>Agent sinh chữ, gọi model nhiều lần mỗi bước. Dữ liệu train thu trong chính AndroidWorld, kho truy xuất cũng lấy từ lượt chấm. Ý "tiền tố mục tiêu" đã có trong bản final.</td></tr>
+<tr><td>MobileRL</td><td>Báo cáo theo mức C1–C4, pass@k và tỉ lệ thắng theo số bước. Mình làm theo cùng định dạng (script <code>aw_report.py</code>). Pass@k không áp dụng được vì model của mình chọn tất định.</td></tr>
+<tr><td>Unsloth decision model</td><td>Cùng kiểu dữ liệu state/questions/gold. Bài học "phải train đủ epoch": final đã chuyển từ 0,4 epoch lên 1 epoch.</td></tr>
+</table>
+
+<h2>8. Đang chạy</h2>
+<p>Bản final (contract v6): 2.322 bước, khoảng 3,5 giờ. Kiểm tra sớm ở checkpoint 250 đang chạy. Cổng 1 và AC-Low sẽ tự chạy khi train xong.</p>
+
+<h2>Nguồn (trong repo)</h2>
+<ul>
+<li><code>docs/research/2026-11-12-FINAL-PLAN-vi.md</code>: kế hoạch, mục 1–9</li>
+<li><code>docs/research/2026-11-12-ACHIGH-vs-AW-FINAL-vi.md</code>: AC-High so với AW</li>
+<li><code>benchmarks/results/2026-11-12-failanalysis/*.tsv</code>: từng bài thất bại</li>
+<li><code>benchmarks/results/2026-11-12-maskenv/difficulty_report.md</code>, <code>compare_A_AG.out</code></li>
+<li><code>benchmarks/results/2026-11-12-imgablate/</code>: thí nghiệm ảnh xám</li>
+<li><code>docs/research/2026-11-12-PAPER-FIGURES-PLAN.md</code>: kế hoạch hình và bảng cho paper</li>
+</ul>
+</main></body></html>

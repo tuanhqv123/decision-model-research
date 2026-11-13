@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DMA-2B demo</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1f;--mute:#6b6b70;--line:#e3e3e0;--acc:#2563eb;--hit:#e5484d;--bar:#dbe6fd}
+@media (prefers-color-scheme:dark){:root{--bg:#141416;--card:#1e1e21;--ink:#ececee;--mute:#a0a0a8;--line:#303035;--acc:#7aa2ff;--hit:#ff6b70;--bar:#2a3a63}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:26px;margin:0 0 6px}
+p.lead{margin:0 0 18px;color:var(--mute);max-width:820px}
+a{color:var(--acc)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit}
+.tab.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset;font-weight:600}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.steps button{min-width:34px}
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.shot{position:relative;padding:8px}
+.shot canvas{width:100%;height:auto;display:block;border-radius:8px}
+.goal{font-size:17px;font-weight:600;margin:0 0 4px}
+.meta{color:var(--mute);font-size:13px}
+.decision{font-size:17px;margin:10px 0 6px}
+code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:13px;word-break:break-word}
+h3{font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin:14px 0 8px}
+.bars{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 54px;gap:4px 8px;align-items:center;font-size:13.5px}
+.bars .lab{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars .track{background:var(--bg);border-radius:4px;height:14px;overflow:hidden}
+.bars .fill{background:var(--bar);height:100%}
+.bars .fill.top{background:var(--acc)}
+.bars .num{text-align:right;font-variant-numeric:tabular-nums}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+ol.hist{margin:0;padding-left:20px;font-size:13.5px}
+details{margin-top:12px}
+pre{white-space:pre-wrap;font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;max-height:420px;overflow:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+th{color:var(--mute);font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.explain{margin-top:18px}
+</style>
+</head>
+<body>
+<main>
+<h1>DMA-2B: one forward pass per phone action</h1>
+<p class="lead"><a href="https://huggingface.co/tuanhqv123/DMA-2B">DMA-2B</a> is a 2B <b>decision model</b> for Android
+agents. At each step it reads the screenshot, the goal, what it has done so far and the list of on-screen elements, then
+<b>chooses</b> the next action from fixed options and the element to act on. It writes no text, so every output can be
+executed, and every choice has a probability. Below are three tasks it completed on an Android emulator, replayed step by step
+from our evaluation run (model on a GPU, about 130 ms per decision).</p>
+
+<div class="controls" id="tabs"></div>
+
+<div class="grid">
+  <div class="card shot"><canvas id="cv"></canvas></div>
+  <div>
+    <div class="card">
+      <div class="goal" id="goal"></div>
+      <div class="meta" id="meta"></div>
+      <div class="decision" id="decision"></div>
+      <div id="jaction"></div>
+      <div class="two">
+        <div><h3>Action probabilities</h3><div class="bars" id="abars"></div></div>
+        <div><h3 id="etitle"></h3><div class="bars" id="ebars"></div></div>
+      </div>
+      <h3>Previous actions</h3><ol class="hist" id="hist"></ol>
+      <details><summary>What the model reads (text input, with the screenshot resized to 720 px)</summary><pre id="state"></pre></details>
+    </div>
+  </div>
+</div>
+
+<div class="card explain">
+<h3>How to read this page</h3>
+<p><b>Action probabilities</b>: the probability the model gave to each kind of action at this step (they sum to 1).
+<b>Element probabilities</b>: for click, type and answer, which element of the list it picks (for open app: which app; for scroll: which direction); the red box is the chosen
+element and the circle is where the tap lands (the element's centre). <b>Done</b> ends the episode.</p>
+<h3>Results (details in the <a href="https://huggingface.co/tuanhqv123/DMA-2B">model card</a>)</h3>
+<table>
+<tr><th>Benchmark</th><th class="n">Type</th><th class="n">Grounding</th><th class="n">Step success</th></tr>
+<tr><td>AndroidControl-Low (a step instruction is given)</td><td class="n">96.6</td><td class="n">90.1</td><td class="n">89.3</td></tr>
+<tr><td>AndroidControl-High (only the goal is given)</td><td class="n">74.3</td><td class="n">78.4</td><td class="n">61.7</td></tr>
+</table>
+<p class="meta"><b>Type</b>: % of steps with the right kind of action. <b>Grounding</b>: % of clicks on the right element,
+among steps with the right kind. <b>Step success</b>: % of steps entirely right.</p>
+</div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let DATA = [], ep = 0, st = 0;
+const img = new Image();
+
+function bars(el, rows, topLabel) {
+  el.innerHTML = "";
+  rows.forEach(([lab, p]) => {
+    const l = document.createElement("div"); l.className = "lab"; l.textContent = lab; l.title = lab;
+    const t = document.createElement("div"); t.className = "track";
+    const f = document.createElement("div"); f.className = "fill" + (lab === topLabel ? " top" : "");
+    f.style.width = (100 * p).toFixed(1) + "%"; t.appendChild(f);
+    const n = document.createElement("div"); n.className = "num"; n.textContent = p.toFixed(3);
+    el.append(l, t, n);
+  });
+  if (!rows.length) el.innerHTML = '<div class="meta">The decision is complete with the action alone.</div>';
+}
+
+function draw(s) {
+  const cv = $("cv"), ctx = cv.getContext("2d");
+  cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+  ctx.drawImage(img, 0, 0);
+  if (s.box) {
+    const css = getComputedStyle(document.documentElement).getPropertyValue("--hit").trim() || "#e5484d";
+    const [x0, y0, x1, y1] = s.box;
+    ctx.lineWidth = 9; ctx.strokeStyle = css; ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+    ctx.beginPath(); ctx.arc((x0 + x1) / 2, (y0 + y1) / 2, 24, 0, 2 * Math.PI); ctx.stroke();
+  }
+}
+
+function show() {
+  const e = DATA[ep], s = e.steps[st];
+  document.querySelectorAll("#tabs .tab").forEach((b, i) => b.classList.toggle("on", i === ep));
+  document.querySelectorAll(".steps button").forEach((b, i) => b.classList.toggle("on", i === st));
+  $("goal").textContent = e.goal;
+  $("meta").textContent = `Task ${e.task} · step ${st + 1} of ${e.steps.length} · model time ${Math.round(s.model_ms)} ms`;
+  let d = `Decision: <b>${s.action}</b> with probability <b>${s.probability.toFixed(3)}</b>`;
+  if (s.element) d += ` on element <b>[${s.element.id}] ${s.element.label.replace(/</g,"&lt;")}</b> (p = ${s.element.probability.toFixed(3)})`;
+  $("decision").innerHTML = d;
+  $("jaction").innerHTML = s.json_action ? `Executed action: <code>${JSON.stringify(s.json_action).replace(/</g,"&lt;")}</code>`
+    : (s.action === "status" ? "The model declares the task complete; the episode ends here." : "");
+  const top = s.action_probs[0][0];
+  bars($("abars"), s.action_probs, top);
+  $("etitle").textContent = s.second.title;
+  bars($("ebars"), s.second.rows, s.second.rows.length ? s.second.rows[0][0] : null);
+  $("hist").innerHTML = s.history.length ? s.history.map(h => `<li>${h.replace(/</g,"&lt;")}</li>`).join("") : "<li>none (first step)</li>";
+  $("state").textContent = s.state;
+  img.onload = () => draw(s); img.src = s.screenshot;
+}
+
+function buildTabs() {
+  const t = $("tabs"); t.innerHTML = "";
+  DATA.forEach((e, i) => {
+    const b = document.createElement("button"); b.className = "tab"; b.textContent = e.title;
+    b.onclick = () => { ep = i; st = 0; buildSteps(); show(); }; t.appendChild(b);
+  });
+  const s = document.createElement("div"); s.className = "steps"; s.id = "steps"; t.appendChild(s);
+  buildSteps();
+}
+function buildSteps() {
+  const s = $("steps"); s.innerHTML = "";
+  const lab = document.createElement("span"); lab.className = "meta"; lab.textContent = "Step:"; s.appendChild(lab);
+  DATA[ep].steps.forEach((_, i) => {
+    const b = document.createElement("button"); b.className = "tab"; b.textContent = i + 1;
+    b.onclick = () => { st = i; show(); }; s.appendChild(b);
+  });
+}
+fetch("data.json").then(r => r.json()).then(d => { DATA = d; buildTabs(); show(); });
+</script>
+</body>
+</html>

@@ -11,7 +11,7 @@
 | Emulator thực thi `navigate_home`/`keyboard_enter`/`double_tap`/`swipe` | **✅ tất cả success** | tôi đã gửi thử từng cái |
 | Checkpoint `ckpt-E2-final` | có trên host A | `~/acv2/ckpt/ckpt-E2-final` |
 | Model server (port 8700) | **FAILED, chưa chạy** | `ModuleNotFoundError: train_d1` — tôi launch thiếu path |
-| VRAM trống | **21.9 GB** | prod chỉ chiếm 2.1 GB (`masan2025`) |
+| VRAM trống | **21.9 GB** | prod chỉ chiếm 2.1 GB (`[user]`) |
 | Container network | **`bridge`** | ⚠️ xem mục Rủi ro #1 |
 
 ## Việc tôi ĐÃ làm (cần biết)

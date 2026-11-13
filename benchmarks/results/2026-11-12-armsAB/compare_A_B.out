@@ -1,0 +1,19 @@
+== A
+  setup: {"policy": {"allow_app_fallback": false, "deferred_effect": true, "done_threshold": 0.0, "effect": "v4", "fresh_wait_s": 8.0, "history_format": "v3", "loop_break": false, "mask": false, "post_action_wait_s": 1.5, "scroll_index": true, "stuck_k": 3, "track": "VA"}, "protocol": "aw-main-v1"}
+  official SR 17.83% (score sum 20.5/115 scored; 20 full successes; excluded ['SimpleSmsReplyMostRecent'])
+  without SMS tasks: 18.8% (20/109)
+  failed 95: declared done but not done 61, step budget 34
+  steps 1305, no change 399 (31%); same action after no change 287/348; failed eps with >=5 identical in a row 35
+  scrolls 172, with index 5; answer-task successes 3
+  successes: CameraTakePhoto, ClockStopWatchPausedVerify, ClockStopWatchRunning, ExpenseDeleteSingle, MarkorCreateFolder, NotesRecipeIngredientCount, OpenAppTaskEval, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SimpleCalendarEventsOnDate, SimpleCalendarFirstEventAfterStartTime, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemWifiTurnOff, SystemWifiTurnOffVerify, SystemWifiTurnOn, SystemWifiTurnOnVerify, TurnOnWifiAndOpenApp
+== B
+  setup: {"policy": {"allow_app_fallback": false, "deferred_effect": true, "done_threshold": 0.0, "effect": "v4", "fresh_wait_s": 8.0, "history_format": "v3", "loop_break": false, "mask": false, "post_action_wait_s": 1.5, "scroll_index": true, "stuck_k": 3, "track": "VA"}, "protocol": "aw-main-v1"}
+  official SR 15.79% (score sum 18/114 scored; 18 full successes; excluded ['OsmAndMarker', 'SimpleSmsReplyMostRecent'])
+  without SMS tasks: 16.7% (18/108)
+  failed 96: declared done but not done 53, step budget 43
+  steps 1404, no change 361 (26%); same action after no change 272/315; failed eps with >=5 identical in a row 34
+  scrolls 182, with index 31; answer-task successes 3
+  successes: AudioRecorderRecordAudio, ClockStopWatchPausedVerify, ClockStopWatchRunning, ContactsAddContact, ExpenseDeleteSingle, MarkorCreateFolder, NotesIsTodo, NotesRecipeIngredientCount, OsmAndFavorite, RecipeDeleteDuplicateRecipes, RecipeDeleteSingleRecipe, RecipeDeleteSingleWithRecipeWithNoise, SimpleCalendarLocationOfEvent, SystemBluetoothTurnOff, SystemBluetoothTurnOn, SystemBluetoothTurnOnVerify, SystemBrightnessMaxVerify, SystemWifiTurnOff
+== paired B vs A on 114 common tasks: wins 6, losses 9, sign test p=0.607
+  wins: AudioRecorderRecordAudio, ContactsAddContact, NotesIsTodo, OsmAndFavorite, SimpleCalendarLocationOfEvent, SystemBrightnessMaxVerify
+  losses: CameraTakePhoto, OpenAppTaskEval, RetroSavePlaylist, SimpleCalendarEventsOnDate, SimpleCalendarFirstEventAfterStartTime, SystemWifiTurnOffVerify, SystemWifiTurnOn, SystemWifiTurnOnVerify, TurnOnWifiAndOpenApp

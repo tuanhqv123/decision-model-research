@@ -1,4 +1,4 @@
-# AndroidWorld Docker runbook (learned 2026-11-02, `Model_Training_Server`)
+# AndroidWorld Docker runbook (learned 2026-11-02, `GPU_HOST_A`)
 
 Everything here was hit and fixed in one evening. Do not re-derive.
 
@@ -23,7 +23,7 @@ docker run -d --name aw-emu \
   android_world:latest
 ```
 - `--device /dev/kvm` is enough (no `--privileged` needed) **on a host with `/dev/kvm`**.
-- Host port: **5051**. On `Model_Training_Server`, **5000 is a prod service** — never bind it.
+- Host port: **5051**. On `GPU_HOST_A`, **5000 is a prod service** — never bind it.
 - `--memory` must be **≥24 GB**. At 16 GB the emulator process gets killed inside the container while
   the FastAPI server keeps answering `/health` — a very confusing half-dead state
   (`docker inspect` shows `OOMKilled=false` because the container's main process did not die).

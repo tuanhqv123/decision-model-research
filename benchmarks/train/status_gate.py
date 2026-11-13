@@ -13,10 +13,10 @@ val and test on the same footing (the val dump has no readout slots).
 
 Usage:
   python3 benchmarks/train/status_gate.py \
-    --val backup-2026-10-29/Model_Training_Server/acwork/runs/E2-val/eval-E2final-V-val.jsonl \
+    --val backup-2026-10-29/GPU_HOST_A/acwork/runs/E2-val/eval-E2final-V-val.jsonl \
     --test backup-2026-11-06/offline/e2-pure-hist.jsonl \
     --rows benchmarks/data/acv2/500_steps_filtered.json \
-    --valdata backup-2026-10-29/prd-survey-x1-5090/acwork/acdata
+    --valdata backup-2026-10-29/GPU_HOST_C/acwork/acdata
 """
 import argparse
 import json
@@ -118,7 +118,7 @@ def main():
     ap.add_argument("--val", required=True)
     ap.add_argument("--test", required=True)
     ap.add_argument("--rows", default="benchmarks/data/acv2/500_steps_filtered.json")
-    ap.add_argument("--valdata", default="backup-2026-10-29/prd-survey-x1-5090/acwork/acdata")
+    ap.add_argument("--valdata", default="backup-2026-10-29/GPU_HOST_C/acwork/acdata")
     ap.add_argument("--out", default="benchmarks/results/2026-11-07-status-gate.json")
     a = ap.parse_args()
 

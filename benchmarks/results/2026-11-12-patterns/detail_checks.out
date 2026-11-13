@@ -1,0 +1,8 @@
+train: other direction 7
+train: same direction 34
+AW: after no-change scroll: next scroll same direction 142
+AW: no-change click on interactive=False 23
+AW: no-change click on interactive=True 330
+no-change clicks on interactive elements, by kind: [('editable field', 136), ('View', 86), ('TextView', 50), ('Button', 35), ('ImageView', 18), ('ImageButton', 4), ('Switch', 1)]
+distinct (first time per episode) by kind: [('TextView', 16), ('Button', 15), ('editable field', 14), ('View', 11), ('ImageView', 5), ('ImageButton', 4), ('Switch', 1)]
+top targets: [(('View', ''), 86), (('EditText', 'f42GOjFWb2aKHogAFQSY'), 65), (('TextView', 'Save'), 44), (('EditText', 'Meeting with HR'), 25), (('Button', 'Just once'), 15), (('ImageView', 'Shutter'), 15), (('EditText', 'An ideal recipe for experimenting with d'), 15), (('EditText', 'Email or phone Enter an email or phone n'), 14), (('EditText', 'Search'), 8), (('Button', 'Continue'), 7), (('ImageView', 'Delete lines'), 3), (('EditText', 'Playlist name'), 3)]

@@ -1,0 +1,74 @@
+# Task 2 of docs/superpowers/plans/2026-11-12-fix-all.md: arm B (merge 0.3 + V11) + verified no-effect masking. Third C of the 116 tasks (every 3rd task),
+# seed 30; paired with aw116_m03f_s0 on the same tasks.
+protocol: aw-main-v1
+agent: d1_m03fm_s0
+checkpoint: merge_v4a03
+model:
+  url: http://172.17.0.1:8702
+  token: tok
+  track: VA
+  return_readouts: true
+  history_format: v3
+  img_width: 720
+  done_threshold: 0.0
+  effect: v4
+environment:
+  url: http://127.0.0.1:5000
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+  emulator_setup: false
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  step_budgets_file: /tmp/budgets.json
+  tasks:
+  - BrowserDraw
+  - CameraTakePhoto
+  - ClockStopWatchRunning
+  - ContactsNewContactDraft
+  - ExpenseAddMultipleFromMarkor
+  - ExpenseDeleteDuplicates2
+  - ExpenseDeleteSingle
+  - MarkorAddNoteHeader
+  - MarkorCreateNote
+  - MarkorDeleteAllNotes
+  - MarkorEditNote
+  - MarkorTranscribeReceipt
+  - NotesMeetingAttendeeCount
+  - OpenAppTaskEval
+  - OsmAndTrack
+  - RecipeAddMultipleRecipesFromMarkor
+  - RecipeDeleteDuplicateRecipes
+  - RecipeDeleteMultipleRecipes
+  - RecipeDeleteSingleRecipe
+  - RetroPlayingQueue
+  - SaveCopyOfReceiptTaskEval
+  - SimpleCalendarAddOneEventRelativeDay
+  - SimpleCalendarAnyEventsOnDate
+  - SimpleCalendarDeleteOneEvent
+  - SimpleCalendarEventsInTimeRange
+  - SimpleCalendarLocationOfEvent
+  - SimpleDrawProCreateDrawing
+  - SimpleSmsResend
+  - SimpleSmsSendReceivedAddress
+  - SportsTrackerActivityDuration
+  - SportsTrackerTotalDurationForCategoryThisWeek
+  - SystemBluetoothTurnOn
+  - SystemBrightnessMaxVerify
+  - SystemCopyToClipboard
+  - SystemWifiTurnOn
+  - TasksDueNextWeek
+  - TasksHighPriorityTasksDueOnDate
+  - TurnOnWifiAndOpenApp
+harness:
+  deferred_effect: true
+  scroll_index: true
+  post_action_wait_s: 1.5
+  fresh_wait_s: 8.0
+record:
+  state: true
+policy:
+  loop_detection:
+    mask: true

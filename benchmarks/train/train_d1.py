@@ -27,12 +27,63 @@ import torch
 import torch.nn.functional as F
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ac_common import AppMemory, TrajMemory, build_questions, build_state, gold_answers  # noqa: E402
+from ac_common import (CONTRACTS, DEFAULT_CONTRACT, AppMemory, TrajMemory, build_questions,  # noqa: E402
+                       build_state, element_inputs, element_inputs_v3, gold_answers, gold_answers_v2, instruction_included,
+                       length_buckets, row_app_options, write_contract)
+
+# Run-wide settings that every sample must agree on. `contract` names the question set (ac_common.CONTRACTS)
+# and is stamped on every saved checkpoint as contract.json, which the server requires.
+RUN = {"contract": DEFAULT_CONTRACT, "app_vocab": []}
+
+
+def tracks_of(track):
+    """The serving tracks a `--track` training flag actually supervises."""
+    return {"V": ["V"], "VA": ["VA"], "mix": ["V", "VA"]}[track]
+
+
+def stamp_contract(ckpt_dir, track):
+    write_contract(ckpt_dir, RUN["contract"], tracks=tracks_of(track))
 
 BASE = "LiquidAI/d1-2B"
 BASE_REV = "cfe5760ff5d5998f91d9ac56bd4b2dbd96996d41"  # pinned: train and eval run the same remote code
 W_LOSS = {"hit": 0.0, "action": 1.0, "target_el": 1.0, "scroll_dir": 0.5, "presence": 0.2, "edge": 0.25,
-          "read": 0.5, "read_nothing": 0.05}
+          "read": 0.5, "read_nothing": 0.05, "is_done": 0.5, "avoid": 1.0, "answer_value": 1.0}
+
+# The candidate cap below this discards most of the distractors the contrastive signal comes from.
+# The VA arm trained at 14 and threw away 58.6% of all candidates (DATA-SPEC §8) — that result is a
+# lower bound, not a verdict. Median candidate count with the production filter is 37.
+MIN_CAND_CAP = 40
+
+
+def check_cand_cap(track):
+    """Refuse to start a candidate-track run whose cap is below the median candidate count.
+
+    D1_MAX_CANDS=0 means 'no cap' in ac_common.build_state, which is fine. A cap between 1 and
+    MIN_CAND_CAP-1 is the memory workaround that produced a false negative; fail loudly instead.
+    """
+    cap = int(os.environ.get("D1_MAX_CANDS", "0") or 0)
+    if track in ("VA", "mix") and 0 < cap < MIN_CAND_CAP:
+        raise SystemExit(
+            f"D1_MAX_CANDS={cap} is below {MIN_CAND_CAP}. The median candidate count with the "
+            f"production filter is 37, so a cap of {cap} discards most distractors and any result "
+            f"is a lower bound, not a measurement. Set D1_MAX_CANDS>={MIN_CAND_CAP} (or 0 for no "
+            f"cap) and see docs/research/DATA-SPEC-2026-11-09.md §8."
+        )
+
+def check_args(a):
+    """Refuse, before any model is loaded, a run whose flags the contract does not define."""
+    if a.contract not in CONTRACTS:
+        raise SystemExit(f"--contract {a.contract!r} is not one of {sorted(CONTRACTS)}")
+    if not CONTRACTS[a.contract].get("elements"):
+        return
+    if a.track != "VA":
+        raise SystemExit(f"--contract {a.contract} is trained on the VA track only (--track VA), not {a.track!r}")
+    if a.eval_every:
+        raise SystemExit("--eval-every scores the AC-v2 398 test rows, which carry no AndroidWorld element list; "
+                         f"evaluate {a.contract} with eval_d1.py --val --val-set validation_v2 --contract {a.contract}")
+    if a.traj_k:
+        raise SystemExit(f"--traj-k adds trajectory lines that a {a.contract} state does not have")
+
 
 OBJECTIVE = "ce"          # "ce" (baseline) | "brier" (proper score) | "joint" (ce + lambda*brier)
 BRIER_LAMBDA = 0.5        # only used by "joint"
@@ -95,14 +146,17 @@ AUX_STATE = {"aux_instr": "Step to perform: {}", "aux_label": "Find the element:
 def make_sample(rec, data, track, memory, rng):
     if isinstance(rec, str):
         rec = json.loads(rec)
+    spec = CONTRACTS[RUN["contract"]]
+    if spec.get("elements"):
+        return make_sample_elements(rec, data, track, spec)
     if "kind" in rec:  # auxiliary grounding sample (make_aux.py): same box question as the decision's target_box
         t, W, H = rec["target"], rec["W"], rec["H"]
-        qs = {"target_box": build_questions("V")["target_box"]}
+        qs = {"target_box": build_questions("V", contract=RUN["contract"])["target_box"]}
         gold = {"target_box": (t["y_min"] / H, t["y_max"] / H, t["x_min"] / W, t["x_max"] / W)}
         return AUX_STATE[rec["kind"]].format(rec["text"]), qs, gold, load_image(f"{data}/{rec['img']}")
     if track == "mix":
         track = "VA" if rng.random() < 0.5 else "V"
-    cands = rec["cands"] if track == "VA" else None
+    cands = rec.get("cands") if track == "VA" else None
     if track == "VA" and not cands:  # empty a11y list: a choice needs options -> the V form of this row
         track, cands = "V", None
     apps = memory.query(rec["goal"], exclude_ep=rec["ep"]) if memory else None
@@ -110,13 +164,53 @@ def make_sample(rec, data, track, memory, rng):
     # Tell build_state which candidate must survive any length cap, BEFORE the state is rendered.
     from ac_common import GOLD_KEEP, gold_candidate
     GOLD_KEEP["idx"] = (gold_candidate(cands, rec.get("target"), rec["action"].get("x"), rec["action"].get("y")) or {}).get("idx") if cands else None
-    from ac_common import app_intent_for
+    from ac_common import app_intent_for, ALLOW_APP_INTENT
     state = build_state(rec["goal"], track, cands, apps, rec.get("history"), trajs,
-                        app_intent=app_intent_for(rec["goal"]))
-    qs = build_questions(track, cands)
+                        app_intent=app_intent_for(rec["goal"]) if ALLOW_APP_INTENT else None)
+    qs = build_questions(track, cands, contract=RUN["contract"])
     gold = gold_answers(rec, track, cands, state)
     img = load_image(f"{data}/{rec['img']}")
     return state, qs, gold, img
+
+
+def make_sample_elements(rec, data, track, spec):
+    """Contract v2 (R2): state, questions and gold from the row's AndroidWorld element list (`rec["elements"]`,
+    compact_*_v2.jsonl), through `ac_common.element_inputs` / `build_questions` — the functions `d1_api` calls
+    on the harness's elements. No app memory, trajectory or app-intent line: the served v2 state has none, so
+    `memory` is not an argument here. Anything v2 does not define is refused rather than approximated."""
+    if "kind" in rec:
+        raise ValueError("an auxiliary box sample has no question under an element contract (v2 has no target_box)")
+    if track != "VA":
+        raise ValueError(f"contract {RUN['contract']!r} is trained on the VA track only, not {track!r}")
+    if "elements" not in rec:
+        raise ValueError(f"contract {RUN['contract']!r} needs rows with an `elements` list (compact_*_v2.jsonl)")
+    if spec.get("history") == "v3":
+        if "history_v3" not in rec:
+            raise ValueError(f"contract {RUN['contract']!r} needs rows with `history_v3` (add_history_v3.py)")
+        instruction = (rec.get("local_goal") if spec.get("instruction") and instruction_included(rec) else None)
+        state, kept, keep_idx = element_inputs_v3(rec["goal"], rec["history_v3"], rec["elements"], rec["W"],
+                                                  rec["H"], spec["element_rule"], instruction,
+                                                  on_off=bool(spec.get("on_off")))
+    else:
+        state, kept, keep_idx = element_inputs(rec["goal"], rec.get("history"), rec["elements"], rec["W"], rec["H"],
+                                               spec["element_rule"])
+    apps = row_app_options(rec, RUN["app_vocab"]) if spec.get("app_choice") else None
+    qs = build_questions("VA", kept, contract=RUN["contract"], apps=apps)
+    gold, _ = gold_answers_v2(rec, kept, keep_idx, state, apps=apps, contract=RUN["contract"])
+    return state, qs, gold, load_image(f"{data}/{rec['img']}")
+
+
+def app_vocab(recs, aw_apps_path):
+    """Distractor pool for app choice: every gold app name of the training rows + AndroidWorld's app names."""
+    names = set()
+    for line in recs:
+        if '"open_app"' in line:
+            a = json.loads(line).get("action") or {}
+            if a.get("action_type") == "open_app" and a.get("app_name"):
+                names.add(a["app_name"].strip())
+    if os.path.exists(aw_apps_path):
+        names |= {x["name"] for x in json.load(open(aw_apps_path))}
+    return sorted(names, key=lambda n: (n.lower(), n))  # case ties in a fixed order, not hash order
 
 
 def load_image(path, width=None):
@@ -131,6 +225,12 @@ def load_image(path, width=None):
         im.save(buf, format="JPEG", quality=90)
         im = Image.open(io.BytesIO(buf.getvalue())).convert("RGB")
     return im
+
+
+def unlikelihood(logp, idx):
+    """-log(1 - p[idx]) from log-probs, computed as -log1p(-exp(logp[idx])) with p clamped below 1 (finite gradient)."""
+    p = logp[idx].exp().clamp(max=1 - 1e-6)
+    return -torch.log1p(-p)
 
 
 def center_in_range_logprob(lp_a, lp_b, lo, hi):
@@ -216,13 +316,18 @@ def _losses(model, eng, M, samples, out, slots, reads, pointer, position_maps, b
     for ci, j in enumerate(code_idx):
         r, (i, qi), sq, _, s_idx = slots[j]
         name, gold = names[i][qi], golds[i]
-        if name not in gold:
+        avoid = name == "action" and "avoid_action" in gold
+        if name not in gold and not avoid:
             continue
         tokens, forms, _ = P.readout_table(tok, sq)
         tt = torch.as_tensor(tokens, device=dev)
         ff = torch.as_tensor(forms, device=dev)
         v = logz[ci, tt][ff].max(-1).values
         logp = torch.log_softmax(v, -1)
+        if avoid:  # contract v4 avoid-only row: push the named option down, supervise nothing else
+            labels = list(requests[i][1][qi].criteria.keys())
+            add("avoid", W_LOSS["avoid"], unlikelihood(logp, labels.index(gold["avoid_action"])))
+            continue
         if name == "target_box":
             if s_idx == 0:
                 add("presence", W_LOSS["presence"], -logp[0])
@@ -237,8 +342,13 @@ def _losses(model, eng, M, samples, out, slots, reads, pointer, position_maps, b
                 if s_idx == 1:  # top edge: track the argmax error in thousandths
                     stats.setdefault("edge_err", []).append(abs(int(logp.argmax()) - center))
         else:
-            labels = list(requests[i][1][qi].criteria.keys())
-            gi = labels.index(gold[name])
+            if name == "is_done":
+                # noul: the two option groups are the readout's own yes/no forms, not a criteria map.
+                gi = 0 if gold[name] == "yes" else 1
+                labels = None
+            else:
+                labels = list(requests[i][1][qi].criteria.keys())
+                gi = labels.index(gold[name])
             ce = -logp[gi]
             if OBJECTIVE == "ce":
                 value = ce
@@ -260,18 +370,30 @@ def _losses(model, eng, M, samples, out, slots, reads, pointer, position_maps, b
         stats.setdefault("p_hit", []).append(float(lhit.detach().exp()))
 
     if pointer is not None:
+        # res.positions is [R, 2, T]: one row per READ (a Read contributes two slots: start and end),
+        # in query_plan's order. `reads` is the flat list of those slots, so read i owns reads[2i:2i+2].
+        # The old code walked reads[::2] and indexed pos[k]; that pairing breaks the moment a slot that
+        # is not a Read enters `reads`, and it silently unpacked the string "yes" as a span.
         pos = res.positions.reshape(-1, 2, res.positions.shape[-1])
-        for k, j in enumerate(reads[::2]):
+        read_pairs = [reads[i:i + 2] for i in range(0, len(reads), 2)]
+        for k, pair in enumerate(read_pairs):
+            if k >= pos.shape[0] or len(pair) < 2:
+                continue
+            j = pair[0]
             r, (i, qi), _, _, _ = slots[j]
             name, gold = names[i][qi], golds[i]
             if name not in gold:
                 continue
-            pm = position_maps[batch[r]]
-            if gold[name] == "nothing":
+            gv = gold[name]
+            if isinstance(gv, str):
+                if gv != "nothing":
+                    # "escalate": not copyable from the state, so there is no span to supervise.
+                    continue
                 first = last_t = 0
                 w = W_LOSS["read_nothing"]
             else:
-                a, b = gold[name]
+                a, b = gv
+                pm = position_maps[batch[r]]
                 idx = [t for t, o in enumerate(pm.offsets) if o and o[0] < b and o[1] > a]
                 if not idx:
                     continue
@@ -299,7 +421,7 @@ def periodic_eval(model, a, memory, step, log, base_dir, best):
     rows = load_rows(f"{a.evalset}/500_steps_filtered.json", f"{a.evalset}/images", a.data)
     score_v = None
     for track in a.eval_tracks.split(","):
-        out, summ = run_eval(model, rows, track, memory, a.eval_batch)
+        out, summ = run_eval(model, rows, track, memory, a.eval_batch, contract=RUN["contract"])
         summ["step"] = step
         line = "EVAL " + json.dumps(summ)
         print(line, flush=True)
@@ -349,6 +471,9 @@ def sync_round(model, sync, k, log):
 def save(model, out, base_dir):
     os.makedirs(out, exist_ok=True)
     model.save_pretrained(out, safe_serialization=True)
+    if RUN.get("app_vocab"):  # app-choice contracts: the distractor pool travels with the weights (eval reads it)
+        with open(os.path.join(out, "app_vocab.json"), "w") as fh:
+            json.dump(RUN["app_vocab"], fh)
     os.remove(f"{out}/config.json")  # architecture unchanged: keep the release's own config (its auto_map/d1_* keys)
     for f in os.listdir(base_dir):  # remote code, tokenizer, processor, calibration
         src = os.path.realpath(f"{base_dir}/{f}")
@@ -358,6 +483,8 @@ def save(model, out, base_dir):
             shutil.copytree(src, f"{out}/{f}")
         else:
             shutil.copy(src, f"{out}/{f}")
+    # Stamped LAST so a contract.json inherited from --init can never survive under the new weights.
+    stamp_contract(out, RUN["track"])
 
 
 def main():
@@ -369,6 +496,8 @@ def main():
     ap.add_argument("--steps", type=int, default=0, help="optimizer steps (0 = epochs)")
     ap.add_argument("--epochs", type=float, default=1.0)
     ap.add_argument("--micro", type=int, default=2)
+    ap.add_argument("--bucket", action="store_true",
+                    help="group each optimizer step's micro*accum samples by length into micro-batches (less padding)")
     ap.add_argument("--accum", type=int, default=16)
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--warmup", type=int, default=50)
@@ -378,12 +507,16 @@ def main():
     ap.add_argument("--no-memory", action="store_true")
     ap.add_argument("--mem-frac", type=float, default=0.0, help="cap this process's share of GPU memory")
     ap.add_argument("--save-every", type=int, default=500)
+    ap.add_argument("--keep-ckpts", action="store_true",
+                    help="save each checkpoint to its own ckpt_<step> directory (choose the best on validation)")
     ap.add_argument("--grad-ckpt", action="store_true")
     ap.add_argument("--sync-dir", default="", help="local-SGD/DiLoCo: write rep_r<k>.safetensors every "
                     "--round-steps, wait for avg_r<k>.safetensors (made by sync_avg.sh), load it, continue")
     ap.add_argument("--round-steps", type=int, default=300)
     ap.add_argument("--traj-k", type=int, default=0, help="procedural memory: k similar TRAIN episodes in the state")
     ap.add_argument("--loss-weights", default="", help="override W_LOSS, e.g. 'read=0,read_nothing=0'")
+    ap.add_argument("--contract", default=DEFAULT_CONTRACT,
+                    help="question set (ac_common.CONTRACTS); stamped on the checkpoint as contract.json")
     ap.add_argument("--objective", default="ce", choices=["ce", "brier", "joint"],
                     help="readout objective: ce (released recipe) | brier (proper score) | joint (ce+lambda*brier)")
     ap.add_argument("--brier-lambda", type=float, default=0.5, help="weight of the Brier term when --objective=joint")
@@ -394,8 +527,13 @@ def main():
     ap.add_argument("--eval-tracks", default="V,VA")
     ap.add_argument("--eval-batch", type=int, default=8)
     ap.add_argument("--evalset", default="evalset")
+    ap.add_argument("--task-complete-weight", type=float, default=0.5,
+                    help="loss weight for the is_done noul readout (default 0.5)")
     a = ap.parse_args()
 
+    check_args(a)
+    check_cand_cap(a.track)
+    W_LOSS["is_done"] = float(a.task_complete_weight)
     for kv in filter(None, a.loss_weights.split(",")):
         k, v = kv.split("=")
         assert k in W_LOSS, k
@@ -406,6 +544,10 @@ def main():
     torch.manual_seed(a.seed)
     if a.mem_frac:
         torch.cuda.set_per_process_memory_fraction(a.mem_frac)
+    RUN["contract"], RUN["track"] = a.contract, a.track
+    print(f"[contract] {a.contract} tracks={tracks_of(a.track)}"
+          + (f" element_rule={CONTRACTS[a.contract]['element_rule']}" if CONTRACTS[a.contract].get("elements")
+             else ""), flush=True)
     os.makedirs(a.out, exist_ok=True)
     json.dump(vars(a), open(f"{a.out}/args.json", "w"), indent=1)
     t0 = time.time()
@@ -420,9 +562,13 @@ def main():
           flush=True)
 
     recs = load_records(a.data, a.train_set, a.limit, a.seed)
+    if CONTRACTS[a.contract].get("app_choice"):
+        RUN["app_vocab"] = app_vocab(recs, f"{a.data}/aw_apps.json")
+        print(f"[apps] app-choice vocabulary: {len(RUN['app_vocab'])} names", flush=True)
     si, sn = map(int, a.shard.split("/"))
     recs = recs[si::sn]
-    memory = None if a.no_memory else build_memory(a.data)
+    # An element contract's state has no memory line (the server never adds one), so none is built.
+    memory = None if (a.no_memory or CONTRACTS[a.contract].get("elements")) else build_memory(a.data)
     if a.traj_k:
         TRAJ["mem"], TRAJ["k"] = build_traj_memory(a.data), a.traj_k
         print(f"[traj] procedural memory over {len(TRAJ['mem'].items)} train episodes, k={a.traj_k}", flush=True)
@@ -450,12 +596,27 @@ def main():
     log = open(f"{a.out}/train.log", "a")
     agg, t_last = {}, time.time()
     for step in range(total):
-        for _ in range(a.accum):
-            if cursor + a.micro > len(order):
+        if a.bucket:
+            # The same per_step samples per optimizer step, grouped by length into micro-batches (`length_buckets`):
+            # every sample keeps weight 1/per_step, only the padding inside a micro-batch shrinks.
+            if cursor + per_step > len(order):
                 rng.shuffle(order)
                 cursor, epoch = 0, epoch + 1
-            samples = [make_sample(recs[k], a.data, a.track, memory, rng) for k in order[cursor:cursor + a.micro]]
-            cursor += a.micro
+            step_samples = [make_sample(recs[k], a.data, a.track, memory, rng) for k in order[cursor:cursor + per_step]]
+            cursor += per_step
+            micro_batches = [[step_samples[j] for j in g]
+                             for g in length_buckets([len(x[0]) for x in step_samples], a.micro)]
+        else:
+            micro_batches = None
+        for mb in range(a.accum):
+            if micro_batches is not None:
+                samples = micro_batches[mb]
+            else:
+                if cursor + a.micro > len(order):
+                    rng.shuffle(order)
+                    cursor, epoch = 0, epoch + 1
+                samples = [make_sample(recs[k], a.data, a.track, memory, rng) for k in order[cursor:cursor + a.micro]]
+                cursor += a.micro
             loss, stats = forward(model, eng, M, samples, backward_scale=1.0 / a.accum)
             stats["loss"] = [float(loss.detach())]
             for k, v in stats.items():
@@ -482,8 +643,10 @@ def main():
         if a.eval_every and ((step + 1) % a.eval_every == 0 or step + 1 == total):
             best = periodic_eval(model, a, memory, step + 1, log, base_dir, best)
         if a.save_every and ((step + 1) % a.save_every == 0 or step + 1 == total):
-            save(model, f"{a.out}/ckpt", base_dir)
-            print(f"[save] step {step+1} -> {a.out}/ckpt", flush=True)
+            # --keep-ckpts: one directory per save, so the best one can be chosen on validation afterwards
+            dest = f"{a.out}/ckpt_{step + 1}" if a.keep_ckpts else f"{a.out}/ckpt"
+            save(model, dest, base_dir)
+            print(f"[save] step {step+1} -> {dest}", flush=True)
     print("TRAIN_DONE", flush=True)
 
 

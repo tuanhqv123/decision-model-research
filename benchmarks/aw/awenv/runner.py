@@ -15,6 +15,16 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 DEFAULT_PROTOCOL = "aw-main-v1"
 
 
+class InfraAbort(RuntimeError):
+    """The device could not be reset: stop the chunk WITHOUT recording a result for this episode.
+
+    A dead accessibility forwarder is not a task outcome. Recording it as a setup error excluded nine
+    consecutive B0 tasks from the official denominator and, because a result line existed, every later
+    resume skipped them (2026-11-10). With no result line the next round (container restart +
+    preflight) runs the same task again.
+    """
+
+
 @dataclass
 class EpisodeSpec:
     task_name: str
@@ -30,10 +40,18 @@ class EpisodeSpec:
         return "%s|%d|%d" % (self.task_name, self.task_idx, self.seed)
 
 
-def _slug(name: str, limit: int = 24) -> str:
-    """A readable, collision-free token for the episode id."""
+def _slug(name: str) -> str:
+    """The episode-id token: the whole task name, lower-cased, never truncated.
+
+    Until 2026-11-10 this cut names at 24 characters and called the result "collision-free". It
+    was not: `SimpleCalendarAddOneEvent` and `SimpleCalendarAddOneEventTomorrow` both became
+    `simplecalendaraddoneeven`, so the second task shared the first one's id and resumption
+    skipped it as already finished. Six such groups hid 12 of the 116 tasks from every 116-task
+    run. Names of 24 characters or fewer get the same token as before, so their existing results
+    still resume; a longer name now gets its full token. `plan_episodes` refuses any duplicate.
+    """
     keep = [c if (c.isalnum() or c == "-") else "-" for c in str(name)]
-    return "".join(keep).strip("-")[:limit].lower() or "task"
+    return "".join(keep).strip("-").lower() or "task"
 
 
 def plan_episodes(
@@ -58,6 +76,14 @@ def plan_episodes(
                 instance_params=(instance_params or {}).get(key, {"task_idx": int(idx)}),
             )
         )
+    # Resumption treats an id with a result as finished, so two episodes sharing an id means the
+    # second is silently never run. Fail here, where it is visible, instead.
+    seen: Dict[str, str] = {}
+    for spec in specs:
+        if spec.episode_id in seen:
+            raise ValueError("duplicate episode id %r for %s|%d (already used by %s)"
+                             % (spec.episode_id, spec.task_name, spec.task_idx, seen[spec.episode_id]))
+        seen[spec.episode_id] = "%s|%d" % (spec.task_name, spec.task_idx)
     return specs
 
 
@@ -90,8 +116,12 @@ class Runner:
         protocol: str = DEFAULT_PROTOCOL,
         checkpoint: Optional[str] = None,
         save_screenshots: bool = True,
+        probe_success_each_step: bool = False,
     ):
         self.recorder = recorder
+        # Self-play labels (2026-11-11): ask the task's own checker after EVERY step, so a rollout records when the
+        # task became complete. Off by default (the official protocol checks once, at the end).
+        self.probe_success_each_step = bool(probe_success_each_step)
         self.env_factory = env_factory
         self.agent_factory = agent_factory
         self.task_factory = task_factory
@@ -105,6 +135,8 @@ class Runner:
         step_budget: int = 20,
         wall_clock_budget: Optional[float] = None,
         goal_of: Optional[Callable[[EpisodeSpec, Any], str]] = None,
+        budget_of: Optional[Callable[[str], int]] = None,
+        max_new: Optional[int] = None,
     ) -> Dict[str, Any]:
         attempted = skipped = 0
         n_action_errors = 0
@@ -114,8 +146,19 @@ class Runner:
             if self.recorder.has_result(spec.episode_id):
                 skipped += 1
                 continue
+            # `max_new` bounds a CHUNK, not the suite. The a11y forwarder degrades after tens of
+            # minutes of emulator uptime and the only reliable fix is recreating the container, so
+            # a 116-task suite is run as several chunks with a restart between them. Each chunk
+            # stops after `max_new` new episodes and the next one resumes from what is on disk.
+            # `--limit` cannot do this: it truncates the SPEC list before skipping, so a chunk
+            # whose first N specs are already done would attempt nothing.
+            if max_new is not None and attempted >= max_new:
+                break
             attempted += 1
-            n_action_errors += self._run_episode(spec, step_budget, goal_of, wall_clock_budget)
+            # Upstream budgets per task (int(10*complexity)). The table (`budget_of`) is only the
+            # fallback: `_run_episode` lets the task instance's own complexity win.
+            budget = budget_of(spec.task_name) if budget_of else step_budget
+            n_action_errors += self._run_episode(spec, budget, goal_of, wall_clock_budget)
 
         return {
             "attempted": attempted,
@@ -137,6 +180,10 @@ class Runner:
         env = self.env_factory()
         task = self.task_factory(spec)
         agent = self.agent_factory(env)
+        # The instance decides its own budget (`suite_utils.py:459`): information-retrieval tasks set
+        # `self.complexity` from their proto in `__init__` (`information_retrieval.py:70`), which a
+        # class-level table cannot see.
+        step_budget = resolve_budget(task, step_budget)
         action_errors = 0
 
         header = {
@@ -153,6 +200,9 @@ class Runner:
             "step_budget": step_budget,
             "harness_commit": _harness_id(),
             "coverage": _coverage_of(task),
+            # agent-side policy (masking, history format, effect labels, harness timing): it changes outcomes
+            # without changing `protocol`, so the header carries it (AW_PROTOCOL; 2026-11-12 review)
+            "policy": agent.policy() if callable(getattr(agent, "policy", None)) else None,
         }
         self.recorder.start_episode(header)
 
@@ -167,12 +217,27 @@ class Runner:
         episode_deadline = (time.time() + wall_clock_budget) if wall_clock_budget else None
         setup_error = None
         try:
+            # ORDER IS UPSTREAM'S: initialise the task, THEN go home. `suite_utils.py:246-247` calls
+            # `task.initialize_task(env)` and only then `run_episode`, whose first act is
+            # `agent.reset(task.start_on_home_screen)` -> `env.reset(go_home=True)`
+            # (`episode_runner.py:79`; `start_on_home_screen = True` for every non-MiniWoB task,
+            # `task_eval.py:40`). Until 2026-11-10 we reset first, so any app that initialisation
+            # left open became the agent's first screen.
+            try:
+                _init_task(task, env)
+            except Exception as exc:  # noqa: BLE001
+                # A task that cannot prepare its own device state must not end the suite. On
+                # 2026-11-08 `ExpenseDeleteDuplicates` raised `no such table: map_markers` inside
+                # initialize_task and killed a 116-task run at episode 42, losing 74 tasks of
+                # coverage to one app's missing schema. Record it as a setup failure and continue.
+                setup_error = "%s: %s" % (type(exc).__name__, exc)
+                env_crash = not _alive(env)
             # ``env.reset()`` raises when the a11y dump fails on a live device — the same transient
             # that AndroidWorld retries internally. On 2026-11-08 it escaped and killed a 116-task run
             # at episode 93 while `adb devices` showed `device` and `/health` said success. Retry a
             # couple of times, and if it still fails treat it as this episode's setup failure rather
             # than the suite's.
-            for _attempt in range(3):
+            for _attempt in range(0 if setup_error else 3):
                 try:
                     env.reset()
                     setup_error = None
@@ -183,16 +248,8 @@ class Runner:
                         env_crash = True
                         break
                     time.sleep(2.0 * (_attempt + 1))
-            if not setup_error:
-                try:
-                    _init_task(task, env)
-                except Exception as exc:  # noqa: BLE001
-                    # A task that cannot prepare its own device state must not end the suite. On
-                    # 2026-11-08 `ExpenseDeleteDuplicates` raised `no such table: map_markers` inside
-                    # initialize_task and killed a 116-task run at episode 42, losing 74 tasks of
-                    # coverage to one app's missing schema. Record it as a setup failure and continue.
-                    setup_error = "%s: %s" % (type(exc).__name__, exc)
-                    env_crash = env_crash or (not _alive(env))
+            if setup_error and setup_error.startswith("reset:"):
+                raise InfraAbort("%s (episode %s left unscored for a re-run)" % (setup_error, spec.episode_id))
             goal = goal_of(spec, task) if goal_of else getattr(task, "goal", "")
 
             while not setup_error and i < step_budget:
@@ -209,17 +266,32 @@ class Runner:
                     record = _error_step(i, exc)
                     record["env_crash_candidate"] = True
                 record = self._attach_image(record, spec.episode_id, i)
+                if self.probe_success_each_step:
+                    try:
+                        record["probe_score"] = float(task.is_successful(env))
+                    except Exception as exc:  # noqa: BLE001 - a probe must never end the episode
+                        record["probe_score"], record["probe_error"] = None, "%s: %s" % (type(exc).__name__, exc)
                 self.recorder.add_step(record)
                 steps.append(record)
                 i += 1
                 if record.get("done"):
                     break
 
-            success = False
             checker_error = None
+            task_score = None
             if not env_crash and not setup_error:
                 try:
-                    success = bool(task.is_successful(env))
+                    # A FLOAT, not a bool: composite tasks return 0.5 and upstream averages the
+                    # floats (`suite_utils.py:248, 684-716`). `bool(0.5)` counted half credit as a
+                    # full success until 2026-11-10.
+                    raw = task.is_successful(env)
+                    # Any numeric scalar (incl. numpy bool_/int64/float64); None or text is not a score.
+                    try:
+                        if raw is None or isinstance(raw, (str, bytes)):
+                            raise TypeError
+                        task_score = float(raw)
+                    except (TypeError, ValueError):
+                        checker_error = "non-numeric checker result: %r" % (raw,)
                 except Exception as exc:  # noqa: BLE001 - a checker must never end the run
                     # A raising checker is not proof that the environment died. AndroidWorld's
                     # own a11y accessor raises when it cannot dump the tree (observed on the
@@ -228,6 +300,20 @@ class Runner:
                     checker_error = "%s: %s" % (type(exc).__name__, exc)
                     env_crash = not _alive(env)
             declared = bool(steps and steps[-1].get("done"))
+            # UPSTREAM REQUIRES BOTH. `suite_utils.py:261` is
+            #     agent_successful = task_successful if interaction_results.done else 0.0
+            # i.e. a correct device state does not count unless the agent DECLARED done. The
+            # harness used to record `success = task.is_successful(env)` alone, which is a
+            # different metric: it asks "is the world right" and ignores "did the agent say so".
+            # That inflates success for any agent that stops early and understates none, and it
+            # makes our numbers incomparable with every published AndroidWorld score.
+            # `agent_successful = task_successful if interaction_results.done else 0.0`; an episode
+            # that was never judged (setup error, crash, raising or non-numeric checker) has no score
+            # — upstream gives it NaN and its mean skips it (`suite_utils.py:544-558`).
+            score = None if task_score is None else (task_score if declared else 0.0)
+            # upstream prints "Task Successful" iff agent_successful > 0.5 (`suite_utils.py:263`)
+            success = score is not None and score > 0.5
+            task_successful = task_score is not None and task_score > 0.5
             # An episode whose checker raised was never judged. It must not be counted as a model
             # outcome: on 2026-11-09 twelve such episodes ran to completion (n_steps 4-25) and were
             # reported as 6 timeouts and 6 premature terminations, because `timeout` and
@@ -236,6 +322,11 @@ class Runner:
             unscored = bool(checker_error) and not env_crash
             result = {
                 "success": success,
+                "score": score,
+                "task_score": task_score,
+                # the two upstream factors, kept apart so a post-mortem can tell
+                # "world was right but agent never said done" from "world was wrong"
+                "task_successful": task_successful,
                 "setup_error": setup_error,
                 "declared_done": declared,
                 "unscored": unscored,
@@ -250,16 +341,22 @@ class Runner:
                     len(steps) >= step_budget or wall_clock_exceeded),
                 "wall_clock_exceeded": wall_clock_exceeded,
                 "latency": _latency(steps),
-                "tokens_generated": 0,
+                # 0 for the one-pass model by construction; the generative arm reports its own count.
+                "tokens_generated": sum(int((s.get("action_raw") or {}).get("tokens_generated") or 0) for s in steps),
                 "task_name": spec.task_name,
                 "task_idx": spec.task_idx,
+                # The goal is the task's identity: without it in the record there is no way to
+                # check that the agent was asked the right thing. Traces from 2026-11-10 could
+                # not answer that question at all, and the same omission is what made the
+                # 2026-11-07 "goal-only vs history" mix-up invisible for days.
+                "goal": goal,
                 "seed": spec.seed,
                 "agent": spec.agent,
                 "checkpoint": spec.checkpoint or self.checkpoint,
             }
             self.recorder.finish_episode(result)
         finally:
-            _teardown_task(task)
+            _teardown_task(task, env)
         return action_errors
 
     def _attach_image(self, record: Dict[str, Any], episode_id: str, i: int) -> Dict[str, Any]:
@@ -278,6 +375,14 @@ class Runner:
         except Exception as exc:
             record["screenshot_error"] = "%s: %s" % (type(exc).__name__, exc)
         return record
+
+
+def resolve_budget(task: Any, fallback: int) -> int:
+    """`int(10 * task.complexity)` when the instance carries a numeric complexity, else `fallback`."""
+    c = getattr(task, "complexity", None)
+    if isinstance(c, (int, float)) and not isinstance(c, bool):
+        return int(10 * c)
+    return int(fallback)
 
 
 def _jsonable(value: Any) -> Any:
@@ -305,13 +410,29 @@ def _init_task(task: Any, env: Any) -> None:
     raise AttributeError("task exposes neither initialize_task nor initialize: %r" % type(task))
 
 
-def _teardown_task(task: Any) -> None:
+def _teardown_task(task: Any, env: Any = None) -> None:
+    """AndroidWorld's `tear_down(env)` resets the apps and closes recents.
+
+    Called with no `env` it raised TypeError every single episode, and the bare `except`
+    below swallowed it — so no episode was ever torn down. `TaskEval.tear_down` is
+    `tear_down(self, env)` (task_eval.py:182) and both upstream callers pass the env
+    (suite_utils.py:288, server/android_server.py:183). A leftover foreground app is exactly
+    how one task's screen leaks into the next task's first observation.
+    """
     fn = getattr(task, "tear_down", None)
-    if callable(fn):
+    if not callable(fn):
+        return
+    try:
+        fn(env)
+    except TypeError:
+        # Some fakes in our own tests take no argument; keep those working, but only after
+        # the real signature has been tried.
         try:
             fn()
         except Exception:
             pass
+    except Exception:
+        pass
 
 
 def _alive(env: Any, attempts: int = 2, delay: float = 1.0) -> bool:

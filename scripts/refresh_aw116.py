@@ -5,7 +5,7 @@ The run is resumable and takes hours, so any number written into a document is a
 This script is the single place that recomputes it, so a document refresh is one command
 instead of a hand-edit that silently drifts:
 
-    python scripts/refresh_aw116.py --host 4090_train
+    python scripts/refresh_aw116.py --host HOST_TRAIN
 
 It copies the episode JSONL out of the container, recomputes every figure the paper and the
 record documents quote, and rewrites
@@ -243,7 +243,7 @@ def report(rows, planned=116):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--host", default="4090_train")
+    ap.add_argument("--host", default="HOST_TRAIN")
     ap.add_argument("--container", default="aw-emu")
     ap.add_argument("--run-dir", default="/tmp/awruns/aw116_appint")
     ap.add_argument("--local", default=os.path.join(OUT_DIR, "episodes"))

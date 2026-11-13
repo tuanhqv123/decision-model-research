@@ -1,0 +1,2 @@
+AUROC(element confidence -> click changed the screen) = 0.553  (changed 354, no change 132)
+AUROC(action confidence -> click changed the screen) = 0.698  (changed 354, no change 132)

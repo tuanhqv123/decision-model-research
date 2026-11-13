@@ -1,0 +1,22 @@
+{
+ "track": "VA",
+ "n": 8444,
+ "step_acc": 0.4993,
+ "type_acc": 0.7573,
+ "grounding": 0.5878,
+ "per_type": {
+  "click": "2585/5074",
+  "long_press": "0/9",
+  "navigate_back": "120/343",
+  "open_app": "485/608",
+  "scroll": "406/1211",
+  "type_text": "334/632",
+  "wait": "286/567"
+ },
+ "ece_action": 0.2862,
+ "always_status": 0.0,
+ "eval_sec": 1932,
+ "contract": "v3",
+ "element_rule": "cap40_reading_noime",
+ "tag": "v3_s0_ckpt_900_actest_v3"
+}

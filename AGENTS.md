@@ -90,6 +90,206 @@ Topic list (each maps to a file under `notes/`):
   - **Caveat to surface honestly:** calibration ↔ risk-gating tradeoff; multimodal adds calibration not accuracy on this benchmark.
 
 ### Program log (keep this in sync — every background run/result goes here)
+- **2026-11-12 (late): AC-HIGH IS A PER-STEP, TEACHER-FORCED NUMBER; PER GOAL IT EQUALS ANDROIDWORLD.**
+  Note: `docs/research/2026-11-12-ACHIGH-vs-AW-FINAL-vi.md`. An independent read-only agent re-derived every number below from the files.
+  - **What AC-High measures.** v4 on the AndroidControl test set (InfiGUI scorer) gets **61.7% per step (5,213/8,444)**, but only **344/1,543 = 22.3% of episodes have every step right**.
+    - This is with human history at every step: `eval_d1.py:42,48-49,220-225`.
+    - The scorer never checks whether the goal was reached.
+    - Whole-episode rate by length: 59% for 1-step episodes, **9.4% for ≥6 steps**.
+  - **AndroidWorld matches it.** v4 + harness V12 (`aw116_v4g`): **25/115 = 21.74%** (24 full successes + 2 halves). Paired against V11: wins 5 / losses 1, p = 0.22.
+  - **Same missing skill on both: stopping at the right time.**
+    - The AC test has **no** correct termination step, yet v4 predicts `terminate` on **1,171/8,444** steps.
+    - AndroidWorld: 49 premature "done" episodes, and 2 tasks where the device reached the goal state but the model never stopped. Those score 0 under the upstream rule.
+  - **AMEX (2407.17490).** It reports only per-step metrics; online evaluation was never run. Its gains come from L1/L2 element understanding. File BACK = 0.35% (12× rarer than the AC test), contradicting the paper's claim. **Not used.**
+  - **v5 OOM.** The first v5 launch hit its own 0.42 memory cap at step ~40; relaunched at 0.48.
+  - **Pre-registered gates:** AC goal-level, `terminate` count, validation, P(back); then 13 targeted AW tasks; then the full 116 on harness V13 (V12 + answer_format).
+  - **v5 was stopped at step 240** at the operator's request.
+    - Cause: v5's curation (dedupe + click cap) had cut the episode stop pair — last action + `status` row. Both rows survived in only **1,918 of 4,191** episodes.
+    - Of the 1,171 wrong `terminate` predictions on the AC test, 460 fall on an episode's last real step.
+  - **Fix: `curate_v5.is_stop_pair`**, pinned by a test. The pairs are now kept in 4,191/4,191 episodes (`compact_cur_v6`).
+  - **Run `final` is training** on that data. Plan: `docs/research/2026-11-12-FINAL-PLAN-vi.md`.
+    - Early warning at ckpt_250 on validation.
+    - v4 validation reference: step 520/827, episodes all right 14/137, false status 64/690, back misuse 16/798.
+  - **AndroidControl-Curated (2510.18488), read from its release:**
+    - Only a TEST set is released (8,435 rows / 1,540 episodes).
+    - Its history field is human-written step text.
+    - In `task-improved.json`, history contains the current step's instruction in 8,377/8,377 rows, and the eval script feeds history into the prompt.
+    - Its "SR" is a per-step AC-style number. Not used as training data: test only, different history format.
+- **2026-11-11 — WHY R1 IS AT 12–15%, AND THE FIX BEING TRAINED (v2a).** Diagnosis (`docs/research/2026-11-11-DIAGNOSIS-why-low.md`,
+  summary in Vietnamese `docs/research/2026-11-11-SUMMARY-vi.md`): 25 IR tasks need `answer` (absent); the app name was copied
+  from the goal, so 29–36% of R1's `open_app` names cannot be launched and 24–25 task-completion tasks never start; the model
+  predicts pixels, not elements (30–37% of clicks hit non-interactive elements); premature `status` (103/171 wrong val dones are
+  one step before the end). **v2a** (contract: element chosen from the AW element list, app chosen from the emulator's 33
+  launchable apps, first step restricted to open_app/status) trains on cur15k_v2 + 1,736 goal→app rows from AndroidWorld's own
+  generator (no task run; 19 templates held out); pre-registration `PRE-REG-2026-11-11-v2a.md`. **Record corrections:** raw
+  AndroidControl has no `status` action (ours, `preprocess_ac.py:126-128`); full AC train has 4,416 episodes (32%) of AW task
+  kinds (not ~22%); stored AC images are 720 px (an 858 run would upsample). R1 stopped at 2/3 seeds (operator) — no claim.
+  Data sources AMEX/AndroidLab/OS-Atlas examined from files and dropped. Infra: `sweep_infra.py`, `watchdog_runbench.sh`.
+- **2026-11-11 (prior-art sweep) — F10 IS FALSE, T-A LOSES "FIRST", AND THE T-C PREMISE IS A PUBLISHED THEOREM.**
+  Five read-only subagents swept the class the repo had not searched: **low-visibility work** — leaderboards, GitHub,
+  vendor grey literature, workshop/thesis/non-English papers, 2026 preprints with no citation count. Note:
+  `docs/research/2026-11-11-PRIORART-insignificant-sweep.md`; slices in `outputs/2026-11-11-priorart-{A..E}-*.md`.
+  (a) **F10 corrected.** The official AndroidWorld leaderboard was checked: **47 rows, zero decision models** (the
+  sheet's own taxonomy has only "Model" = one LLM call and "AI agent" = multi-call, so it cannot express our
+  artifact; Jev-Mobile was never submitted). But a typed decision model **has** been measured on the official
+  protocol: *When Faster Decisions Do Not Make Better Agents* (arXiv 2610.13092) reports AndroidWorld 116 tasks × 3
+  runs, **T3A 57.47 → 44.25** with a decision model (9 gains / 55 losses), FastAgent 50.00 → 31.90 (27/90);
+  decision latency −73.9…−81.5% but **per-task time −10.6% / +0.7%** (Table 8). So the "no standalone
+  decision-model result" sentence must be rewritten; what nobody ran is the **matched** (same family/size/rows/
+  harness) one-pass-vs-generation pair.
+  (b) **T-A loses "first" and half its hypothesis.** The same paper's Fig. 2b already plots the deficit by
+  AndroidWorld step budget, and the deficit is **12.5 / 15.3 pp even in the shortest stratum** — "keeps short-task
+  competence" is contradicted by the closest analogue; pre-register a **uniform deficit** as the expected outcome.
+  GUI-JEPA (2610.36877) already runs the matched offline comparison (0.50B decoder-free vs a self-SFT'd
+  Qwen2.5-VL-7B, 2.8–4.0× faster) and matches contract v3's shape (element-id choice, goal-span copy, one batched
+  pass); Liquid AI already demoed a zero-token d1 web agent.
+  (c) **T-C must be narrowed.** *Per-Step Conformal Calibration Does Not Transfer to Agent Trajectories*
+  (EMNLP 2026 main 1808) proves and quantifies it: nominal 10% → trajectory miscoverage 29.5% (T=3) to 83.5%
+  (T=15), mean 50.7%. Argus (NeurIPS 2026 D&B) independently reproduces threshold non-transfer (ρ +0.08
+  [−0.219, +0.373]) and *Last Step Matters* (EMNLP 2026 main 475) gives early-uncertainty AUROC < 0.60. Surviving
+  T-C residue: the **per-action no-effect** instantiation, AUROC on a held-out task split, labels from a
+  deterministic changed/no-change diff (VeriGUI trains a `NO_CHANGE` head from exactly those labels; CEB and
+  Outcome-Grounded fit gates from other verified labels). No coverage–risk curve or certificate exists **on
+  AndroidWorld**; VeriCUA has a decision-rate number (82% decided, 95.1% decided accuracy, FPR 7.7%).
+  (d) **Design constraints now citable.** SparkVLA (2608.16172, Table 3): an independent stop head caps at ≈80%
+  while `Stop` inside the candidate ranking reaches **96.65%** (SR 42.53 → 47.12) — contract v3 already wires
+  `status` inside the `action` choice, which is now a citation. StepReflect (2608.05587) learns a transition head
+  from **882 transitions, 41.4% negative → 82.16%**; A3RM needs positives oversampled ×4; a learned multi-feature
+  stopper is **≤ a scalar** on hard settings (LearnStop 2606.30852). Element track needs three additions it does not
+  have: a **BM25 baseline** (LEX, Findings EMNLP 2026: R@1 0.557 beats five dense encoders), label-type
+  stratification, and an **element-text-masked ablation** (22–38 R@1). Closest 3B one-call AndroidWorld baseline is
+  **AppVLM** (2502.06395): 37.8% (82/116, 3 seeds, 0.91 s/step) and Table 4 = AC-only 11.4 / AW-rollouts-only 22.4 /
+  both 37.8, i.e. our Task 9 ablation already run with seeds.
+  (e) **Surviving claims:** matched one-pass-vs-generation pair; verified no-effect masking by re-ranking the
+  model's own option distribution; a per-action no-effect gate from deterministic labels with a coverage–risk
+  certificate on AndroidWorld; app choice as a classification over the launchable-app list (no prior system passes
+  an app list; M3A's own source says an uninstalled name does nothing); candidate-cap recall measured live.
+  (f) **One arithmetic discrepancy, reported not closed:** IR tasks are **25** (registry-derived and counted in
+  `benchmarks/aw/hostscripts/aw116_answer_only.txt`) but R3 Task 4's answer-type decomposition sums to **26**
+  (STRING 16 + NUMBER 8 + DATE 1 + TIME 1). Resolve from `tasks.textproto` before the `answer` head ships.
+  All five slice agents were read-only; nothing in the harness, the model or the plan files was modified by this
+  sweep.
+- **2026-11-10 (4th) — FIRST PAIRED ANDROIDWORLD RESULT UNDER THE OFFICIAL PROTOCOL (one seed; no claim).**
+  B0′ (E2, overlay hidden) and R1 s0 (contract v1) both ran all 116 tasks on the same host and instances.
+  Pre-registered analysis (`paired_sr.py`, frozen in `da5d3eb8`): **R1 12.2% (14/115) vs B0′ 7.0% (8/115)**,
+  w = 9 / l = 3, sign test p = 0.146 (104-task sensitivity: 12.6% vs 5.8%, p = 0.065). Amendment A1 fires
+  (|w−l| = 6, exactly the bar) → seeds 1–2 online (chain8). §4 needs three seeds; nothing is claimed yet.
+  Mechanism as predicted for repeats (first-encounter repeat 41.2% vs 65.8%), not for typing (+0.9 pts).
+  **Post-hoc: the gain is mostly termination** — 7/9 wins are tasks B0′ finished but never declared done; R1
+  declares done 2.4x as often and is right less often (17% vs 24%). **Q11 (no model, `status` at step 0) scores
+  6.6% (7/113): B0′'s 7.0% is indistinguishable from doing nothing, and beyond the 7 "state already holds" tasks both
+  arms solve exactly 7 — R1's gain is termination, not task skill.** (Seed 1 then scored 14.8% (17/115), w 12 / l 3,
+  p = 0.035, with 10 successes beyond the floor tasks — so "termination only" holds for seed 0, not seed 1; the claim
+  waits for seed 2.) Q10: a same-host replay is not
+  deterministic (6/20 trajectories diverge, 0/20 outcomes flip, upper bound 16.1%). Also: B0′'s 12 previously
+  hidden tasks hold 2 of its 8 successes; `run_arm.sh` now counts scored episodes from the index (a killed
+  partial episode had read as scored). `benchmarks/results/2026-11-10-stage1/`.
+- **2026-11-10 (3rd) — H11: EVERY "116-TASK" ANDROIDWORLD RUN SO FAR SCORED 104 TASKS.**
+  `awenv/runner._slug` cut task names at 24 characters (docstring: "collision-free"), so 6 groups of tasks shared
+  an episode id (e.g. `SimpleCalendarAddOneEvent` / `…Tomorrow` / `…RelativeDay` / `…InTwoWeeks`) and resumption
+  skipped the later members as already finished — silently, with a normal report each chunk. Computed over the
+  116-task table: 12 shadowed tasks (Recipe 7, SimpleCalendar 4, AudioRecorder 1; complexity 1.2–6.0), identical to
+  the 12 missing from the 2026-11-08/09 run (its "104/116 finished" was this, not infra), B0-overlay, B0′ and Q11.
+  **Consequence: every AndroidWorld rate quoted "on 116 tasks" (incl. 15/80, 15/104, 12/80) is on 104 tasks, with
+  12 multi-step tasks never attempted; any 116-task claim must be restated.** Fixed with TDD (`_slug` no longer
+  truncates; `plan_episodes` refuses duplicate ids; preflight plans the container's real task table and requires
+  116 ids / 116 tasks). Harness packages v2f / v4 = v2 / v3 + this fix only. Runs are completed by task name
+  (`hostscripts/make_completion_cfg.py`), not re-run. `run_arm.sh` (unversioned until now) also counted abandoned
+  partial episodes as finished; fixed and moved into `benchmarks/aw/hostscripts/`. Board: `docs/research/EXEC-2026-11-10.md`.
+  Also decided the same day: R1 is NOT moved to the second emulator (paired with B0′ ⇒ same host); the two hosts'
+  images were proven byte-identical (layer-list and config hashes), the host itself is unmeasured — a 20-task
+  host-equivalence check runs before the second emulator carries any paired arm.
+- **2026-11-10 (2nd) — ANDROIDWORLD IS THE SINGLE PRIMARY BENCHMARK; CONTRACT AUDIT; FIVE HARNESS DEVIATIONS.**
+  Decision record: `notes/decision-2026-11-10-androidworld-primary.md`. Evidence (every line from upstream
+  `android_world@55ddaf5`, our code, or parsed data files): `docs/research/2026-11-10-AUDIT-androidworld-contract.md`.
+  (a) **Operator decision:** AndroidWorld (116 tasks, official protocol) is the only benchmark optimised;
+  AC-v2 64.07% stays as a past, teacher-forced result (its history is the oracle human step instructions,
+  398/398 rows) and is not optimised further.
+  (b) **Harness vs `suite_utils`, line by line:** H1 `bool(is_successful)` turns a 0.5 partial credit into a
+  success; **H2 task instances were never seeded** (`random.seed(sha256("30_{name}_0"))` missing), so every
+  AndroidWorld number so far is on random, non-official instances; H3 reset ran *before* `initialize_task`
+  (upstream: initialise, then go home); H4 IR budgets read the class `complexity`, not the instance's;
+  H5 screenshot and element list came from two different `get_state` calls. **Checked and correct:** the
+  done gate, the per-task budget, and the denominator — upstream averages with pandas `mean()`, which skips
+  the `NaN` of tasks that raised, so A5 §1's "wrong denominator" was itself wrong.
+  (c) **Data facts:** 25/116 tasks score only via `answer` (ceiling 78.4% without it); AndroidControl's
+  `status` is the final row of all 13,603 episodes, always `successful` (no non-terminal negatives);
+  training extracted every a11y node while AndroidWorld serves `forest_to_ui_elements` (leaves /
+  content-desc / scrollable, invisible excluded); 13/20 AW apps have zero training goals.
+  (d) **Withdrawn on a slow re-read (no evidence):** "the model cannot see that wifi is on" (the screenshot
+  shows it), "unseen apps are the dominant cause" (confounded with task length: seen-app long tasks 0/6),
+  "bare-click history causes the loops", "the double tap caused the typing failures". They are hypotheses
+  until an offline count sizes them.
+  (e) **Corrections:** HANDOFF-2026-11-10 P4 is false (history is not dropped; 64.07 stands); aw116 is
+  **12/80 = 15.0%** under the done gate, not 15 successes — and on unseeded instances.
+  (f) Infra: `git` hung because `core.fsmonitor=true` stalls on the 55 GB tree; set to `false` locally.
+  (g) **H1–H5 fixed on branch `aw-official-harness`** (plan `docs/superpowers/plans/2026-11-10-aw-official-harness.md`),
+  each pinned by a test that cites the upstream line; `official_sr` reproduces 12/80 = 15.0% on the 2026-11-08
+  episodes. Baseline config `benchmarks/aw/configs/aw116_official_baseline.yaml` (same `appint_full@938`, V track —
+  only the harness changes) is ready; the run itself waits for the operator because it uses the shared hosts.
+  (h) **Correction — Jev-Mobile is a hybrid, not a standalone single-pass agent** (read from arXiv 2609.30186):
+  its 79% AndroidWorld uses Qwen3.8-Max as planner, which writes the input text and decides finish/blocked; Jev picks
+  an ID among program-built a11y candidates. No standalone decision model (single-pass, zero tokens) has a published
+  AndroidWorld number in the sources read; GUI-JEPA (2610.36877) reports AndroidControl only. Published limits of
+  one-pass decision models (2610.24929 state tracking; 2610.25947 record-over-observation) match our failure classes.
+  Review: `outputs/aw-state-review.md`. B0 = `ckpt-E2-final` (appint_full saw 1,380 AndroidWorld goal rows);
+  R1 = contract-v1 retrain, 3 seeds; pre-registration amended (A1) before any R1 online result.
+  (i) **FINAL PLAN = `docs/research/PLAN-2026-11-10-question-tree.md`** (operator constraint: one decision model, no
+  planner, no external model). Partial B0 diagnosis, episode-clustered: no-effect steps 53.9% (CI 35–66%), repeat at
+  first encounter of an unchanged screen 68.2% (CI 55–80%), typing lands 18/18 but is chosen in 2.0% of decisions,
+  online AUROC(confidence → effect) 0.59 (CI 0.48–0.69). **H10 found:** official agents call `hide_automation_ui()`;
+  we did not — fixed in code, so the running B0 is arm *B0-overlay* and the official baseline is B0′. The thesis is
+  chosen at Gate 2 by evidence (matched generative control Q1 needs operator approval). Pooled 57% / 83% / 90.9%
+  figures quoted earlier the same day are superseded by the clustered ones.
+- **2026-11-10 — `episodic-s0` FAILS ITS OWN PRE-REGISTRATION; `is_done` IS NOT A QUESTION IN THIS CORPUS; THE GATE IS OFF.**
+  (a) **The eval was already on disk and unread.** `runs/isdone.json` and
+  `runs/eval/eval-episodic-s0-V.summary.json` were written 2026-11-09 22:58. The 2026-11-10 work went
+  into the AndroidWorld loop instead — the one measurement `PRE-REG-2026-11-09-episodic-isdone.md` §(c)
+  explicitly excludes ("a task-success number from this study would be noise read as signal").
+  (b) **The mechanism, measured here for the first time:** on the 824 val rows, `step == n_steps` and
+  `action == status` are the **same 137 rows** — 137/137, and **0 positives among the 687 non-status
+  rows**. So "has the task been completed?" is answered perfectly by "is this action `status`?", which
+  the action head already predicts. `auroc` 0.960 is that shortcut; **`auroc_nonterm` is null
+  (not computable)**; `risk @ 50% coverage` = **0.670**. PRE-REG §Secondary withdrawal named exactly
+  this and said the non-terminal number is the only reportable one — and it does not exist.
+  (c) **Conditions: 1 FAIL (not measurable), 2 FAIL (never run — the V-track eval has `el_idx` on
+  0/398 rows, so `target_el` was never evaluated), 3 FAIL** — AC-v2 **55.78% (222/398) vs 64.07%
+  baseline = −8.29 pts**, `type_acc` 0.7764 vs 0.8417 (−6.53), `status` **64/87 vs 76/87**, while
+  **grounding improved to 0.600 (114/218 spatial = 0.5229) vs 0.5605**. The loss is concentrated in
+  the class the redundant readout was built from: training it consumed capacity, it added no signal.
+  Report: `benchmarks/results/2026-11-10-episodic-s0-fails-prereg.md`.
+  (d) **The `is_done` gate is now OFF by default** (`done_threshold: 0.0` in adapter, agent,
+  `run_bench`), i.e. upstream behaviour, so SR is comparable again; two tests lock it
+  (`test_is_done_gate_is_off_by_default`, `test_is_done_gate_can_still_be_switched_on_explicitly`).
+  The gate generated three of its own defects on 2026-11-10 and they are fixed with regression tests:
+  (1) three refused terminations all mapped to `wait`, produced **identical signatures**, tripped
+  `stuck_k`, and the third was **overwritten with `navigate_back`** — which is what destroyed
+  `MarkorCreateNote` with the note correctly typed on screen; (2) history reported a refused
+  `status` as `"status -> declare done"`, so every later decision was taken by a model that believed
+  the task had ended; (3) an invalid decision was reported as `"click -> ok"`. Also fixed:
+  `_signature` now includes `text`/`direction`/`app_name` (two different typings and two opposite
+  scrolls used to collide).
+  (e) **Two more real harness defects found and fixed the same day, both measured on the device:**
+  **`_teardown_task` called `tear_down()` with no env** — upstream signature is `tear_down(self, env)`
+  (`task_eval.py:182`; callers `suite_utils.py:288`, `server/android_server.py:183`), so it raised
+  `TypeError` every episode and the bare `except` swallowed it: **no episode was ever torn down**.
+  Proven on the emulator: old call `TypeError`, `tear_down(env)` returns the device to the launcher.
+  And **`goal` was never written to the trace** — the task's identity was unauditable, which is the
+  same omission that hid the 2026-11-07 goal-only/history mix-up.
+  (f) **`--run-root` moved out of the code tree** (`AW_RUN_ROOT`, default `/tmp/awruns`). It defaulted
+  to `benchmarks/aw/runs`, and the harness is reinstalled into `/tmp/awh` on every emulator restart,
+  so real episodes were silently deleted while the summary still printed.
+  (g) **Gate A rewritten and green: 41/41, 0 skip, 0 fail** (was 40 pass/1 fail/1 skip, and it
+  asserted the OLD wrong contract — `["click","input_text"]` for `type_text`, i.e. the double-tap bug
+  it was supposed to catch). It now verifies **consequences**, not the absence of exceptions:
+  `click`/`scroll` change the image, `navigate_home` reaches the launcher, `navigate_back` changes
+  activity or pixels, `open_app` is polled to 24/24 apps (Retro Music's cold start was failing a
+  fixed 5 s sleep — a flaky gate is worse than none), and `type_text` is proven to **replace** the
+  field rather than append (`clear_text`), which the old gate skipped. Emulator screenshots confirm
+  it: `+15195923419` and `The cake is a lie` both land in the right fields.
+  (h) **Standing correction:** the earlier 2026-11-10 entry's 1/5 = 20% is **not a benchmark number**
+  — it ran with the gate ON (a deviation) and n=5 (Wilson 3.6–62.4%). It is withdrawn as a rate and
+  kept only as a mechanism observation.
 - **2026-11-09 — THE 116-TASK RUN IS FINISHED AND THE SERVERS ARE CLEAN.**
   (a) **Result, with all four buckets and all three denominators.** 104/116 tasks finished. Buckets: **15
   successes, 34 non-terminating timeouts (median 25 steps), 31 premature `status` (median 7), 12 `unscored`
@@ -126,8 +326,11 @@ Topic list (each maps to a file under `notes/`):
   the prose from that evidence, and `check_record.py` re-renders it and demands byte equality.
   (e) **§5.12.1 and the value brief §5.1 were added**: `P(task) = p^n`; our 64.07% implies 2.8% over 8
   steps; inverting published scores gives the frontier's per-step accuracy — **MAI-UI-2B 92.3% after SFT
-  alone, 93.1% after RL, 235B 97.4%** — so **online RL is worth only +0.8 per-step at 2B** and the 28-point
-  gap is **supervision**. `scripts/verify_compound_accuracy.py` re-derives all of it from
+  alone, 93.1% after RL, 235B 97.4%** — so **online RL is worth only +0.8 per-step at 2B**.
+  ⚠️ **RETRACTED 2026-11-09 (M13/M14):** these are **derived by us**, not reported by MAI-UI (which publishes
+  no per-step metric), and the derivation assumes step independence, which **our own data refutes by 6.6x**
+  (predicted 2.84% at 8 steps, measured 18.8%). The "28-point per-step gap" is **withdrawn**; the measured
+  claim is a **task-success** gap (45.1% vs 18.8%). See paper §5.12.1.1. `scripts/verify_compound_accuracy.py` re-derives all of it from
   `references/raw/maiui2026-androidworld-table9.txt`. **The comparison class is MAI-UI-2B-SFT at 45.1%
   end-to-end, not 76.7% (235B post-RL) and not even 49.1% (2B post-RL) — and we do not reach it.**
   (f) **Read slot**: `app_intent` probe 1/8 → 8/8; five arms tabulated with artifacts (smoke 24.37%,
@@ -142,12 +345,14 @@ Topic list (each maps to a file under `notes/`):
 - **2026-11-08 (2nd) — THE COMPOUND-ACCURACY ARITHMETIC; THE FIRST FULL 116-TASK RUN; AND WHY "FIX THE BUG" WAS NEVER THE ANSWER.**
   (a) **`P(task) = p^n` is the governing equation and nobody in this programme had written it down.** At our
   measured per-step 64.07%, an 8-step task succeeds **2.8%** and a 10-step task **1.2%**. Inverting the
-  published end-to-end AndroidWorld scores gives the per-step accuracy the frontier must run at: **93.1%**
-  (MAI-UI-2B, 49.1% e2e), **96.6%** (MAI-UI-8B, 70.7%), **97.4%** (MAI-UI-235B, 76.7%), **88.8%** (M3A,
-  30.6%). **(a2) THE GAP IS SUPERVISION, NOT RL — corrected the same day from MAI-UI Table 9.** Their
-  SFT/RL rows read **2B 45.1 → 49.1**, 8B 64.7 → 70.7, 32B 69.8 → 73.3 (end-to-end). In per-step terms
-  2B is **92.3% after SFT alone** and 93.1% after RL, so **online RL is worth +0.8 per-step points at 2B**.
-  The 28-point gap to our 64.07% is therefore **the supervision**: multi-step trajectory corpora
+  published end-to-end AndroidWorld scores gives the per-step accuracy the frontier *would* need **if steps
+  were independent**: **93.1%** (MAI-UI-2B, 49.1% e2e), **96.6%** (MAI-UI-8B, 70.7%), **97.4%**
+  (MAI-UI-235B, 76.7%), **88.8%** (M3A, 30.6%). **(a2) THE GAP IS SUPERVISION, NOT RL — from MAI-UI
+  Table 9.** Their SFT/RL rows read **2B 45.1 → 49.1**, 8B 64.7 → 70.7, 32B 69.8 → 73.3 (**end-to-end**;
+  Table 9 has no per-step column). ⚠️ **2026-11-09 RETRACTION (M13/M14):** the derived per-step pair
+  (92.3 → 93.1) and the "28-point per-step gap" are **withdrawn** — they assumed step independence, which
+  our own measurement refutes 6.6x over (predicted 2.84% at 8 steps, measured 18.8%). The surviving claim
+  is a **task-success** gap. The supervision diagnosis stands and is unchanged: multi-step trajectory corpora
   (GUI-Odyssey's 8,334 cross-app episodes), thousands of expert/synthesised tasks on a live emulator with
   an MLLM-judge rejection loop, a 50-step horizon, and a 12-action space with `ask_user`/`mcp_call`. We
   have SFT on 15k **single-step** decisions, one 4090, 8 actions, no trajectory data, no judge loop.
@@ -451,17 +656,17 @@ Topic list (each maps to a file under `notes/`):
 - **2026-11-04 (loop checkpoint) — Stage-2 diagnosis done; THREE hypotheses refuted, zero code changes to claims.** New script `benchmarks/train/class_bias.py`; artifact `benchmarks/results/2026-11-03-stage0/class_bias.json`; provenance now **70 assertions, all PASS**. (a) **`scroll` is a TYPE error, not direction**: 19 errors on 37 gold-scroll rows = **16 type** (`status` 9, `click` 7) + only **3 direction**; scroll type acc 21/37 = 56.8% ⇒ **do not build a direction model**, ceiling +4.0 pts. (b) **Premature `status` is NOT an episode-boundary artifact**: 87.9% of rows are at their episode's last evaluated step vs 85.7% of the 21 premature rows (enrichment **0.97×**); `p(terminate)` does separate them (0.671 vs 0.882) but "suppress status when grounding is strong" flips 21/21 premature **and 76/76 correct** ⇒ net **−55**, refuted. Also: **AC-v2 is ~1 step/episode, so episode-position hypotheses cannot be tested on it.** (c) **Per-class logit adjustment (2007.07314) works on val, fails on test**: type acc 0.8053→0.8210 val but **0.8417→0.8141 test**, 18 regressed/7 fixed, McNemar **p=0.043 significantly worse** — the val/test action-mix mismatch (F5b) causing a concrete practical failure. **BLOCKED:** any step-level evaluation of a type-changing post-processor needs the `scroll_dir`/`type_text`/`app_name` readouts for the switched-to class (the jsonl stores only the emitted action's `value`) ⇒ needs a ~52 s model re-run that saves all readouts.
 - **2026-11-03 (2nd pass) — LEARNED FUSION: BETTER POINT ESTIMATE, NOT A CLAIMABLE GAIN; THE BOUND IS WORTH MORE THAN THE MODEL.** Script `benchmarks/train/score_fusion.py`; artifacts `benchmarks/results/2026-11-03-stage0/score_fusion.json`; 63 provenance assertions now. **(F6)** L2 logistic on 8 per-row readout features (top-1, top-2 margin, 8-way entropy, `box_conf`, `found`, spatial, 2 interactions), hyper-params by 5×`StratifiedGroupKFold(5)` **inside** val with **groups = episode**, test scored once: AUROC **0.767 val (OOF 0.758) / 0.743 test** vs routed 0.722/0.730 and global 0.677/0.649; test **risk@50% 0.226 → 0.191**; AUPRC 0.811 → 0.829. It **rediscovers routing by itself** (`box_conf×spatial` +1.08, `p1×nonspatial` +0.50, `spatial` −0.46). **BUT the paired episode-clustered ΔAUROC = +0.013, 95% [−0.020, +0.043] → NOT significant** (MDE ≈ +0.02 at 398 rows / 140 positives). **Report the estimate + interval; claim nothing.** **(F7) CRC ≫ Clopper–Pearson** (Angelopoulos 2208.02814): same val split, same score → δ=20%: CP 38.4% cov @ 19.6% risk vs **CRC 45.5% @ 18.2%**; δ=25%: CP 60.6% vs **CRC 66.1%** ⇒ **+6–7 pp of coverage free from the bound choice alone**. δ=10% is "certifiable" under CRC at **14 steps / 3.5% coverage** — the cleanest proof that the 10% budget is a risk floor, not a modelling target (do NOT report it as a gate). **(F5b) Shift diagnostic:** val→test action-mix **TV 0.106**, ESS after weighting **752/827 (91%)** — cheap; reweighting can move risk ≤~2 pp, and the 6.6-pp cross-checkpoint gap has binomial SE ~4.5 pp (**≈1.5σ**) ⇒ report gap + SE + explained fraction; qualitative claim survives, quantitative one does not. **Research that drove this (2026-11-03):** PACE (2609.24277) — on GUI click correctness **entropy > top-1 prob > top-2 margin**, and uniform aggregation is the failure mode; SelectiveNet (1901.09192) — learned rejection beats thresholding; CRC (2208.02814); SCRC (2512.12844) feasibility `m ≥ ⌈1/δ⌉−1`; MAST (2503.13657) — premature termination is 7.82% of agent failures (ours 5.28%, in band); SwipeGen (2601.18305) — swipe failures are 69% region/scrollable-target, only 6% direction; AndroidControl-Curated's own rates are **24.13% unclear task / 8.12% multiple valid / 37.63% wrong GT** (the "30%" is the intro's prose, and GUI-Libra reports ~20% — cite 20% or the taxonomy, never "30%"); **no sub-3B model exceeds 66% AC-v2 step accuracy in any verifiable source**; **UI-Venus-2 80.2 is a 9B, not 2–3B** (prior note was a category error); AndroidWorld numbers across papers are **not comparable** (GUI-Libra-32B 34.8 vs UI-Venus-2 9B 57.8) — decline to report AW or declare the protocol. **GPU levers if ever run:** unfreeze ViT+projector (+3–6 pts grounding predicted; full AdamW FT is ~27 GB → **does not fit 24 GB**, ViT-only does), ConClick-style hard negatives from our own 68 wrong-element errors (~4k pairs, +2–4), AMEX (1.2M Android element annotations, CC-BY-4.0, 93 GB).
 - **2026-11-03 — ZERO-GPU FORENSIC PASS: THE GATE WAS ROUTED WRONG; TWO CLAIMS DIE.** Full note: `notes/research-2026-11-03-calibration-routed-gate.md`; write-up `benchmarks/results/2026-11-03-acv2-error-budget-and-routed-gate.md`; scripts `benchmarks/train/{error_budget,paired_eval,gate_routed,grounding_audit}.py` (numpy only, seconds, no model). **(F1) Error budget is 4 buckets** — on E2 398: 68 element-wrong (48.6%) / 27 spatial type-wrong / 36 non-spatial type-wrong / 9 value-wrong; type errors 63 vs grounding 68 test, 161 vs 137 val. ⚠️ **161-vs-137 is z≈1.4, p≈0.16 — NOT significant**; say "comparable magnitudes", never "type exceeds grounding". The paper + `notes/grounding-precision-2026.md` §2 "gap is grounding, not type" is **wrong** (it conflated high type accuracy 84.17% with few type errors). **(F2) The gate was mis-specified**: `p(action)×box_conf` on ALL rows is **chance on non-spatial** (AUROC 0.504/0.526) because box_conf is meaningless there. Type-routed (box_conf on spatial, p(action) elsewhere, val-fitted per-bucket ECDF): AUROC **0.760 val / 0.729 test938 / 0.709 test705** vs global 0.677/0.649/0.662. `box_conf` on spatial is 0.79–0.80 and **under**-confident. This is the mechanical reason the old 0.723/0.036/55% never reproduced. **(F3) Two claims must die:** (a) a 10% risk budget at ≥50% coverage is **unattainable** (risk floor ~12.5%; conformal certifies only **20% @ 40.7% coverage**, empirical 17.3%, CP UB 21.7%) → **restate GOAL.md C2**; (b) the conformal threshold **does not transfer across checkpoints** (same τ → 17.3% on E2@938 vs 23.9% on E2@705) ⇒ **exchangeability, not the score, is binding**; cite SCRC (arXiv 2512.12844) for the feasibility condition. **(F4) Grounding metric is HONEST — negative result, keep it:** audit of the a11y trees shows **80.6% of element misses are genuinely different elements** (only 17.9% subtree, 1.5% same-label); tolerance curve 66.16%→72.73%. So the AndroidControl-Curated ~30%-defective-GT argument does **NOT** rescue our 56.5% — **do not claim the metric under-reports us**. **Paired testing added** (`paired_eval.py`, McNemar + **episode-clustered** paired bootstrap — 398 rows span 350 episodes, so cluster by episode): E2@705→@938 = **+3.52 pts [0.76, 6.33], p=0.016** on the same 398 rows where ±4.7 independent CIs see a tie; that gain was +12 non-spatial / only **+2 spatial** ⇒ grounding saturates early, late training buys type. **Artifact gap:** `E2-938-V.jsonl` is the 258/398 **hinted** run; the pure predictions were not on disk at the time (~52 s to regenerate). **Resolved 2026-11-07:** they are on disk now — 255/398 in-process (`E2-nomem`) and 254/398 served (`e2-pure-hist.jsonl`); no artifact yields 256, so the pre-audit 64.32 is retired. **Skills:** `kntism/skills` (source of the installed `model-trainer`) is a 1-star unmaintained scrape — use upstream `huggingface/skills` + `K-Dense-AI/scientific-agent-skills`. **Also:** GUI-JEPA (2610.36877) already does top-2-margin confidence routing (AUROC 0.74) — differentiate on the chance-level product score + type routing + the certificate boundary.
-- **2026-11-02 — N1 OBJECTIVE ABLATION RUN (pilot) + ALL SERVER ARTIFACTS REMOVED.** Matched 250-step runs, identical data/base/schedule, only the option readout varied: `ce` / `brier` / `joint`. 12,750 train / 2,250 held-out curated decisions, seed 0, frozen embeddings, V-track. **Result = a clean null:** step acc **0.5658 / 0.5653 / 0.5707** (majority-class `click` baseline **0.5218**), ECE10 **0.237 / 0.243 / 0.242**, Brier **0.339 / 0.329 / 0.331**, AUROC(conf,correct) **0.657 / 0.647 / 0.653**, mean conf **0.80** vs accuracy **0.57**. Proper scoring moves the *average* probability but not discrimination; every arm is severely overconfident. Single seed + 250 steps + in-distribution holdout ⇒ cannot settle the mechanism; must be re-run at full schedule with ≥3 seeds and a hard/OOD split. Files: `benchmarks/results/2026-11-02-n1-objective-pilot.md`, paper §5.11, `notes/exp-n1-objective-2026-11-02.md`; trainer flag `--objective` (default `ce`). **Online loop (same day):** 6-task subset at 8 steps → d1 **1/6**, `wait` **0/6**, `random` **0/6** (matched controls); 12-task attempt aborted when the emulator hung under load. **SUPERSEDED 2026-11-07:** the larger 8-task run is **1/8 in both conditions** (Wilson 2.2–47.1%), and its 2/8 "crashes" were Clock-task checker exceptions on a live device, since fixed. **Cleanup verified complete:** `~/awork`, `~/d1-api`, `android_world:latest` image and `aw-emu` container all removed from `Model_Training_Server`; `s4090-1x-100` clean; every pre-existing prod container untouched. Backup: `backup-2026-11-02/` (29 files; N1 checkpoints not transferred — regeneration commands in the result file).
-- **2026-11-02 — ONLINE LOOP IS RUNNING; first honest numbers are weak and that is the result.** AndroidWorld emulator is up on `Model_Training_Server` (KVM, container `aw-emu`, 127.0.0.1:5051) with the E2 checkpoint served at 127.0.0.1:8700. Three Dockerfile defects had to be fixed (dead `openjdk:18` base; `COPY . /` + `WORKDIR /` made `uv pip install .` package the whole filesystem — 90 min/21 GB RSS; Pillow imported but undeclared). Full runbook: `docs/compute/AW_DOCKER_RUNBOOK.md`. **Measured (2 tasks, 12-step cap):** d1 **0/2** (earlier attempt **1/2** — `ClockStopWatchRunning` scored 1.0; run-to-run variance is the finding), `wait` **0/2**, `random` **0/2**; model p50 **113–123 ms**. Details: `benchmarks/results/2026-11-02-online-aw-smoke.md`; paper §5.7 + Limitations 7–9 updated. Interface limits: HTTP `/screenshot` is **pixels-only** (no a11y tree) → the V-track checkpoint returns an **empty `app_name`** (harness goal-keyword fallback = scaffolding, must be disclosed); each screenshot is ~7.8M ints (hundreds of MB) and killed the emulator at a 16 GB cap → 24 GB. **N1 (CE vs Brier vs joint) is prepared but not run:** `notes/exp-n1-objective-2026-11-02.md`, trainer flag `--objective` added (default `ce`, behaviour unchanged); blocked only on the 1.8 GB training-image transfer to the server.
-- **2026-11-02 — 8h ONLINE LOOP STARTED (user directive).** Objective + step checklist: `docs/compute/LOOP-2026-11-02.md` (S1–S12). Cleanup ledger (MANDATORY at the end): `docs/compute/CLEANUP-2026-11-02.md` — back up results to `backup-2026-11-02/`, then remove every artifact from `Model_Training_Server` and `s4090-1x-100`. Loop job `71dbb002` (every 20 min, session-scoped). Compute plan: AndroidWorld emulator container on `Model_Training_Server` (KVM, host port **5051**; port 5000 is prod) + d1-2B API on the same host's GPU at 127.0.0.1:8700 with `D1_MEM_FRAC=0.35` (21 GB free). Harness: `benchmarks/aw/aw_smoke.py` (policies d1 / wait / random for the baseline gate). Dockerfile base patched `openjdk:18-jdk-slim` → `eclipse-temurin:17-jdk-jammy` (the old base image was deleted from Docker Hub). **Feynman audit corrections (do not re-derive):** (a) **no** AndroidWorld baseline is peer-reviewed — every number is an arXiv preprint or vendor self-report; (b) `GUI-Owl-1.5-2B = 67.9%` has **no primary source** (the real figures are 71.6% for the 8B-Thinking variant; 2B reports OSWorld-Verified 43.5) — do not cite 67.9%; (c) the HTTP server returns **pixels only**, no a11y tree; (d) success requires device-state `is_successful`, so a stalling agent scores 0. Briefings: `outputs/androidworld-online-loop-briefing.md` (+ Feynman paper-gap brief).
-- **2026-11-02 — STRATEGIC PIVOT to the online AndroidWorld/AndroidLab loop + HANDOFF rewrite.** AC-v2 offline declared plateaued (box grading = artifact, `2610.36831`) → grounding V2P-σ plan INVALIDATED, no GPU spend. **Machine decision (verified live 2026-11-02): emulator on `Model_Training_Server`** (only 4090 with `/dev/kvm`, 32 vmx, 16 cores, 51 GB RAM avail, 137 GB disk, docker 28.2.2); model inference on VKong 4090. VKong $2.80 credit **held unspent**. `docs/HANDOFF.md` fully rewritten (13 sections); it is the entry point. ⚠️ syngenta container on `Model_Training_Server` crash-looping (`Restarting (1)`) — do not touch without OK (`docs/compute/STOPPED_CONTAINERS.md`).
+- **2026-11-02 — N1 OBJECTIVE ABLATION RUN (pilot) + ALL SERVER ARTIFACTS REMOVED.** Matched 250-step runs, identical data/base/schedule, only the option readout varied: `ce` / `brier` / `joint`. 12,750 train / 2,250 held-out curated decisions, seed 0, frozen embeddings, V-track. **Result = a clean null:** step acc **0.5658 / 0.5653 / 0.5707** (majority-class `click` baseline **0.5218**), ECE10 **0.237 / 0.243 / 0.242**, Brier **0.339 / 0.329 / 0.331**, AUROC(conf,correct) **0.657 / 0.647 / 0.653**, mean conf **0.80** vs accuracy **0.57**. Proper scoring moves the *average* probability but not discrimination; every arm is severely overconfident. Single seed + 250 steps + in-distribution holdout ⇒ cannot settle the mechanism; must be re-run at full schedule with ≥3 seeds and a hard/OOD split. Files: `benchmarks/results/2026-11-02-n1-objective-pilot.md`, paper §5.11, `notes/exp-n1-objective-2026-11-02.md`; trainer flag `--objective` (default `ce`). **Online loop (same day):** 6-task subset at 8 steps → d1 **1/6**, `wait` **0/6**, `random` **0/6** (matched controls); 12-task attempt aborted when the emulator hung under load. **SUPERSEDED 2026-11-07:** the larger 8-task run is **1/8 in both conditions** (Wilson 2.2–47.1%), and its 2/8 "crashes" were Clock-task checker exceptions on a live device, since fixed. **Cleanup verified complete:** `~/awork`, `~/d1-api`, `android_world:latest` image and `aw-emu` container all removed from `GPU_HOST_A`; `GPU_HOST_B` clean; every pre-existing prod container untouched. Backup: `backup-2026-11-02/` (29 files; N1 checkpoints not transferred — regeneration commands in the result file).
+- **2026-11-02 — ONLINE LOOP IS RUNNING; first honest numbers are weak and that is the result.** AndroidWorld emulator is up on `GPU_HOST_A` (KVM, container `aw-emu`, 127.0.0.1:5051) with the E2 checkpoint served at 127.0.0.1:8700. Three Dockerfile defects had to be fixed (dead `openjdk:18` base; `COPY . /` + `WORKDIR /` made `uv pip install .` package the whole filesystem — 90 min/21 GB RSS; Pillow imported but undeclared). Full runbook: `docs/compute/AW_DOCKER_RUNBOOK.md`. **Measured (2 tasks, 12-step cap):** d1 **0/2** (earlier attempt **1/2** — `ClockStopWatchRunning` scored 1.0; run-to-run variance is the finding), `wait` **0/2**, `random` **0/2**; model p50 **113–123 ms**. Details: `benchmarks/results/2026-11-02-online-aw-smoke.md`; paper §5.7 + Limitations 7–9 updated. Interface limits: HTTP `/screenshot` is **pixels-only** (no a11y tree) → the V-track checkpoint returns an **empty `app_name`** (harness goal-keyword fallback = scaffolding, must be disclosed); each screenshot is ~7.8M ints (hundreds of MB) and killed the emulator at a 16 GB cap → 24 GB. **N1 (CE vs Brier vs joint) is prepared but not run:** `notes/exp-n1-objective-2026-11-02.md`, trainer flag `--objective` added (default `ce`, behaviour unchanged); blocked only on the 1.8 GB training-image transfer to the server.
+- **2026-11-02 — 8h ONLINE LOOP STARTED (user directive).** Objective + step checklist: `docs/compute/LOOP-2026-11-02.md` (S1–S12). Cleanup ledger (MANDATORY at the end): `docs/compute/CLEANUP-2026-11-02.md` — back up results to `backup-2026-11-02/`, then remove every artifact from `GPU_HOST_A` and `GPU_HOST_B`. Loop job `71dbb002` (every 20 min, session-scoped). Compute plan: AndroidWorld emulator container on `GPU_HOST_A` (KVM, host port **5051**; port 5000 is prod) + d1-2B API on the same host's GPU at 127.0.0.1:8700 with `D1_MEM_FRAC=0.35` (21 GB free). Harness: `benchmarks/aw/aw_smoke.py` (policies d1 / wait / random for the baseline gate). Dockerfile base patched `openjdk:18-jdk-slim` → `eclipse-temurin:17-jdk-jammy` (the old base image was deleted from Docker Hub). **Feynman audit corrections (do not re-derive):** (a) **no** AndroidWorld baseline is peer-reviewed — every number is an arXiv preprint or vendor self-report; (b) `GUI-Owl-1.5-2B = 67.9%` has **no primary source** (the real figures are 71.6% for the 8B-Thinking variant; 2B reports OSWorld-Verified 43.5) — do not cite 67.9%; (c) the HTTP server returns **pixels only**, no a11y tree; (d) success requires device-state `is_successful`, so a stalling agent scores 0. Briefings: `outputs/androidworld-online-loop-briefing.md` (+ Feynman paper-gap brief).
+- **2026-11-02 — STRATEGIC PIVOT to the online AndroidWorld/AndroidLab loop + HANDOFF rewrite.** AC-v2 offline declared plateaued (box grading = artifact, `2610.36831`) → grounding V2P-σ plan INVALIDATED, no GPU spend. **Machine decision (verified live 2026-11-02): emulator on `GPU_HOST_A`** (only 4090 with `/dev/kvm`, 32 vmx, 16 cores, 51 GB RAM avail, 137 GB disk, docker 28.2.2); model inference on [cloud-gpu] 4090. [cloud-gpu] $2.80 credit **held unspent**. `docs/HANDOFF.md` fully rewritten (13 sections); it is the entry point. ⚠️ [service] container on `GPU_HOST_A` crash-looping (`Restarting (1)`) — do not touch without OK (`docs/compute/STOPPED_CONTAINERS.md`).
 - **2026-11-02 — PAPER REWRITTEN (Feynman writer+verifier skill) + CALIBRATION DISCREPANCY FOUND.** `papers/single-pass-decision-acv2.md` rewritten to `papers/single-pass-decision-acv2.md` (4,615 words, all sections + Sources appendix). Deep-verify (re-ran official scorer + analyze_eval.py): E2 pure **64.32%** (256/398 — *retired 2026-11-07: the artifact is 255/398 = 64.07%*), groundB **64.82%**, app-name-hint **64.82%**; per-type (click 121/212, status 76/87, open_app 20/27, navigate_back 13/20, scroll 18/37, type_text 7/11, wait 3/4); val 62.76% (827/519); grounding decomposition verified — 68 rows = 65 click + 3 type_text (**0 open_app**), median 437px / mean 663px / 86.8% >150px / 4.4% ≤50px / y-bias 0.5px; latency median 103ms; p(action) ECE 0.231 (E2@705) / 0.204 (E2@938), AUROC 0.626/0.631. **⚠️ CALIBRATION DISCREPANCY:** the earlier-cited ECE 0.146→**0.036** isotonic, AUROC 0.723, and risk-gate cov 55.0%/36.7% DO **NOT** reproduce from the saved jsonl (recompute gives p×box ECE ~0.29–0.36; isotonic fit-on-val→test collapses to τ=1.0). Paper now reports only the reproducible evidence and marks 0.036/55%/36.7% as **reported-in-run / pending GPU re-fit** (see `docs/HANDOFF.md` §3.4, `notes/grounding-precision-2026.md`). **SUPERSEDED 2026-11-02:** the V2P + ConClick grounding fix is INVALIDATED (`docs/HANDOFF.md` §3.3); next thread = the online AndroidWorld loop.
 - **Orchestration rule (teach the system):** gate on GPU before any heavy job; validate cheap (--limit 5) before a full run; run one heavy job in background with auto-notify, never poll it from chat; record every learning in AGENTS.md + `docs/colab/GPU_RUNBOOK.md`. Read the runbook before touching compute.
 - **RESEARCHER MODE (user, 2026-10-29 — applies to EVERY session):** act as an expert researcher / AI engineer, not an executor of old plans.
   (a) Think from first principles and read CURRENT papers/SOTA (spawn research agents for 2026 work) — don't be biased by old code, HANDOFF or prior knowledge; do what is actually right.
   (b) The agent is the DECISION MODEL (d1-2B single-pass); target = beat a SOTA point on AC-v2 (a small margin suffices for the paper).
   (c) Trust published baselines; don't spend GPU re-running them.
-  (d) Never wait blind: parity/smoke gate before any long run, read logs, fail fast, maximize GPU throughput; fan out across the 3 servers (Model_Training_Server first).
+  (d) Never wait blind: parity/smoke gate before any long run, read logs, fail fast, maximize GPU throughput; fan out across the 3 servers (GPU_HOST_A first).
   (e) Prod servers: stop a container only if ONE safe command restores it; log it in `docs/compute/STOPPED_CONTAINERS.md`; cap VRAM (`--mem-frac`) on shared prod GPUs.
   (f) Data hygiene: the old curated/completion sets contain AndroidControl TEST episodes (e.g. ep 27) — train only on the GCS-rebuilt train split (`benchmarks/train/preprocess_ac.py`, eval episodes asserted absent).
 - **DECISION PRINCIPLES (user, hard-taught — apply BEFORE any compute run):**
@@ -501,6 +706,45 @@ solution, not a learned model. Don't repeat this.
    312/312-row differential test (0 mismatches) on real predictions. Both contaminated result files
    (2026-10-14 llama smoke, 2026-10-15 UI-Venus baseline) are bannered RETRACTED.
 
+### MISTAKE LEDGER — the errors this programme has actually made, and the rule that prevents each
+
+Taught 2026-11-09 after the operator said: *"remember these things in AGENTS.md that make sure don't make it
+again"*. Every row below is a real error from this programme, not a hypothetical. **Read this before starting
+any new phase.** If a proposed action matches the "how it happened" column, stop.
+
+| # | The mistake | How it happened | The rule that prevents it |
+|---|---|---|---|
+| M1 | **Read the dataset card, not the data.** Concluded GUI-Odyssey's `TYPE` action had no coordinates, so the corpus "cannot teach field selection". | Card said `info` is empty for `TYPE`. The real file has action **`TEXT`** (not `TYPE`), and **99.27%** of `TEXT` steps are preceded by a `CLICK` carrying the field coordinates. The wrong conclusion was one step from cancelling the whole training plan. | **Never characterise a dataset from its card or abstract.** Download the annotation file, parse it, and count. A card is marketing copy; the file is the contract. Report counts, not claims. |
+| M2 | **Conflated per-step accuracy with task success.** Framed "64% per-step" as the headline achievement. | They differ by ~8x here (64.07% per-step vs 18.8% end-to-end). MAI-UI Table 9 splits them (92.3% per-step, 45.1% e2e) precisely because they are different quantities. | **A per-step number may never be presented as a task-result number, and never in the same column.** Every rate names its unit *and* its denominator. |
+| M3 | **Invented a number to close an arithmetic gap** (a spurious "6"). | Wanted the totals to balance. | **Never fabricate a figure.** If totals do not balance, report the discrepancy. A hole in the arithmetic is a finding; a filled hole is a lie. |
+| M4 | **Compared numbers across benchmarks/harnesses.** Quoted AC-v2 and AndroidWorld figures against other papers' figures. | Same backbone scores 49.62 (ECHOES) vs 54.80 (Mem-W) — a **5.18-point protocol spread** on identical weights. AC-v2 is not rankable across papers. | **Never compare a number to a number produced by a different harness, protocol or split.** Either reproduce the baseline in our own harness, or decline to rank. Say "not comparable" out loud. |
+| M5 | **Scored unscorable episodes as model failures.** 12 episodes whose checker raised were bucketed as timeouts/premature terminations. | `AndroidWorldEnv` had no `__getattr__`, so `task.is_successful(env)` silently returned `False`. | **An infrastructure failure is not a model outcome.** Every bucket must be disjoint, and the harness must prove the environment was alive. `unscored` is its own category. |
+| M6 | **Trusted a single seed.** Reported grounding deltas from runs differing by 8 samples out of 15,008. | `--steps 938` never completes an epoch, so "duplication" vs control differed only by shuffle order — yet differed by 4 points. Seed spread measured at **sd 2.12, range 4.04**. | **No GPU delta is reportable without ≥3 seeds and an interval.** Pre-register the withdrawal rule ("sd ≥ 2.0 → withdraw") and honour it. |
+| M7 | **Changed a claim to match a hoped-for result**, then had to retract 11 claims. | Iterative "fix-and-re-fix" churn. | **The artifact defines the number, never the reverse.** Recompute from artifacts; if the paper disagrees, the paper is wrong. `check_record.py` enforces byte equality for exactly this reason. |
+| M8 | **Read a subagent/skill name and assumed it existed.** Invoked `arxiv-search` on a repo that only ships `textual-screenshot`; it failed with exit 1. | Did not list the available skills first. | **List before you invoke.** `npx skills use <repo>` with no `--skill` lists what is there. Never assume a URL contains the skill you were told about. |
+| M9 | **Assumed a branch contained our work.** Branch `vinh` was assumed to hold revisions to this research repo. | It is an *orphan branch of a different project* (a PTIT mobile-agent demo export), 1089 files, no relation to this repo's tree. | **Inspect before merging.** `git ls-tree -r --name-only HEAD` and read the manifest before assuming a branch's contents. Different tree = different project = do not merge, report it. |
+| M10 | **Trusted the card's action vocabulary over the file** (same failure class as M1, separate instance): card listed `IMPOSSIBLE`, `HOME`, `BACK`; the data has `INCOMPLETE` and **zero** `HOME`/`BACK`. | Card written for an older/newer schema than the file shipped. | Same as M1. Additionally: **when a card and a file disagree, the file wins and the discrepancy is itself a finding worth recording.** |
+| M11 | **Omitted a denominator, then read the number as if it were complete.** "18.8%" silently meant 15/80, not 15/116. | Reported the rate before naming the base. | **A rate always carries its denominator and its interval.** We report three (scorable 80, attempted 92, finished 104) and label which question each answers. |
+| M12 | **Built a post-processor on a metric that was already refuted.** Proposed a `p(status)` threshold gate after it had been measured monotone-harmful at every τ. | Did not check the negative-results list first. | **Read the recorded negatives before proposing a fix.** If the literature or our own record already contradicts it, the proposal must beat that result or be reported as contradicted. |
+| M13 | **Cited a DERIVED number as if the paper reported it.** AGENTS.md and the paper stated "MAI-UI-2B 92.3% per-step after SFT, 93.1% after RL" and built a "28-point per-step gap" on it. | MAI-UI publishes **no per-step metric at all**. The numbers were produced by *us* inverting `P(task)=p^n` on its task-success figures, with n=10 assumed — then cited as `[maiui2026, Tab. 9]`. The 92.3 string in the paper is an unrelated MMBench-GUI cell. Our own raw capture `references/raw/maiui2026-androidworld-table9.txt` disproved it the whole time. | **A derived number must always be labelled derived, and never carries a table citation to the source it was derived FROM.** Separate "what the paper reports" from "what we computed from it" in every sentence. And test your own assumption before building on it: `P(task)=p^n` predicts 2.84% at 8 steps while we measured 18.8% — a 6.6x refutation that lived in our own artifacts. |
+| M14 | **Let a derived assumption stand as a prediction.** Used `P(task)=p^n` to "retro-explain" a 1/8 result and to reassure that a harness bug could not have mattered. | Step independence is false: GUI steps are strongly dependent, and easy screens have far lower error than the 64% average. The 6.6x discrepancy was measurable and unremarked. | **Test the assumption with your own data before reasoning from it.** If a model predicts something we can measure, measure it. A refuted premise invalidates every conclusion drawn from it, including the comforting ones. |
+| M15 | **Tested an invariant on hand-picked inputs, not on the real population.** Episode-id uniqueness was tested on 3 unrelated short task names; the real 116 contain 6 groups sharing their first 24 characters, and 12 tasks were silently never run in any 116-task run. | The function's docstring said "collision-free" and the test agreed with the docstring, not with the data. | **Test every invariant over the actual population it must hold for** (here: all 116 registry names), and make the system refuse a violation at plan time rather than absorb it at resume time. A count that never moves (104/116 three runs in a row) is a finding, not noise. |
+| M16 | **Answered questions about a training run from memory.** Said the running model "learns whole trajectories"; its data keeps every step of only 0.6% of episodes (4,985 episodes contribute one step). | The facts of a run were scattered across curation scripts, logs and notes; nothing computed them in one place. | **Every training run has a run card generated from its data files before launch** (`benchmarks/train/run_card.py` → `docs/research/RUNCARD-<run>.md`). Questions about a run are answered from its card, not from memory. |
+
+| M17 | **Stopped two training runs on an early-warning rule whose premise was never tested.** The rule compared a ckpt_250 (10% of training, peak LR) against a fully trained v4; final launches 1 and 2 were killed on it. | v3's own checkpoint trend was on disk the whole time: back misuse 34 at ckpt_450 → 18 at the end, false status 49–52 mid-run → 31 at the end. Early checkpoints of a continued fine-tune dip and recover; the rule fired on all three launches. | **Before a stopping rule is pre-registered, check on a past run that the early metric predicts the final one.** Compare like with like (final vs final). Mid-run checkpoints are a trend to watch, not a verdict. |
+
+**The three meta-rules behind all of them:**
+
+1. **Measurement beats assertion.** Every claim in this repo must be reproducible from a file that is on disk.
+   If it cannot be, it is a hypothesis and must be labelled one.
+2. **The negative result is the deliverable.** A refuted hypothesis, correctly measured, is worth more than a
+   confirmed one measured wrongly. Never bury a negative; it is the only thing that stops the next person
+   repeating the work.
+3. **Read the primary artifact.** Card, abstract, README, manifest, branch name — all are descriptions.
+   The data, the artifact and the file are the thing itself. This one rule would have prevented M1, M8, M9, M10.
+
+---
+
 ### How advanced agents are ACTUALLY trained (2026-10-16 — MobileRL, arXiv 2509.18119)
 The frontier mobile-GUI-agent method is NOT 'frozen encoder + single-pass action classification head'.
 MobileRL (Tsinghua/Z.AI, ICLR 2026) trains open VLMs (Qwen2.5-VL-7B, GLM-4.1V-9B) via a 3-stage pipeline:
@@ -532,7 +776,7 @@ per-task success rate over a full episode, computed against the RL SOTA baseline
   (2) leaderboard scorer is `eval_rl.py` (≡ our port except no point for non-spatial preds — eval_d1 mirrors it);
   (3) old curated/completion data leaked TEST episodes → rebuilt from GCS (88,288 train decisions).
   Gates passed: parity 24/24, grad-ckpt, ckpt reload, sync smoke. Code: `benchmarks/train/`. Ops rules:
-  `docs/colab/GPU_RUNBOOK.md` (2026-10-29 section). Restore syngenta container when done
+  `docs/colab/GPU_RUNBOOK.md` (2026-10-29 section). Restore [service] container when done
   (`docs/compute/STOPPED_CONTAINERS.md`).
 - **2026-10-29 RESULT — d1-2B decision model = 64.32% AC-v2 High Pass@1 (OFFICIAL eval_rl.py, PURE protocol; 95% CI 59.5–68.8) — *superseded 2026-11-07: the artifact is 255/398 = 64.07%, no 256 exists; see the audit entry above*
   (64.82 with an extra train-goal app-name hint) → on par with GUI-Libra-8B 64.3 / Mem-W-4B 63.07 (within noise),
@@ -593,7 +837,7 @@ check_record.py            158/158
 verify_paper.py            69 assertions, exit 0
 verify_audit_objections.py ALL OBJECTIONS CLOSED
 verify_compound_accuracy.py ALL CHECKS PASS
-benchmarks/aw/tests        135 passed, 35 skipped
+benchmarks/aw/tests        249 passed, 43 skipped
 ```
 <!-- GATES:END -->
 Dated program-log entries below describe what was true **on their date** and quote the counts of that moment

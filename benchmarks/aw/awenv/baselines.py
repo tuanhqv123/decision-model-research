@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional
 
 from .adapter import CANON_APPS, EMITTABLE
 
-POLICIES = ("wait", "random")
+POLICIES = ("wait", "random", "status_now")
 
 #: ``status`` is excluded: a control that declares done cannot be told from one that gave up.
 RANDOM_ACTIONS = tuple(a for a in EMITTABLE if a != "status")
@@ -70,16 +70,31 @@ class RandomPolicy:
         return dec
 
 
+class StatusNowPolicy:
+    """The floor of the official metric (plan Q11): declare `status` at step 0.
+
+    `suite_utils` scores `task_successful if done else 0`, so this policy scores exactly the tasks
+    whose initial state already satisfies the checker. Whatever it gets, every arm gets for free.
+    """
+
+    name = "status_now"
+
+    def decide(self, goal: str, history: Optional[List[str]] = None, pixels: Any = None, **kw) -> Dict[str, Any]:
+        return {"action": "status", "confidence": 1.0, "latency_ms": {"model": 0.0}}
+
+
 def policy_names():
     return POLICIES
 
 
 def build_policy(name: str, **kw):
-    """Registry for the two controls that fit the decide() interface."""
+    """Registry for the controls that fit the decide() interface."""
     if name == "wait":
         return WaitPolicy()
     if name == "random":
         return RandomPolicy(seed=kw.get("seed", 0))
+    if name == "status_now":
+        return StatusNowPolicy()
     raise KeyError("unknown policy %r (m3a is built by build_m3a, not a policy)" % (name,))
 
 
