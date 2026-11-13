@@ -19,6 +19,7 @@ import numpy as np
 import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ac_common import instruction_included  # noqa: E402
 from ac_common import (CONTRACTS, DEFAULT_CONTRACT, FROM_OPTION, SPATIAL, build_questions,  # noqa: E402
                        build_state, chosen_element, decode_app_choice, element_centre, element_inputs, element_inputs_v3,
                        gold_answers_v2, pick_candidates, read_contract, row_app_options)
@@ -203,6 +204,14 @@ def _gold_as_answers(rec, state, kept, keep_idx, apps, contract):
     return ans
 
 
+def instruction_for(rec, with_instruction):
+    """The step instruction the state shows: always (True, AndroidControl-Low), never (False, AndroidControl-High), or
+    as the row says ("row": `show_instruction`, executor data of build_exec_data)."""
+    if with_instruction == "row":
+        return rec.get("local_goal") if instruction_included(rec) else None
+    return rec.get("local_goal") if with_instruction else None
+
+
 def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image, app_vocab=(),
                        exclude_actions=(), drop_actions=(), with_instruction=False):
     """`model=None`: oracle — the gold answers go down the same decoding path (the ceiling of the interface)."""
@@ -218,7 +227,7 @@ def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule
                                  f"none): episode {r.get('episode_id')} step {r.get('step')}")
             W, H = r["screenshot_width"], r["screenshot_height"]
             if CONTRACTS[contract].get("history") == "v3":
-                instr = (r.get("rec") or {}).get("local_goal") if with_instruction else None  # AC-Low
+                instr = instruction_for(r.get("rec") or {}, with_instruction)
                 state, kept, keep_idx = element_inputs_v3(r["goal"], r["history_v3"], r["elements"], W, H, element_rule,
                                                           instr, on_off=bool(CONTRACTS[contract].get("on_off")))
             else:
@@ -310,6 +319,8 @@ def main():
                          "unlike --exclude-actions this changes the input). Benchmark adaptation: report it")
     ap.add_argument("--instruction", action="store_true",
                     help="show each row's step instruction (AndroidControl-Low); contract v3i checkpoints only")
+    ap.add_argument("--instruction-per-row", action="store_true",
+                    help="show the step instruction where the row says so (`show_instruction`, build_exec_data rows)")
     ap.add_argument("--oracle", action="store_true",
                     help="no model: the gold answers down the same decoding path (ceiling of the interface)")
     a = ap.parse_args()
@@ -324,7 +335,7 @@ def main():
     rows = load_rows(a.rows, a.shots, a.data, a.val, a.limit, a.val_set)
     contract = a.contract or (read_contract(a.ckpt)["name"] if os.path.isdir(a.ckpt) else DEFAULT_CONTRACT)
     a.track = resolve_track(contract, a.track)
-    if a.instruction and not CONTRACTS[contract].get("instruction"):
+    if (a.instruction or a.instruction_per_row) and not CONTRACTS[contract].get("instruction"):
         raise SystemExit(f"--instruction needs a checkpoint trained with step instructions (v3i), not {contract!r}")
     rule = element_rule_for(a.ckpt, contract)
     print(f"[contract] {contract}" + (f" element_rule={rule}" if rule else ""), flush=True)
@@ -339,7 +350,7 @@ def main():
         raise SystemExit(f"contract {contract!r} chooses the app from a list; {vocab_path} is missing")
     out, summ = run_eval(model, rows, a.track, memory, a.batch, a.save_readouts, contract=contract,
                          element_rule=rule, app_vocab=app_vocab, exclude_actions=tuple(a.exclude_actions),
-                         drop_actions=tuple(a.drop_actions), with_instruction=a.instruction)
+                         drop_actions=tuple(a.drop_actions), with_instruction="row" if a.instruction_per_row else a.instruction)
     summ["tag"] = a.tag
     summ["contract"] = contract
     os.makedirs(a.out, exist_ok=True)
