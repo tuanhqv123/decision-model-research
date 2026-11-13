@@ -70,7 +70,7 @@ What this gives an agent:
 - **A probability for each decision.** On AndroidControl-High the action probability ranks the model's own errors
   with AUROC 0.758. Acting only on the more confident half of the steps cuts the error rate from 38.3% to 19.0%.
 
-> This is a research checkpoint from one training seed. All numbers below are measured by us from files in the
+> This is a research model from one training seed. All numbers below are measured by us from files in the
 > project, except the rows marked *reported*, which are copied from the cited papers.
 
 **Try it:** [DMA-2B demo Space](https://huggingface.co/spaces/tuanhqv123/DMA-2B-demo): step through three
@@ -103,54 +103,6 @@ helps it; after the agent stops, a checker reads the device state (a contact exi
 right). **TSR** (task success rate) is the share of tasks completed. This is the closest to real use, and the
 hardest: a task fails if any step goes wrong and the agent cannot recover.
 
-### Our checkpoints, same evaluation
-
-All rows use the same 8,444 AndroidControl test steps and the InfiGUI-R1 scorer. **Bold** = best of our
-checkpoints in the column.
-
-**AndroidControl-Low** (step instruction given)
-
-| Checkpoint | Training | Type | Grounding | SR |
-|---|---|---|---|---|
-| d1-2B (base, not fine-tuned) | none | 80.0 | 76.9 | 59.8 |
-| v3 (2026-11-11) | 29,190 rows, element list capped at 40, no step instructions | – | – | – |
-| **DMA-2B (v4, this repo)** | 39,713 rows, all elements, `answer` action, step instructions on half the rows | **96.6** | **90.1** | **89.3** |
-| v6 (2026-11-13) | v4 + episode stop rows kept, 2,313 more steps | 96.4 | 89.4 | 88.8 |
-
-**AndroidControl-High** (goal only)
-
-| Checkpoint | Type | Grounding | SR | Episodes all right |
-|---|---|---|---|---|
-| d1-2B (base, not fine-tuned) | 63.6 | 63.1 | 40.2 | 145 / 1,543 |
-| v3 (2026-11-11) | **81.0** | 77.4 | **67.1** | **374 / 1,543** |
-| **DMA-2B (v4, this repo)** | 74.3 | **78.4** | 61.7 | 344 / 1,543 |
-| v6 (2026-11-13) | 73.3 | **78.4** | 61.3 | 323 / 1,543 |
-
-**AndroidWorld** (116 live tasks, seed 30, pass@1, our harness)
-
-| Checkpoint | Harness A (first version) | Harness D (final version) |
-|---|---|---|
-| v3 (2026-11-11) | 15.0% (17 / 113 scored) | not run |
-| **DMA-2B (v4, this repo)** | 13.5% (15.5 / 115 scored) | **21.6% (25 / 116)** |
-| v6 (2026-11-13) | not run | not run |
-
-The harness is our code around the model (how the screen is read, how actions are executed, how answers reach
-the checker). Fixing it raised DMA-2B from 13.5% to 21.6% with the same weights (answers forwarded to the
-checker, waiting until the element list matches the screenshot, a working SIM card, first-run screens cleared,
-numeric answer format).
-
-Reading the table:
-
-- **Fine-tuning gains +29.5 SR on AC-Low and +21.5 on AC-High** over the base model.
-- **v3 is better than DMA-2B on AC-High step accuracy (67.1 vs 61.7).** No AC-High test step is a correct
-  `status` (task done), yet DMA-2B predicts it on 1,171 steps against v3's 539. At least 430 of the 827 steps that
-  v3 gets right and DMA-2B gets wrong are such a `status`, 300 of them on scroll steps. On AndroidWorld, under the same
-  harness, the two are tied (5 tasks won, 6 lost; sign test p = 1.0). We release DMA-2B because it adds the
-  `answer` action (needed by 25 of the 116 AndroidWorld tasks), reads every element instead of the first 40, and is
-  the checkpoint evaluated under the final harness.
-- **v6 does not improve on DMA-2B** (AC-Low paired p = 0.007, worse; AC-High p = 0.19). It is not released.
-- AC-Low is not reported for v3: it was not trained with step instructions, so the AC-Low input is new to it.
-
 ### Compared with published models on AndroidControl
 
 Rows marked *reported* are copied from InfiGUI-R1 (Table 3), GUI-R1 (Tables 2–3) and MobileRL (Table 2); we did
@@ -172,6 +124,7 @@ list and chooses among its elements. Prompts, app lists and history formats also
 | d1-2B (base) | 2B | 80.0 | 76.9 | 59.8 | 63.6 | 63.1 | 40.2 |
 | ***DMA-2B (ours)*** | 2B | *96.6* | *90.1* | *89.3* | *74.3* | *78.4* | *61.7* |
 
+Fine-tuning raises step success over the base d1-2B from 59.8 to 89.3 on AC-Low and from 40.2 to 61.7 on AC-High.
 At 2–4B, DMA-2B matches UI-TARS-2B on AC-Low SR (89.3 vs 89.3) and its AC-High grounding (78.4 vs 78.4), and is
 clearly above GUI-R1-3B and zero-shot Qwen2.5-VL-3B. It is behind UI-TARS-2B, OS-Atlas-4B and InfiGUI-R1-3B on
 AC-High SR (61.7 vs 67.5–71.1), mainly on action type (74.3 vs 81–85).
@@ -193,8 +146,8 @@ half-credit tasks. The other rows are reported by their authors with their own h
 | MAI-UI-235B-A22B *(reported)* | 235B | 1 | yes | 76.7 |
 | MobileRL-9B *(reported)* | 9B | 1 | yes | **80.2** |
 
-DMA-2B is far from the AndroidWorld state of the art. In the run with 115 scored tasks (harness C, same score of
-25), its 91 tasks without full success split into 51 where it declared the task done too early (49 scored 0, 2
+DMA-2B is far from the AndroidWorld state of the art. In a run with 115 scored tasks and the same score of 25, its
+91 tasks without full success split into 51 where it declared the task done too early (49 scored 0, 2
 scored half) and 40 that ran out of steps. The models above 45% train on
 multi-step trajectories, and several train on AndroidWorld apps or on generated AndroidWorld task variants, often
 with online RL. DMA-2B was trained only on AndroidControl human demonstrations plus 1,736 goal-to-app rows from
