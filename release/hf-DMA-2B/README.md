@@ -73,20 +73,71 @@ What this gives an agent:
 > This is a research checkpoint from one training seed. All numbers below are measured by us from files in the
 > project, except the rows marked *reported*, which are copied from the cited papers.
 
+**Try it:** [DMA-2B demo Space](https://huggingface.co/spaces/tuanhqv123/DMA-2B-demo): step through three
+AndroidWorld tasks and see the probability of every action, element, app and scroll direction, replayed from
+our evaluation run.
+
 ## Results
+
+### What the numbers mean
+
+**AndroidControl** (Google, NeurIPS 2024) is a set of 1,543 recorded human episodes on real Android apps
+(8,444 steps in the test split). At each step the model sees the screen and the history of what the human did, and
+must predict the human's next action. It is scored step by step:
+
+| Metric | Question it answers | Example of a miss |
+|---|---|---|
+| **Type** | Is the *kind* of action right (click, scroll, type, open app, back, wait, ...)? | predicts scroll when the human clicked |
+| **Grounding** | Among steps with the right kind of action, is the click on the right element? | clicks "Settings" when the human clicked "Search" |
+| **SR** (step success rate) | Is the whole step right: kind of action and all its arguments (element, text, direction, app)? | right element but scroll direction wrong |
+
+- **AC-Low**: the model also gets the human's short instruction for the step ("click on the search bar"). This
+  tests whether it can *carry out* an instruction.
+- **AC-High**: the model gets only the overall goal ("find the hello note and share it"). This tests whether it can
+  *decide* the next step, which is much harder.
+- **Episodes all right**: episodes where every step is right. Each step still sees the human's correct history,
+  so this is not the same as completing the task alone.
+
+**AndroidWorld** (Google, ICLR 2025) runs the agent live on an Android emulator: 116 tasks in 20 apps. Nobody
+helps it; after the agent stops, a checker reads the device state (a contact exists, wifi is on, the answer is
+right). **TSR** (task success rate) is the share of tasks completed. This is the closest to real use, and the
+hardest: a task fails if any step goes wrong and the agent cannot recover.
 
 ### Our checkpoints, same evaluation
 
-All rows are scored on the same 8,444 AndroidControl test steps with the InfiGUI-R1 scorer (Type = action type
-right; Grounding = click target right, among steps whose type is right; SR = step success rate). Evaluation is
-teacher-forced: each step sees the demonstrator's history. **Bold** = best of our checkpoints.
+All rows use the same 8,444 AndroidControl test steps and the InfiGUI-R1 scorer. **Bold** = best of our
+checkpoints in the column.
 
-| Checkpoint | Training | AC-Low Type | AC-Low Grounding | AC-Low SR | AC-High Type | AC-High Grounding | AC-High SR | AC-High episodes all right | AndroidWorld TSR |
-|---|---|---|---|---|---|---|---|---|---|
-| d1-2B (base, not fine-tuned) | none | 80.0 | 76.9 | 59.8 | 63.6 | 63.1 | 40.2 | 145 / 1,543 | – |
-| v3 (2026-11-11) | 29,190 rows, element list capped at 40 | – | – | – | **81.0** | 77.4 | **67.1** | **374 / 1,543** | 15.0% (17/113, harness A) |
-| **DMA-2B (v4, this repo)** | 39,713 rows, all elements, `answer` action, step instructions on half the rows | **96.6** | **90.1** | **89.3** | 74.3 | **78.4** | 61.7 | 344 / 1,543 | 13.5% (15.5/115, harness A) <br> **21.6% (25/116, harness D)** |
-| v6 (2026-11-13) | v4 + episode stop rows kept, 2,313 steps from v4 | 96.4 | 89.4 | 88.8 | 73.3 | **78.4** | 61.3 | 323 / 1,543 | not run |
+**AndroidControl-Low** (step instruction given)
+
+| Checkpoint | Training | Type | Grounding | SR |
+|---|---|---|---|---|
+| d1-2B (base, not fine-tuned) | none | 80.0 | 76.9 | 59.8 |
+| v3 (2026-11-11) | 29,190 rows, element list capped at 40, no step instructions | – | – | – |
+| **DMA-2B (v4, this repo)** | 39,713 rows, all elements, `answer` action, step instructions on half the rows | **96.6** | **90.1** | **89.3** |
+| v6 (2026-11-13) | v4 + episode stop rows kept, 2,313 more steps | 96.4 | 89.4 | 88.8 |
+
+**AndroidControl-High** (goal only)
+
+| Checkpoint | Type | Grounding | SR | Episodes all right |
+|---|---|---|---|---|
+| d1-2B (base, not fine-tuned) | 63.6 | 63.1 | 40.2 | 145 / 1,543 |
+| v3 (2026-11-11) | **81.0** | 77.4 | **67.1** | **374 / 1,543** |
+| **DMA-2B (v4, this repo)** | 74.3 | **78.4** | 61.7 | 344 / 1,543 |
+| v6 (2026-11-13) | 73.3 | **78.4** | 61.3 | 323 / 1,543 |
+
+**AndroidWorld** (116 live tasks, seed 30, pass@1, our harness)
+
+| Checkpoint | Harness A (first version) | Harness D (final version) |
+|---|---|---|
+| v3 (2026-11-11) | 15.0% (17 / 113 scored) | not run |
+| **DMA-2B (v4, this repo)** | 13.5% (15.5 / 115 scored) | **21.6% (25 / 116)** |
+| v6 (2026-11-13) | not run | not run |
+
+The harness is our code around the model (how the screen is read, how actions are executed, how answers reach
+the checker). Fixing it raised DMA-2B from 13.5% to 21.6% with the same weights (answers forwarded to the
+checker, waiting until the element list matches the screenshot, a working SIM card, first-run screens cleared,
+numeric answer format).
 
 Reading the table:
 
@@ -98,7 +149,7 @@ Reading the table:
   `answer` action (needed by 25 of the 116 AndroidWorld tasks), reads every element instead of the first 40, and is
   the checkpoint evaluated under the final harness.
 - **v6 does not improve on DMA-2B** (AC-Low paired p = 0.007, worse; AC-High p = 0.19). It is not released.
-- AC-Low is not reported for v3, which was not trained with step instructions.
+- AC-Low is not reported for v3: it was not trained with step instructions, so the AC-Low input is new to it.
 
 ### Compared with published models on AndroidControl
 
