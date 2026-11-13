@@ -1,0 +1,272 @@
+[
+ {
+  "name": "google chrome",
+  "aliases": [
+   "google chrome",
+   "chrome"
+  ],
+  "package": "com.android.chrome"
+ },
+ {
+  "name": "settings",
+  "aliases": [
+   "settings",
+   "system settings"
+  ],
+  "package": "com.android.settings"
+ },
+ {
+  "name": "youtube",
+  "aliases": [
+   "youtube",
+   "yt"
+  ],
+  "package": "com.google.android.youtube"
+ },
+ {
+  "name": "google play",
+  "aliases": [
+   "google play",
+   "play store",
+   "gps"
+  ],
+  "package": "com.android.vending"
+ },
+ {
+  "name": "gmail",
+  "aliases": [
+   "gmail",
+   "gemail",
+   "google mail",
+   "google email",
+   "google mail client"
+  ],
+  "package": "com.google.android.gm"
+ },
+ {
+  "name": "google maps",
+  "aliases": [
+   "google maps",
+   "gmaps",
+   "maps",
+   "google map"
+  ],
+  "package": "com.google.android.apps.maps"
+ },
+ {
+  "name": "google photos",
+  "aliases": [
+   "google photos",
+   "gphotos",
+   "photos",
+   "google photo",
+   "google pics",
+   "google images"
+  ],
+  "package": "com.google.android.apps.photos"
+ },
+ {
+  "name": "google calendar",
+  "aliases": [
+   "google calendar",
+   "gcal"
+  ],
+  "package": "com.google.android.calendar"
+ },
+ {
+  "name": "camera",
+  "aliases": [
+   "camera"
+  ],
+  "package": "com.android.camera2"
+ },
+ {
+  "name": "audio recorder",
+  "aliases": [
+   "audio recorder"
+  ],
+  "package": "com.dimowner.audiorecorder"
+ },
+ {
+  "name": "google drive",
+  "aliases": [
+   "google drive",
+   "gdrive",
+   "drive"
+  ],
+  "package": "com.google.android.apps.docs"
+ },
+ {
+  "name": "clock",
+  "aliases": [
+   "clock"
+  ],
+  "package": "com.google.android.deskclock"
+ },
+ {
+  "name": "google search",
+  "aliases": [
+   "google search",
+   "google"
+  ],
+  "package": "com.google.android.googlequicksearchbox"
+ },
+ {
+  "name": "contacts",
+  "aliases": [
+   "contacts"
+  ],
+  "package": "com.google.android.contacts"
+ },
+ {
+  "name": "android world",
+  "aliases": [
+   "android world"
+  ],
+  "package": "com.example.androidworld"
+ },
+ {
+  "name": "files",
+  "aliases": [
+   "files"
+  ],
+  "package": "com.google.android.documentsui"
+ },
+ {
+  "name": "markor",
+  "aliases": [
+   "markor"
+  ],
+  "package": "net.gsantner.markor"
+ },
+ {
+  "name": "clipper",
+  "aliases": [
+   "clipper"
+  ],
+  "package": "ca.zgrs.clipper"
+ },
+ {
+  "name": "messages",
+  "aliases": [
+   "messages"
+  ],
+  "package": "com.google.android.apps.messaging"
+ },
+ {
+  "name": "simple sms messenger",
+  "aliases": [
+   "simple sms messenger",
+   "simple sms"
+  ],
+  "package": "com.simplemobiletools.smsmessenger"
+ },
+ {
+  "name": "dialer",
+  "aliases": [
+   "dialer",
+   "phone"
+  ],
+  "package": "com.google.android.dialer"
+ },
+ {
+  "name": "simple calendar pro",
+  "aliases": [
+   "simple calendar pro",
+   "simple calendar"
+  ],
+  "package": "com.simplemobiletools.calendar.pro"
+ },
+ {
+  "name": "simple gallery pro",
+  "aliases": [
+   "simple gallery pro",
+   "simple gallery"
+  ],
+  "package": "com.simplemobiletools.gallery.pro"
+ },
+ {
+  "name": "miniwob",
+  "aliases": [
+   "miniwob"
+  ],
+  "package": "com.google.androidenv.miniwob"
+ },
+ {
+  "name": "simple draw pro",
+  "aliases": [
+   "simple draw pro"
+  ],
+  "package": "com.simplemobiletools.draw.pro"
+ },
+ {
+  "name": "pro expense",
+  "aliases": [
+   "pro expense",
+   "pro expense app"
+  ],
+  "package": "com.arduia.expense"
+ },
+ {
+  "name": "broccoli",
+  "aliases": [
+   "broccoli",
+   "broccoli app",
+   "broccoli recipe app",
+   "recipe app"
+  ],
+  "package": "com.flauschcode.broccoli"
+ },
+ {
+  "name": "osmand",
+  "aliases": [
+   "osmand"
+  ],
+  "package": "net.osmand"
+ },
+ {
+  "name": "tasks",
+  "aliases": [
+   "tasks",
+   "tasks app",
+   "tasks.org:"
+  ],
+  "package": "org.tasks"
+ },
+ {
+  "name": "open tracks sports tracker",
+  "aliases": [
+   "open tracks sports tracker",
+   "activity tracker",
+   "open tracks",
+   "opentracks"
+  ],
+  "package": "de.dennisguse.opentracks"
+ },
+ {
+  "name": "joplin",
+  "aliases": [
+   "joplin",
+   "joplin app"
+  ],
+  "package": "net.cozic.joplin"
+ },
+ {
+  "name": "vlc",
+  "aliases": [
+   "vlc",
+   "vlc app",
+   "vlc player"
+  ],
+  "package": "org.videolan.vlc"
+ },
+ {
+  "name": "retro music",
+  "aliases": [
+   "retro music",
+   "retro",
+   "retro player"
+  ],
+  "package": "code.name.monkey.retromusic"
+ }
+]
