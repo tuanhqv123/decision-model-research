@@ -14,7 +14,7 @@ repository. This notice records which files were changed, as Section 4(b) of the
 
 | File | Change |
 |---|---|
-| `model.safetensors` | **Modified.** Full fine-tune (seed 0, 2,482 optimizer steps; the tied input embedding / output head stayed frozen) on AndroidControl training-split steps and goal-to-app rows from the AndroidWorld task generator, as an Android GUI action selector ("contract v4"). See README.md for data, recipe and evaluation. |
+| `model.safetensors` | **Modified.** Full fine-tune (seed 0, 2,482 optimizer steps; the tied input embedding / output head stayed frozen) on AndroidControl training-split steps and goal-to-app rows from the AndroidWorld task generator, as an Android GUI action selector. See README.md for data, recipe and evaluation. |
 | `contract.json` | **Added by the fine-tune.** Names the question set this checkpoint was trained on (contract v4). |
 | `README.md` | **Replaced.** This repository's model card replaces the base model card. |
 
