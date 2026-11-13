@@ -659,6 +659,8 @@ def element_inputs_v3(goal, entries, elements, W, H, rule, instruction=None, on_
 def instruction_included(rec):
     """Contract v3i training: whether this row shows its step instruction — a fixed half of the rows, chosen by a
     hash of (episode, step) so every epoch, process and machine picks the same rows."""
+    if "show_instruction" in rec:  # the row decides (build_exec_data, 2026-11-13)
+        return bool(rec["show_instruction"])
     import hashlib
     return hashlib.sha256(f"{rec.get('ep')}:{rec.get('step')}".encode()).digest()[0] < 128
 

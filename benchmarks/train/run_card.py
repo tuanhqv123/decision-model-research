@@ -20,10 +20,13 @@ def card_stats(rows):
     eps = collections.defaultdict(set)
     n_steps = {}
     for r in rows:
-        eps[r["ep"]].add(r["step"])
+        ep = str(r["ep"]).split(":", 1)[1] if str(r["ep"]).startswith("done:") else r["ep"]  # build_exec_data
+        ep = int(ep) if isinstance(ep, str) and ep.isdigit() else ep
+        eps[ep].add(r["step"])
         if r.get("n_steps") is not None:
-            n_steps[r["ep"]] = r["n_steps"]
-    full = sum(1 for e, s in eps.items() if e in n_steps and len(s) == n_steps[e] + 1)
+            n_steps[ep] = r["n_steps"]
+    # full = every ACTION step of the episode is present (the final `status` screen may or may not be a row)
+    full = sum(1 for e, s in eps.items() if e in n_steps and set(range(n_steps[e])) <= s)
     per_ep = collections.Counter(min(len(s), 6) for s in eps.values())
     hkey = "history_v3" if any("history_v3" in r for r in rows) else "history"  # the history the contract reads
     hist = collections.Counter(min(len(r.get(hkey) or []), 5) for r in rows)

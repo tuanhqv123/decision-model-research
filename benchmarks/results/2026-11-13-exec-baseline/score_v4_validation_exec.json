@@ -1,0 +1,12 @@
+{
+ "action rows": 690,
+ "step success %": 76.23,
+ "false done on action rows": "0/690",
+ "false done inside a local goal": "0/356",
+ "false done on its last action": "0/334",
+ "done rows": 334,
+ "done recall %": 3.59,
+ "done precision %": 100.0,
+ "AUROC p(status) done vs action": 0.7364,
+ "rows without a prediction": 0
+}
