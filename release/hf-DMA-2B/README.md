@@ -15,7 +15,6 @@ tags:
   - gui-agent
   - mobile-agent
   - android
-  - androidworld
   - androidcontrol
   - custom_code
 model-index:
@@ -41,16 +40,6 @@ model-index:
           - type: step_success_rate
             name: SR
             value: 89.3
-      - task:
-          type: gui-agent
-          name: AndroidWorld (task success rate, seed 30, pass@1, our harness)
-        dataset:
-          type: androidworld
-          name: AndroidWorld (116 tasks)
-        metrics:
-          - type: task_success_rate
-            name: TSR
-            value: 21.6
 ---
 
 # DMA-2B: a single-pass decision model for Android GUI agents
@@ -65,8 +54,8 @@ What this gives an agent:
 
 - **No parsing.** Every answer is one of the listed options, so every decoded action is a valid AndroidWorld
   `JSONAction`.
-- **Speed.** 135 ms per decision at the median over 1,335 AndroidWorld steps (181 ms at the 95th percentile, one
-  shared 24 GB GPU, served over HTTP). The emulator step takes 1,624 ms, so the device dominates the loop.
+- **Speed.** 135 ms per decision at the median (181 ms at the 95th percentile; one shared 24 GB GPU, served over
+  HTTP), with no tokens generated.
 - **A probability for each decision.** On AndroidControl-High the action probability ranks the model's own errors
   with AUROC 0.758. Acting only on the more confident half of the steps cuts the error rate from 38.3% to 19.0%.
 
@@ -74,7 +63,7 @@ What this gives an agent:
 > project, except the rows marked *reported*, which are copied from the cited papers.
 
 **Try it:** [DMA-2B demo Space](https://huggingface.co/spaces/tuanhqv123/DMA-2B-demo): step through three
-AndroidWorld tasks and see the probability of every action, element, app and scroll direction, replayed from
+recorded tasks and see the probability of every action, element, app and scroll direction, replayed from
 our evaluation run.
 
 ## Results
@@ -95,13 +84,6 @@ must predict the human's next action. It is scored step by step:
   tests whether it can *carry out* an instruction.
 - **AC-High**: the model gets only the overall goal ("find the hello note and share it"). This tests whether it can
   *decide* the next step, which is much harder.
-- **Episodes all right**: episodes where every step is right. Each step still sees the human's correct history,
-  so this is not the same as completing the task alone.
-
-**AndroidWorld** (Google, ICLR 2025) runs the agent live on an Android emulator: 116 tasks in 20 apps. Nobody
-helps it; after the agent stops, a checker reads the device state (a contact exists, wifi is on, the answer is
-right). **TSR** (task success rate) is the share of tasks completed. This is the closest to real use, and the
-hardest: a task fails if any step goes wrong and the agent cannot recover.
 
 ### Compared with published models on AndroidControl
 
@@ -129,30 +111,6 @@ At 2–4B, DMA-2B matches UI-TARS-2B on AC-Low SR (89.3 vs 89.3) and its AC-High
 clearly above GUI-R1-3B and zero-shot Qwen2.5-VL-3B. It is behind UI-TARS-2B, OS-Atlas-4B and InfiGUI-R1-3B on
 AC-High SR (61.7 vs 67.5–71.1), mainly on action type (74.3 vs 81–85).
 
-### AndroidWorld
-
-116 tasks, official task seeds (seed 30), pass@1, one run, our harness (accessibility element list + screenshot,
-one decision per step, no planner, no external model). Score 25.0 of 116 = **21.6%**: 24 full successes and two
-half-credit tasks. The other rows are reported by their authors with their own harnesses, for context only.
-
-| System | Size | Model calls per step | Generates text | AndroidWorld TSR (%) |
-|---|---|---|---|---|
-| ***DMA-2B (ours)*** | 2B | 1 | no | *21.6* |
-| M3A, GPT-4 Turbo *(reported)* | – | ≥2 | yes | 30.6 |
-| UI-TARS *(reported)* | – | 1 | yes | 46.6 |
-| MAI-UI-2B *(reported)* | 2B | 1 | yes | 49.1 |
-| UI-Venus-1.5-2B *(reported)* | 2B | 1 | yes | 55.6 |
-| GUI-Owl-7B *(reported)* | 7B | 1 | yes | 66.4 |
-| MAI-UI-235B-A22B *(reported)* | 235B | 1 | yes | 76.7 |
-| MobileRL-9B *(reported)* | 9B | 1 | yes | **80.2** |
-
-DMA-2B is far from the AndroidWorld state of the art. In a run with 115 scored tasks and the same score of 25, its
-91 tasks without full success split into 51 where it declared the task done too early (49 scored 0, 2
-scored half) and 40 that ran out of steps. The models above 45% train on
-multi-step trajectories, and several train on AndroidWorld apps or on generated AndroidWorld task variants, often
-with online RL. DMA-2B was trained only on AndroidControl human demonstrations plus 1,736 goal-to-app rows from
-AndroidWorld's task generator (no AndroidWorld screen, trajectory or success signal).
-
 ### Confidence
 
 AndroidControl-High, 8,444 steps, confidence c = p(chosen action). Risk at 50% coverage is the error rate on the
@@ -168,8 +126,7 @@ half of the steps with the highest confidence. **Bold** = better.
 | AURC | 0.420 | **0.196** |
 
 Both models are over-confident, so treat the probability as a ranking signal (for an act / ask threshold chosen on
-held-out data), not as a calibrated estimate. On AndroidWorld, p(done) separates correct from wrong terminations
-with AUROC 0.746 (75 terminations).
+held-out data), not as a calibrated estimate.
 
 ## How to use
 
@@ -225,7 +182,7 @@ After executing the action, append one history line built with `v.history_entry_
 | | |
 |---|---|
 | Base | `LiquidAI/d1-2B`, revision `cfe5760` |
-| Data | 37,977 decisions from the AndroidControl training split (rebuilt from the original release, test episodes excluded, task kinds that also occur in AndroidWorld) + 1,736 goal-to-app rows from AndroidWorld's task generator (97 of the 116 evaluated templates; goals only) |
+| Data | 37,977 decisions from the AndroidControl training split (rebuilt from the original release, test episodes excluded, task kinds that also occur in AndroidWorld) + 1,736 goal-to-app rows from AndroidWorld's task generator (goals only) |
 | Added rows | actions with no effect followed by a different action; episodes that end with an answer; AndroidControl step instructions on a fixed half of the rows |
 | Objective | cross-entropy on every question the gold action defines; unlikelihood on rows that mark an action to avoid |
 | Optimisation | full fine-tune except the tied embedding / output head; 2,482 steps × 16 rows (one epoch); AdamW8bit (torchao), bf16 with stochastic rounding, lr 1e-5, 30 warm-up steps, cosine decay, weight decay 0, gradient clip 1.0; seed 0 |
@@ -233,8 +190,9 @@ After executing the action, append one history line built with `v.history_entry_
 
 ## Limitations
 
-- **Stops too early.** Most AndroidWorld failures are premature "done". The probability of `status` helps rank these
-  (AUROC 0.746) but does not remove them.
+- **Says "done" too early.** On AndroidControl-High it predicts `status` (task done) on 1,171 of 8,444 steps, although
+  none of these steps is a correct `status`. Use the probability of `status` with a threshold, or a check, before
+  ending a task.
 - **Teacher-forced imitation only.** Trained on human demonstrations with the correct history; it never saw its own
   mistakes and was not trained on task success.
 - **Needs the accessibility element list.** It cannot act from pixels only, or tap a target that has no element.

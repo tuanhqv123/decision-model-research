@@ -52,8 +52,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 <p class="lead"><a href="https://huggingface.co/tuanhqv123/DMA-2B">DMA-2B</a> is a 2B <b>decision model</b> for Android
 agents. At each step it reads the screenshot, the goal, what it has done so far and the list of on-screen elements, then
 <b>chooses</b> the next action from fixed options and the element to act on. It writes no text, so every output can be
-executed, and every choice has a probability. Below are three AndroidWorld tasks it completed, replayed step by step from
-our evaluation run (model on a GPU, about 130 ms per decision).</p>
+executed, and every choice has a probability. Below are three tasks it completed on an Android emulator, replayed step by step
+from our evaluation run (model on a GPU, about 130 ms per decision).</p>
 
 <div class="controls" id="tabs"></div>
 
@@ -79,8 +79,7 @@ our evaluation run (model on a GPU, about 130 ms per decision).</p>
 <h3>How to read this page</h3>
 <p><b>Action probabilities</b>: the probability the model gave to each kind of action at this step (they sum to 1).
 <b>Element probabilities</b>: for click, type and answer, which element of the list it picks (for open app: which app; for scroll: which direction); the red box is the chosen
-element and the circle is where the tap lands (the element's centre). <b>Done</b> ends the episode; AndroidWorld's
-checker then reads the phone's state to decide whether the task was completed.</p>
+element and the circle is where the tap lands (the element's centre). <b>Done</b> ends the episode.</p>
 <h3>Results (details in the <a href="https://huggingface.co/tuanhqv123/DMA-2B">model card</a>)</h3>
 <table>
 <tr><th>Benchmark</th><th class="n">Type</th><th class="n">Grounding</th><th class="n">Step success</th></tr>
@@ -88,8 +87,7 @@ checker then reads the phone's state to decide whether the task was completed.</
 <tr><td>AndroidControl-High (only the goal is given)</td><td class="n">74.3</td><td class="n">78.4</td><td class="n">61.7</td></tr>
 </table>
 <p class="meta"><b>Type</b>: % of steps with the right kind of action. <b>Grounding</b>: % of clicks on the right element,
-among steps with the right kind. <b>Step success</b>: % of steps entirely right. On AndroidWorld (116 tasks run live on
-an emulator) DMA-2B completes <b>21.6%</b> of the tasks, so these three are among its successes, not typical runs.</p>
+among steps with the right kind. <b>Step success</b>: % of steps entirely right.</p>
 </div>
 </main>
 <script>
@@ -127,11 +125,11 @@ function show() {
   document.querySelectorAll("#tabs .tab").forEach((b, i) => b.classList.toggle("on", i === ep));
   document.querySelectorAll(".steps button").forEach((b, i) => b.classList.toggle("on", i === st));
   $("goal").textContent = e.goal;
-  $("meta").textContent = `AndroidWorld task ${e.task} · step ${st + 1} of ${e.steps.length} · model time ${Math.round(s.model_ms)} ms`;
+  $("meta").textContent = `Task ${e.task} · step ${st + 1} of ${e.steps.length} · model time ${Math.round(s.model_ms)} ms`;
   let d = `Decision: <b>${s.action}</b> with probability <b>${s.probability.toFixed(3)}</b>`;
   if (s.element) d += ` on element <b>[${s.element.id}] ${s.element.label.replace(/</g,"&lt;")}</b> (p = ${s.element.probability.toFixed(3)})`;
   $("decision").innerHTML = d;
-  $("jaction").innerHTML = s.json_action ? `AndroidWorld action: <code>${JSON.stringify(s.json_action).replace(/</g,"&lt;")}</code>`
+  $("jaction").innerHTML = s.json_action ? `Executed action: <code>${JSON.stringify(s.json_action).replace(/</g,"&lt;")}</code>`
     : (s.action === "status" ? "The model declares the task complete; the episode ends here." : "");
   const top = s.action_probs[0][0];
   bars($("abars"), s.action_probs, top);
