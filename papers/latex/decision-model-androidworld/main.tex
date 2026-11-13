@@ -440,6 +440,8 @@ With the checkpoint fixed, harness corrections raised the TSR from 15.5/115 to 2
 answers had not reached the checker, the accessibility tree lagged behind the screenshot, the SIM was
 unavailable, and first-run screens of Chrome, Markor and OsmAnd blocked tasks. Each defect produced failures
 that looked like model failures.
+A last revision (D) leaves the score unchanged at 25/116, with the OsmAnd marker task now scorable
+(2 wins, 2 losses).
 
 \paragraph{Vision.}
 Replacing every screenshot with a uniform grey image lowers validation step accuracy from 519/827 to 337/827 and
@@ -507,7 +509,7 @@ Revision & Score & Change with respect to the previous revision \\
 A & 15.5/115 & -- \\
 B & 20.5/115 & answers forwarded to the checker; a fresh observation when the accessibility tree lags the screenshot (up to 8\,s). 5 wins, 0 losses ($p = 0.062$). \\
 C & 25/115 & fresh observation also after a page change (up to 20\,s); working SIM; Chrome first-run screens cleared before the suite. 5 wins, 1 loss ($p = 0.22$). \\
-D & pending & numeric answer format; Back closes the keyboard after typing; Markor and OsmAnd first-run state repaired. Only the affected tasks are re-run. \\
+D & 25/116 & numeric answer format; Back closes the keyboard after typing; Markor and OsmAnd first-run state repaired. The 39 affected tasks are re-run (37 scored); OsmAnd's marker task becomes scorable. 2 wins, 2 losses. \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -550,6 +552,7 @@ Weight averaging (0.3/0.7) with an earlier checkpoint & 6 wins, 9 losses on Andr
 Recovery (``go back'') rows & 300-step pilot: validation step accuracy 65.2\% $\rightarrow$ 57.7\%; back predicted where it is wrong 1.9\% $\rightarrow$ 10.0\% \\
 Per-candidate yes/no re-ranking of the top-5 elements, zero-shot & worse than the trained choice (261 vs.\ 286 of 430 validation targets), although the gold element is in the top 5 for 388 \\
 Next-screen progress question, zero-shot & AUROC 0.76 on an AndroidControl sample, but with only 26 negative transitions \\
+Retraining with every episode's final action and ``done'' row kept (2,313 steps from \ours) & no gain: AndroidControl-Low SR 89.3 $\rightarrow$ 88.8 (paired $p = 0.007$), High 61.7 $\rightarrow$ 61.3 ($p = 0.19$); premature ``done'' on validation 64 $\rightarrow$ 72 of 690; back where it is wrong 16 $\rightarrow$ 23 of 798 \\
 \bottomrule
 \end{tabular}
 \end{table}
