@@ -1,0 +1,24 @@
+{
+ "track": "VA",
+ "n": 827,
+ "step_acc": 0.8585,
+ "type_acc": 0.9637,
+ "grounding": 0.8213,
+ "per_type": {
+  "click": "343/420",
+  "long_press": "1/1",
+  "navigate_back": "29/29",
+  "open_app": "45/45",
+  "scroll": "82/86",
+  "status": "123/137",
+  "type_text": "42/53",
+  "wait": "45/56"
+ },
+ "ece_action": 0.1145,
+ "always_status": 0.1657,
+ "eval_sec": 337,
+ "contract": "v4",
+ "element_rule": "all_reading_noime",
+ "tag": "dma_vallow",
+ "status_threshold": null
+}

@@ -85,6 +85,7 @@ class DecideReq(BaseModel):
     elements: Optional[List[dict]] = None  # harness spelling of `nodes`; accepted for compatibility
     track: str = "V"
     return_readouts: bool = False
+    instruction: Optional[str] = None  # executor checkpoints (contract with "instruction"): the local goal
 
     def a11y(self):
         return self.nodes if self.nodes is not None else self.elements
@@ -131,13 +132,15 @@ def _element_contract(contract):
     return bool(CONTRACTS[contract["name"]].get("elements"))
 
 
-def build_request(contract, goal, history, nodes, W, H, track):
+def build_request(contract, goal, history, nodes, W, H, track, instruction=None):
     """Everything the model is asked for one request, built without the model.
 
     Returns {"track", "state", "questions", "cands" (v1 VA candidates or None), "kept", "keep_idx" (v2 kept
     canonical elements and their positions in `nodes`, or None)}. Raises ValueError for a request the
     checkpoint's contract does not define; `decide` turns that into HTTP 400.
     """
+    if instruction is not None and not CONTRACTS[contract["name"]].get("instruction"):
+        raise ValueError(f"contract {contract['name']!r} was not trained with step instructions; send no `instruction`")
     if _element_contract(contract):
         if not nodes:
             raise ValueError(f"this checkpoint speaks contract {contract['name']!r}: it chooses among the screen's "
@@ -146,7 +149,7 @@ def build_request(contract, goal, history, nodes, W, H, track):
         if track != "VA":
             raise ValueError(f"contract {contract['name']!r} is served on track 'VA' only, not {track!r}")
         if CONTRACTS[contract["name"]].get("history") == "v3":  # history = the agent's v3 entries, verbatim
-            state, kept, keep_idx = element_inputs_v3(goal, history, nodes, W, H, contract["element_rule"],
+            state, kept, keep_idx = element_inputs_v3(goal, history, nodes, W, H, contract["element_rule"], instruction,
                                                       on_off=bool(CONTRACTS[contract["name"]].get("on_off")))
         else:
             state, kept, keep_idx = element_inputs(goal, history, nodes, W, H, contract["element_rule"])
@@ -194,7 +197,7 @@ def decide(req: DecideReq, x_api_key: Optional[str] = Header(default=None)):
     try:
         raw = Image.open(io.BytesIO(base64.b64decode(req.image_b64)))
         W, H = raw.size
-        built = build_request(CONTRACT, req.goal, req.history, req.a11y(), W, H, req.track)
+        built = build_request(CONTRACT, req.goal, req.history, req.a11y(), W, H, req.track, req.instruction)
         track, cands, state, qs = built["track"], built["cands"], built["state"], built["questions"]
         img = load_image(io.BytesIO(base64.b64decode(req.image_b64)))
         with LOCK, torch.inference_mode():
@@ -261,7 +264,9 @@ def _respond_elements(req, ans, built, W, H, model_ms, t_req):
     action = FROM_OPTION[ans["action"]["choice"]]
     by_action = {FROM_OPTION[k]: float(v) for k, v in probs.items()}
     restricted = False
-    if APPS is not None:  # v2a: the first step of a task (empty history) may only launch an app or declare done
+    # v2a: the first step of a task (empty history) may only launch an app or declare done. Not for an executor request
+    # (`instruction` set, 2026-11-16): the LLM writes the local goal, and the executor was trained without this rule
+    if APPS is not None and req.instruction is None:
         first = restrict_first_step(by_action, req.history)
         restricted, action = first != action, first
     conf = float(by_action.get(action) or max(by_action.values()))

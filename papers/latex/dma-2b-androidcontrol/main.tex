@@ -1,0 +1,373 @@
+%% ICML 2026 style (preprint option), anonymous authors. Build: tectonic main.tex
+%% 2026-11-16: AndroidControl-only version. Numbers: benchmarks/train/paper_ac_final.py -> paper_numbers.json.
+\documentclass{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[table]{xcolor}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xurl}
+\usepackage{hyperref}
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+\usepackage[preprint]{icml2026}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[capitalize,noabbrev]{cleveref}
+\input{tables/numbers.tex}
+
+\definecolor{oursbg}{HTML}{E3ECF8}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\ours}{DMA-2B}
+\newcommand{\base}{d1-2B}
+\makeatletter\newcommand{\inputrows}[1]{\@@input #1 }\makeatother
+
+\icmltitlerunning{Single-Pass Action Selection for Mobile GUI Control}
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{Single-Pass Action Selection for Mobile GUI Control:\\A 2B Decision Model on AndroidControl}
+
+  \begin{icmlauthorlist}
+    \icmlauthor{Anonymous Author(s)}{anon}
+  \end{icmlauthorlist}
+  \icmlaffiliation{anon}{Anonymous institution}
+  \icmlcorrespondingauthor{Anonymous Author(s)}{anonymous@example.com}
+  \icmlkeywords{GUI agents, decision models, calibration, selective prediction, AndroidControl}
+  \vskip 0.3in
+]
+
+\printAffiliationsAndNotice{}
+
+\begin{abstract}
+Mobile GUI agents are usually vision-language models that decode a reasoning trace and an action string at
+every step. They must parse their own output, pay a sequential decoding cost per step, and expose no probability
+for the action they take. We study the alternative of a \emph{decision model}, which reads the screen state once
+and returns a probability distribution over typed answers in a single forward pass, without generating tokens.
+We fine-tune the 2B decision model \base{} on the full AndroidControl training split and call the result
+\ours{}. Scored with the InfiGUI-R1 evaluation code in AndroidControl's own action space, \ours{} reaches a step
+success rate of 90.5\% on AndroidControl-Low and 74.2\% on AndroidControl-High, against
+\BASELOW\% and \BASEHIGH\% for the untrained base model. On AndroidControl-High this is within 0.3 points of
+the best reported model of up to 9B parameters and above all others of that size, without generating a single
+output token. The probability of the selected action ranks the model's own errors (AUROC \OURSAUROC{} on
+AndroidControl-High), and a threshold chosen on held-out episodes keeps the error rate of the accepted steps
+below 20\% while acting on \OURSCOVTWENTY\% of them.
+\end{abstract}
+
+%% ==================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Most mobile GUI agents are generative. At each step a vision-language model (VLM) reads a screenshot, writes
+a thought, and emits an action as text, which the harness parses and executes
+\citep{uitars2025,mobileagentv3,mobilerl2025}. This design has three costs for an agent that runs on a device.
+First, the action is a string, so a malformed or out-of-schema output is a runtime error. Second, decoding is
+sequential, and its cost grows with the length of the reasoning trace. Third, the agent exposes no probability
+for the action it selected, so the surrounding software cannot decide whether to act, to ask the user, or to
+stop.
+
+A decision model removes all three costs by construction \citep{typesafe2026,liquidd12026}. It receives a state
+and a set of typed questions, and returns, for each question, a probability distribution over a closed answer
+set in one forward pass. Its output cannot violate the schema, its cost is one forward pass, and each answer
+comes with a probability. Whether such a model can select phone actions as accurately as generative agents, and
+whether its probabilities are informative, has not been measured on a standard benchmark.
+
+This paper reports that measurement on AndroidControl \citep{androidcontrol2024}. Our contributions are:
+\begin{enumerate}
+  \item A single-pass decision interface for mobile GUI control (\cref{sec:method}), in which the action, the
+        target element, the scroll direction, the app and any typed text are answered jointly from one forward
+        pass.
+  \item \ours{}, a 2B decision model fine-tuned on the full AndroidControl training split. It reaches 90.5\%
+        (Low) and 74.2\% (High) step success, against \BASELOW\% and \BASEHIGH\% for the base model
+        (\cref{sec:results}).
+  \item An analysis of the action probability as a control signal: how well it ranks errors, and what error
+        rate a threshold chosen on held-out episodes achieves (\cref{sec:confidence}).
+\end{enumerate}
+
+%% ==================================================================
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Mobile GUI agents.}
+AndroidControl \citep{androidcontrol2024} scores individual steps of human demonstrations in two settings: with
+the step instruction (Low) and with the goal only (High). Recent agents are VLMs trained with supervised
+fine-tuning on GUI trajectories \citep{osatlas,aguvis,uitars2025} and, increasingly, with reinforcement learning
+from rule-based or environment rewards \citep{uir1,guir1,infiguir1,uigenie,mobilerl2025}. All of them generate
+text, and several generate an explicit reasoning trace before the action.
+
+\paragraph{Decision models.}
+TypeSafe's Jev and LiquidAI's d1 family answer typed questions (choice, yes/no, score, span, box) in one pass and
+return probabilities rather than text \citep{typesafe2026,liquidd12026}. We build on the open d1-2B model.
+
+\paragraph{Calibration and selective prediction.}
+A classifier is calibrated when its confidence matches its accuracy \citep{guo2017calibration}. Selective
+prediction lets a model abstain where its confidence is low and trades coverage for risk
+\citep{geifman2017selective}. Learn-then-Test \citep{angelopoulos2021ltt} and conformal risk control
+\citep{angelopoulos2024crc} turn a score into a threshold with a finite-sample guarantee on the risk of the
+accepted decisions. CORA \citep{cora2026} applies conformal risk control to mobile GUI automation with a separate
+guardian model; we apply the same tools to the probability that the acting model itself produces.
+
+%% ==================================================================
+\section{Method}
+\label{sec:method}
+
+\subsection{Problem formulation}
+At step $t$ the agent observes a screenshot $x_t$ and the accessibility tree of the screen, and knows the goal
+$g$, optionally the step instruction $u_t$, and its previous actions $h_{<t}$. A deterministic renderer turns
+$(g, u_t, h_{<t}, \text{tree})$ into a text state $z_t$ that lists the goal, the instruction, the current app,
+the previous actions with their observed effects, and the visible elements
+$\mathcal{E}_t = \{e_1,\dots,e_{n_t}\}$ with label, type, state and position. The model receives
+$s_t = (x_t, z_t)$ and a fixed set of typed questions, and returns in one forward pass
+\begin{equation}
+  p(a \mid s_t),\; p(e \mid s_t),\; p(d \mid s_t),\; p(m \mid s_t),\; p(\sigma \mid s_t),
+\end{equation}
+where $a$ is the action type, $e \in \mathcal{E}_t$ the target element, $d$ the scroll direction, $m$ the app to
+open, chosen from a list of installed apps, and $\sigma$ a span of $z_t$ that is copied as the text to type. The
+executed action is assembled from the arg-max answers. Because spans are copied from the text state, the model
+cannot produce text that appears only in the pixels.
+
+\subsection{Model and training data}
+The decision model is \base{} \citep{liquidd12026}, a 1.92B-parameter vision-language decision model whose readout
+heads project the backbone state onto the token groups of each question's options. We fine-tune all parameters
+except the tied input embedding and output head, including the vision encoder, with a cross-entropy loss on every
+question that the gold action defines.
+
+The training data are built from the complete AndroidControl training split, rebuilt from the original release:
+13{,}594 episodes and 88{,}308 steps, with every test episode excluded. A fixed share of the episodes (34\%) is
+shown with the goal only, as in the High setting. In the remaining episodes the step instructions are grouped into
+\emph{local goals} of one to four consecutive instructions, and every step shows the instructions of its local
+goal; after the last step of each local goal, the next screen is added with the answer ``done'', so the model also
+learns when an instruction has been carried out. Steps that continue an instruction from the previous step
+(AndroidControl repeats an instruction over several steps, for example for repeated scrolls or a wait after a
+click) are given three times the weight. The training set has 116{,}139 rows; training runs for one epoch
+(7{,}259 steps of 16 rows, learning rate $10^{-5}$, cosine schedule). Training stopped at step 7{,}190 when a
+long sample exceeded the memory cap; we use the last saved checkpoint (step 7{,}000, learning rate
+$3\times10^{-8}$), as fixed before evaluation.
+
+\subsection{Scoring}
+The AndroidControl action space has no ``done'' action, and the test split contains no step whose correct action
+is ``done''. We therefore score \ours{} in AndroidControl's own action space: the ``done'' option is removed at
+inference and the best remaining action of the same forward pass is taken. \Cref{sec:ablations} reports what
+happens when it is not removed. The base model is reported as evaluated with its full action space, in which it
+answers ``done'' on \BASEDONELOW{} (Low) and \BASEDONEHIGH{} (High) of the 8{,}444 steps.
+
+\subsection{Confidence and escalation}
+\label{sec:gate}
+We use the probability of the selected action, $c(s_t) = p(\hat a \mid s_t)$, as the step confidence. An
+escalation gate acts if $c(s_t) \geq \tau$ and asks otherwise. For $n$ scored steps with correctness
+$y_i \in \{0,1\}$, coverage and selective risk are
+\begin{align}
+  \mathrm{cov}(\tau) &= \frac{1}{n}\sum_{i=1}^{n} \mathbf{1}[c_i \geq \tau], \\
+  R(\tau) &= \frac{\sum_{i} \mathbf{1}[c_i \geq \tau]\,(1-y_i)}{\sum_{i} \mathbf{1}[c_i \geq \tau]}.
+\end{align}
+To choose $\tau$ for a target risk $\delta$ we follow Learn-then-Test with fixed-sequence testing
+\citep{angelopoulos2021ltt}: on a calibration set we lower $\tau$ from the most confident decision and stop
+before the first threshold at which the one-sided Clopper--Pearson upper bound on $R(\tau)$ at level
+$\alpha = 0.05$ exceeds $\delta$.
+
+%% ==================================================================
+\section{Experimental Setup}
+\label{sec:setup}
+
+The AndroidControl test split has 8{,}444 steps in 1{,}543 episodes \citep{androidcontrol2024}. In the Low setting
+the model sees the step instruction; in the High setting it sees only the goal. In both settings the history is
+the demonstrator's, so every step is evaluated from the correct prefix. We score with the evaluation code of
+InfiGUI-R1 \citep{infiguir1} without modification and report \emph{Type}, the action-type accuracy;
+\emph{Grounding}, the share of click and long-press steps with the correct type whose predicted point falls inside
+the target element; \emph{SR}, the step success rate; and the \emph{episode success rate} (ESR), the share of
+episodes in which every step is correct. Decoding is a single deterministic forward pass. We compare against the
+untrained base model and against the results reported for other models.
+
+%% ==================================================================
+\section{Results}
+\label{sec:results}
+
+\begin{table}[t]
+\centering
+\caption{Step success rate (\%) on the AndroidControl test set (8{,}444 steps). Rows of other models are the
+values reported in the InfiGUI-R1, GUI-R1 and MobileRL papers (\cref{sec:ac}); prompts, action spaces and
+scorers differ between sources, so the comparison is approximate. Text: the model generates text. Bold: best.}
+\label{tab:ac}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{@{}l r c r r@{}}
+\toprule
+Model & Size & Text & Low & High \\
+\midrule
+\inputrows{tables/tab_ac_rows.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table*}[t]
+\centering
+\caption{Base model and \ours{} on the AndroidControl test set, InfiGUI-R1 scorer. \ours{} is scored in
+AndroidControl's action space, the base model with its full action space (\cref{sec:method}). ESR: episodes in
+which every step is correct (1{,}543 episodes).}
+\label{tab:ours}
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}l cccc cccc@{}}
+\toprule
+& \multicolumn{4}{c}{AndroidControl-Low} & \multicolumn{4}{c}{AndroidControl-High} \\
+\cmidrule(lr){2-5}\cmidrule(l){6-9}
+Model & Type & Grounding & SR & ESR & Type & Grounding & SR & ESR \\
+\midrule
+\inputrows{tables/tab_ours_rows.tex}
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{AndroidControl}
+\label{sec:ac}
+\Cref{tab:ours} compares \ours{} with the base model it starts from. Fine-tuning raises step success from
+\BASELOW\% to 90.5\% on AndroidControl-Low and from \BASEHIGH\% to 74.2\% on AndroidControl-High (paired McNemar
+test, $p < 10^{-\PAIREDEXP}$ in both settings). The ``done'' option does not explain this gap: the base model
+answers ``done'' on at most \BASEDONEHIGH{} of the 8{,}444 steps, while its step success is more than 30 points lower.
+
+\Cref{tab:ac} places \ours{} among published models; the values are those reported by InfiGUI-R1
+\citep{infiguir1} (GPT-4o \citep{gpt4o}, OS-Atlas-4B \citep{osatlas}, Aguvis \citep{aguvis}, UI-TARS-2B
+\citep{uitars2025}, InfiGUI-R1-3B), by GUI-R1 under its shared zero-shot prompt \citep{guir1} (Qwen2.5-VL
+\citep{qwen25vl}, UI-R1-3B \citep{uir1}, GUI-R1), and by MobileRL \citep{mobilerl2025} (UI-TARS-7B and 72B,
+UI-Genie \citep{uigenie}, MobileRL). On AndroidControl-High, \ours{} (74.2\%) is above UI-TARS-2B (68.9\%),
+InfiGUI-R1-3B (71.1\%), UI-TARS-7B (72.5\%), MobileRL-7B (71.3\%) and MobileRL-9B (73.9\%); only UI-Genie-7B
+(74.5\%), UI-TARS-72B (74.7\%) and UI-Genie-72B (77.0\%) are higher, by 0.3 to 2.8 points. On AndroidControl-Low, \ours{} (90.5\%) is above UI-TARS-2B (89.3\%), level with
+UI-TARS-7B (90.8\%), and below InfiGUI-R1-3B (92.1\%), MobileRL (91.4\% and 94.3\%) and UI-Genie (94.3\% and
+94.8\%). Every other model in the table generates text, and several generate a reasoning trace before each
+action; \ours{} answers every step in one forward pass.
+
+\paragraph{Latency.} One decision is one forward pass of the 1.92B model. Served over HTTP on a shared 24\,GB GPU,
+the same architecture takes 135\,ms per decision at the median and 181\,ms at the 95th percentile (1{,}335
+decisions; no tokens are generated).
+
+%% ==================================================================
+\section{Confidence as a Control Signal}
+\label{sec:confidence}
+
+\begin{table}[t]
+\centering
+\caption{Step confidence $c = p(\hat a\mid s)$ on AndroidControl-High (8{,}444 steps). Risk@50: error rate on the
+50\% most confident steps. Gate: a threshold chosen on half of the episodes for a target risk of 20\%, applied to
+the other half (mean over 200 random splits); ``--'': a threshold exists in fewer than half of the splits.}
+\label{tab:calib}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}l c c@{}}
+\toprule
+& \base{} (base) & \ours{} \\
+\midrule
+SR (\%)                       & \BASEHIGH & 74.2 \\
+Mean confidence (\%)          & \BASEMEANCONF & \OURSMEANCONF \\
+ECE $\downarrow$              & \BASEECE & \OURSECE \\
+AUROC $\uparrow$              & \BASEAUROC & \OURSAUROC \\
+Risk@50 (\%) $\downarrow$     & \BASERISK & \OURSRISK \\
+AURC $\downarrow$             & \BASEAURC & \OURSAURC \\
+Type: AUROC / ECE             & \BASETYPE & \OURSTYPE \\
+\midrule
+Gate $\delta{=}20\%$: cov. / risk (\%) & \BASEGATE & \OURSGATE \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/fig_calibration.pdf}
+  \caption{AndroidControl-High, base model and \ours{}. (a) Error rate among the steps the gate accepts, as the
+  threshold is lowered. (b) Step accuracy against binned confidence; the dashed line is perfect calibration.}
+  \label{fig:calibration}
+\end{figure}
+
+\Cref{tab:calib} and \cref{fig:calibration} compare the step confidence of the base model and of \ours{} on
+AndroidControl-High. Fine-tuning lowers the error rate on the half of the steps the model is most confident about
+from \BASERISK\% to \OURSRISK\%, and the area under the risk--coverage curve from \BASEAURC{} to \OURSAURC{}. The
+ranking of correct above incorrect steps improves only slightly (AUROC \BASEAUROC{} to \OURSAUROC{}; \OURSPRODAUROC{}
+when the action probability is multiplied by the element probability), and both models are over-confident: mean
+confidence exceeds accuracy by \BASEGAP{} and \OURSGAP{} points. For the action type alone, the probability of
+\ours{} is close to calibrated (ECE \OURSTYPEECE) and ranks type errors with AUROC \OURSTYPEAUROC.
+
+To turn the probability into a gate, we split the test episodes into two halves 200 times, choose $\tau$ on one
+half with the procedure of \cref{sec:gate}, and apply it to the other. For a target risk $\delta = 20\%$ a threshold
+exists in every split, and the gate acts on \OURSCOVTWENTY\% of the held-out steps with a mean error rate of
+\OURSRISKTWENTY\%. For $\delta = 15\%$ it acts on \OURSCOVFIFTEEN\% of the steps (error rate \OURSRISKFIFTEEN\%),
+and for $\delta = 10\%$ on \OURSCOVTEN\% (error rate \OURSRISKTEN\%; a threshold exists in \OURSTENSPLITS{} of 200
+splits). For the base model a threshold for $\delta = 20\%$ exists in only \BASETWENTYSPLITS{} of 200 splits. The
+guarantee concerns the expected risk; on a half-size test set the realised error rate still exceeds $\delta$ in some
+splits (\OURSVIOLTWENTY\% of them for $\delta = 20\%$).
+
+%% ==================================================================
+\section{Per-step and episode success}
+\label{sec:episodes}
+The AndroidControl scorer feeds the demonstrator's history at every step and never checks the goal, so errors do
+not compound. \Cref{fig:episode} shows the episode success rate on AndroidControl-High by episode length.
+\ours{} gets every step of an episode right in \OURSESRHIGH\% of the episodes on High and \OURSESRLOW\% on Low,
+against \BASEESRHIGH\% and \BASEESRLOW\% for the base model. On High the share falls from 65.5\% for one-step
+episodes to 27.7\% for five-step episodes and 5.3\% for episodes of ten steps or more (base model: 48.3\%, 3.9\% and
+0\%). High per-step accuracy therefore still leaves long tasks mostly unfinished when errors are not corrected.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/fig_episode.pdf}
+  \caption{AndroidControl-High: share of episodes in which every step is correct, by episode length (1{,}543
+  episodes).}
+  \label{fig:episode}
+\end{figure}
+
+%% ==================================================================
+\section{Ablations}
+\label{sec:ablations}
+
+\begin{table}[t]
+\centering
+\caption{Ablations, AndroidControl step success rate (\%), InfiGUI-R1 scorer. Validation: 690 action steps of the
+AndroidControl validation split in the Low format.}
+\label{tab:abl}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}L{4.6cm} r r@{}}
+\toprule
+Variant & Low & High \\
+\midrule
+\rowcolor{oursbg}\ours{} & 90.5 & 74.2 \\
+Smaller curated training set (40k rows, 2{,}482 steps) & 89.3 & 69.7 \\
+``Done'' left in the action space at test time & 86.8 & 74.2 \\
+\midrule
+& \multicolumn{2}{r}{Validation} \\
+\ours{} & \multicolumn{2}{r}{601/690} \\
+Weight average with a model trained without the continuation weighting & \multicolumn{2}{r}{606/690} \\
+Weight average with the smaller-data model & \multicolumn{2}{r}{601/690} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Cref{tab:abl} lists the variants we measured. Training on the full AndroidControl training split instead of a
+smaller curated subset adds 1.2 points on Low and 4.5 points on High. Leaving the ``done'' option in the action
+space costs 3.7 points on Low: the model ends an instruction one step early on 449 of the 8{,}444 steps, most
+often when AndroidControl keeps the same instruction for a following wait or repeated scroll. It costs nothing on
+High, where the model never answers ``done''. Averaging the weights with a model trained without the
+continuation weighting, or with the smaller-data model, does not change validation accuracy by more than 5 of 690 steps, so we keep the single model.
+
+%% ==================================================================
+\section{Limitations}
+All results come from one training seed, and we did not measure the variation between seeds on this benchmark,
+so differences of a few points to the strongest reported models should not be read as a ranking.
+The rows of other models come from other papers, prompts, action spaces and scorers. Scoring in AndroidControl's
+action space removes the ``done'' option that our training adds; with it, Low step success is 86.8\%. AndroidControl
+evaluates single steps from the demonstrator's history, so these numbers do not measure task completion. The
+conformal analysis assumes that calibration and test steps are exchangeable.
+
+\section{Conclusion}
+A 2B decision model that answers typed questions in one forward pass, with no generated tokens, reaches 90.5\% and
+74.2\% step success on AndroidControl-Low and High, up from \BASELOW\% and \BASEHIGH\% for its base model, and on
+High is within three points of generative agents of 7B to 72B parameters. Its action probability ranks its own errors well
+enough to act on \OURSCOVTWENTY\% of the steps at an error rate below 20\%. The largest remaining errors are the
+choice of the target element and the decision between acting and waiting on a screen that is still loading.
+
+\bibliography{refs}
+\bibliographystyle{icml2026}
+
+\end{document}

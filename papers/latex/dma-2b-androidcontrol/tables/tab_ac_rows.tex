@@ -1,0 +1,29 @@
+\multicolumn{5}{@{}l}{\textit{General vision-language models, zero-shot}} \\
+\quad GPT-4o & -- & yes & 19.4 & 20.8 \\
+\quad Qwen2.5-VL-3B & 3B & yes & 59.3 & 38.9 \\
+\quad Qwen2.5-VL-7B & 7B & yes & 62.5 & 47.1 \\
+\addlinespace[2pt]
+\multicolumn{5}{@{}l}{\textit{GUI agents, up to 4B}} \\
+\quad UI-R1-3B & 3B & yes & 66.4 & 45.4 \\
+\quad GUI-R1-3B & 3B & yes & 64.4 & 46.6 \\
+\quad OS-Atlas-4B & 4B & yes & 80.6 & 67.5 \\
+\quad UI-TARS-2B & 2B & yes & 89.3 & 68.9 \\
+\quad InfiGUI-R1-3B & 3B & yes & 92.1 & 71.1 \\
+\addlinespace[2pt]
+\multicolumn{5}{@{}l}{\textit{GUI agents, 7B to 9B}} \\
+\quad GUI-R1-7B & 7B & yes & 66.5 & 51.7 \\
+\quad Aguvis-7B & 7B & yes & 80.5 & 61.5 \\
+\quad UI-TARS-7B & 7B & yes & 90.8 & 72.5 \\
+\quad MobileRL-7B & 7B & yes & 91.4 & 71.3 \\
+\quad UI-Genie-7B & 7B & yes & 94.3 & 74.5 \\
+\quad MobileRL-9B & 9B & yes & 94.3 & 73.9 \\
+\addlinespace[2pt]
+\multicolumn{5}{@{}l}{\textit{GUI agents, 72B}} \\
+\quad Aguvis-72B & 72B & yes & 84.4 & 66.4 \\
+\quad UI-TARS-72B & 72B & yes & 91.3 & 74.7 \\
+\quad UI-Genie-72B & 72B & yes & \textbf{94.8} & \textbf{77.0} \\
+\addlinespace[2pt]
+\midrule
+\multicolumn{5}{@{}l}{\textit{Decision model, one forward pass (this work)}} \\
+\quad d1-2B (base) & 2B & no & 59.8 & 40.2 \\
+\rowcolor{oursbg}\quad \textbf{\ours{}} & 2B & no & 90.5 & 74.2 \\

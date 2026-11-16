@@ -38,7 +38,16 @@ def auroc(pos, neg):
 
 def score(preds, rows):
     pred = {(str(p["episode_id"]), p["step"]): p for p in preds}
-    done_keys = {(str(r["ep"]).split(":", 1)[1], r["step"]) for r in rows if r["aug"] == "span_done"}
+    # The last action of a local goal: the next row of the file is not another action row of the same local goal (a
+    # done row, another episode, or the end of the file). The AndroidControl test episodes end at their last action,
+    # so their last local goal has no done row; its last action is still a last action (fixed 2026-11-14: it used to
+    # be counted as "inside").
+    last = set()
+    for i, r in enumerate(rows):
+        nx = rows[i + 1] if i + 1 < len(rows) else None
+        if r["aug"] == "span" and not (nx and nx["aug"] == "span" and str(nx["ep"]) == str(r["ep"])
+                                       and nx.get("local_goal") == r.get("local_goal")):
+            last.add((str(r["ep"]), r["step"]))
     acc = {"inside": [0, 0, 0], "last": [0, 0, 0]}  # rows, correct, predicted status
     done = [0, 0]
     pos, neg, missing = [], [], 0
@@ -55,7 +64,7 @@ def score(preds, rows):
             done[1] += said_done
             pos.append(p_status(p))
         else:
-            k = "last" if (str(r["ep"]), r["step"] + 1) in done_keys else "inside"
+            k = "last" if (str(r["ep"]), r["step"]) in last else "inside"
             acc[k][0] += 1
             acc[k][1] += bool(p["correct"])
             acc[k][2] += said_done
