@@ -52,8 +52,10 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 <p class="lead"><a href="https://huggingface.co/tuanhqv123/DMA-2B">DMA-2B</a> is a 2B <b>decision model</b> for Android
 agents. At each step it reads the screenshot, the goal, what it has done so far and the list of on-screen elements, then
 <b>chooses</b> the next action from fixed options and the element to act on. It writes no text, so every output can be
-executed, and every choice has a probability. Below are three tasks it completed on an Android emulator, replayed step by step
-from our evaluation run (model on a GPU, about 130 ms per decision).</p>
+executed, and every choice has a probability. Below are three episodes of the AndroidControl test split in the AC-Low
+setting (the step instruction is given). Every step was run through the released model; each step shows whether its decision
+matches what the human did. Two episodes are fully right and one has one wrong step; over the whole test split 63.8% of the
+episodes are fully right.</p>
 
 <div class="controls" id="tabs"></div>
 
@@ -63,7 +65,9 @@ from our evaluation run (model on a GPU, about 130 ms per decision).</p>
     <div class="card">
       <div class="goal" id="goal"></div>
       <div class="meta" id="meta"></div>
+      <div class="meta" id="instr"></div>
       <div class="decision" id="decision"></div>
+      <div id="verdict"></div>
       <div id="jaction"></div>
       <div class="two">
         <div><h3>Action probabilities</h3><div class="bars" id="abars"></div></div>
@@ -79,12 +83,13 @@ from our evaluation run (model on a GPU, about 130 ms per decision).</p>
 <h3>How to read this page</h3>
 <p><b>Action probabilities</b>: the probability the model gave to each kind of action at this step (they sum to 1).
 <b>Element probabilities</b>: for click, type and answer, which element of the list it picks (for open app: which app; for scroll: which direction); the red box is the chosen
-element and the circle is where the tap lands (the element's centre). <b>Done</b> ends the episode.</p>
+element and the circle is where the tap lands (the element's centre). AndroidControl has no "done" action, so the model's
+"done" option is shown but never taken.</p>
 <h3>Results (details in the <a href="https://huggingface.co/tuanhqv123/DMA-2B">model card</a>)</h3>
 <table>
 <tr><th>Benchmark</th><th class="n">Type</th><th class="n">Grounding</th><th class="n">Step success</th></tr>
-<tr><td>AndroidControl-Low (a step instruction is given)</td><td class="n">96.6</td><td class="n">90.1</td><td class="n">89.3</td></tr>
-<tr><td>AndroidControl-High (only the goal is given)</td><td class="n">74.3</td><td class="n">78.4</td><td class="n">61.7</td></tr>
+<tr><td>AndroidControl-Low (a step instruction is given)</td><td class="n">96.8</td><td class="n">91.2</td><td class="n">90.5</td></tr>
+<tr><td>AndroidControl-High (only the goal is given)</td><td class="n">87.0</td><td class="n">80.4</td><td class="n">74.2</td></tr>
 </table>
 <p class="meta"><b>Type</b>: % of steps with the right kind of action. <b>Grounding</b>: % of clicks on the right element,
 among steps with the right kind. <b>Step success</b>: % of steps entirely right.</p>
@@ -125,12 +130,19 @@ function show() {
   document.querySelectorAll("#tabs .tab").forEach((b, i) => b.classList.toggle("on", i === ep));
   document.querySelectorAll(".steps button").forEach((b, i) => b.classList.toggle("on", i === st));
   $("goal").textContent = e.goal;
-  $("meta").textContent = `Task ${e.task} · step ${st + 1} of ${e.steps.length} · model time ${Math.round(s.model_ms)} ms`;
+  $("meta").textContent = `AndroidControl test episode ${e.episode} · step ${st + 1} of ${e.steps.length} · model time ${Math.round(s.model_ms)} ms`;
+  $("instr").textContent = `Step instruction: ${s.instruction}`;
+  const hv = s.human ? JSON.stringify(s.human).replace(/</g, "&lt;") : "";
+  $("verdict").innerHTML = s.matches_human === true
+    ? `<span style="color:#2e7d4f;font-weight:600">✓ matches the human's action</span> <span class="meta">${hv}</span>`
+    : s.matches_human === false
+      ? `<span style="color:var(--hit);font-weight:600">✗ differs from the human's action</span> <span class="meta">human: ${hv}</span>`
+      : "";
   let d = `Decision: <b>${s.action}</b> with probability <b>${s.probability.toFixed(3)}</b>`;
   if (s.element) d += ` on element <b>[${s.element.id}] ${s.element.label.replace(/</g,"&lt;")}</b> (p = ${s.element.probability.toFixed(3)})`;
   $("decision").innerHTML = d;
   $("jaction").innerHTML = s.json_action ? `Executed action: <code>${JSON.stringify(s.json_action).replace(/</g,"&lt;")}</code>`
-    : (s.action === "status" ? "The model declares the task complete; the episode ends here." : "");
+    : "";
   const top = s.action_probs[0][0];
   bars($("abars"), s.action_probs, top);
   $("etitle").textContent = s.second.title;

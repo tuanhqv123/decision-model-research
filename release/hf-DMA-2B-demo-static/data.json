@@ -1,1 +1,1437 @@
-[{"title": "Turn wifi on", "task": "SystemWifiTurnOnVerify", "goal": "Turn wifi on.", "steps": [{"screenshot": "screens/wifi_on_0.png", "history": [], "state": "Goal: Turn wifi on.\nProgress: step 1, 0 actions done\nCurrent app: home screen\nPrevious actions: none\nElements on screen (id: label | type | state | position):\n[1] (no label) | ScrollView | scroll | x:0-100% y:0-100%\n[2] Home | View | - | x:0-100% y:5-97%\n[3] Sun, Oct 15 | TextView | click | x:5-95% y:12-15%\n[4] Gmail | TextView | click,long_click | x:29-48% y:62-73%\n[5] Photos | TextView | click,long_click | x:52-71% y:62-73%\n[6] YouTube | TextView | click,long_click | x:75-95% y:62-73%\n[7] Phone | TextView | click,long_click | x:7-23% y:78-86%\n[8] Messages | TextView | click,long_click | x:30-46% y:78-86%\n[9] Chrome | TextView | click,long_click | x:54-70% y:78-86%\n[10] Markor | TextView | click,long_click | x:77-93% y:78-86%\n[11] Search | FrameLayout | click,long_click | x:7-93% y:89-95%\n[12] Voice search | ImageView | click | x:69-80% y:89-95%\n[13] Google Lens | ImageButton | click | x:80-92% y:89-95%\n[14] Google app | ImageView | click | x:8-20% y:89-95%", "action": "open_app", "probability": 0.9997901747013376, "element": null, "box": null, "json_action": {"action_type": "open_app", "app_name": "settings"}, "action_probs": [["open app", 0.9997901747013376], ["click", 0.0001584280759208824], ["wait", 1.9522169371584842e-05], ["back", 9.514345484721226e-06], ["done (end task)", 9.149856633083416e-06], ["home", 3.5552511603574766e-06], ["scroll", 3.2119017610841274e-06], ["type text", 2.6523789669137884e-06], ["long press", 2.139587836353472e-06], ["answer", 1.6517315272969055e-06]], "element_probs": [["[2] Home", 0.8899325836134159], ["[14] Google app", 0.07080259914462646], ["[1] (no label)", 0.02524544418456434], ["[7] Phone", 0.002877065097288365], ["[3] Sun, Oct 15", 0.0025390010368912296]], "model_ms": 116.7, "second": {"title": "App probabilities (top 5)", "rows": [["settings", 0.9999240509088352], ["google chrome", 1.5445375003256877e-05], ["gmail", 5.90838250409855e-06], ["markor", 5.337778771209134e-06], ["files", 4.356568063436509e-06]]}}, {"screenshot": "screens/wifi_on_1.png", "history": ["open_app settings → screen changed"], "state": "Goal: Turn wifi on.\nProgress: step 2, 1 actions done\nCurrent app: settings (com.android.settings)\nPrevious actions:\nStep 1: open_app settings → screen changed\nElements on screen (id: label | type | state | position):\n[1] (no label) | ScrollView | scroll | x:0-100% y:5-97%\n[2] Profile picture, double tap to open Goog | ImageView | click | x:82-94% y:11-17%\n[3] Settings | TextView | - | x:6-38% y:17-22%\n[4] Search settings | TextView | - | x:19-51% y:26-29%\n[5] (no label) | ScrollView | scroll | x:0-100% y:32-97%\n[6] Network & internet | TextView | - | x:18-58% y:34-37%\n[7] Mobile, Wi‑Fi, hotspot | TextView | - | x:18-50% y:37-39%\n[8] Connected devices | TextView | - | x:18-59% y:44-47%\n[9] Bluetooth, pairing | TextView | - | x:18-44% y:47-49%\n[10] Apps | TextView | - | x:18-29% y:54-57%\n[11] Assistant, recent apps, default apps | TextView | - | x:18-72% y:57-59%\n[12] Notifications | TextView | - | x:18-45% y:63-66%\n[13] Notification history, conversations | TextView | - | x:18-69% y:66-68%\n[14] Battery | TextView | - | x:18-33% y:73-76%\n[15] 100% | TextView | - | x:18-26% y:76-78%\n[16] Storage | TextView | - | x:18-34% y:82-85%\n[17] 46% used - 4.31 GB free | TextView | - | x:18-54% y:85-88%\n[18] Sound & vibration | TextView | - | x:18-56% y:92-95%\n[19] Volume, haptics, Do Not Disturb | TextView | - | x:18-65% y:95-97%", "action": "click", "probability": 0.9875959451317615, "element": {"id": 6, "label": "Network & internet", "probability": 0.7759870331872937}, "box": [189, 824, 625, 895], "json_action": {"action_type": "click", "x": 407, "y": 860}, "action_probs": [["click", 0.9875959451317615], ["scroll", 0.009682049960848212], ["wait", 0.0017358959046527473], ["done (end task)", 0.00041231141713757183], ["long press", 0.00022069439813174598], ["back", 0.00020732320049472012], ["type text", 7.869101102489489e-05], ["open app", 2.9751295601237895e-05], ["answer", 2.4616564147215792e-05], ["home", 1.2721116200387539e-05]], "element_probs": [["[6] Network & internet", 0.7759870331872937], ["[7] Mobile, Wi‑Fi, hotspot", 0.21548381670629724], ["[4] Search settings", 0.0013219868710239826], ["[8] Connected devices", 0.0010789742380576065], ["[10] Apps", 0.0008945010611162668]], "model_ms": 130.5, "second": {"title": "Element probabilities (top 5)", "rows": [["[6] Network & internet", 0.7759870331872937], ["[7] Mobile, Wi‑Fi, hotspot", 0.21548381670629724], ["[4] Search settings", 0.0013219868710239826], ["[8] Connected devices", 0.0010789742380576065], ["[10] Apps", 0.0008945010611162668]]}}, {"screenshot": "screens/wifi_on_2.png", "history": ["open_app settings → screen changed", "click \"Network & internet\" → screen changed"], "state": "Goal: Turn wifi on.\nProgress: step 3, 2 actions done\nCurrent app: settings (com.android.settings)\nPrevious actions:\nStep 1: open_app settings → screen changed\nStep 2: click \"Network & internet\" → screen changed\nElements on screen (id: label | type | state | position):\n[1] (no label) | ScrollView | scroll | x:0-100% y:0-97%\n[2] Network & internet | FrameLayout | - | x:0-100% y:0-25%\n[3] Navigate up | ImageButton | click | x:0-14% y:5-11%\n[4] Internet | TextView | - | x:18-34% y:27-30%\n[5] Networks available | TextView | - | x:18-46% y:30-32%\n[6] Calls & SMS | TextView | - | x:18-44% y:35-38%\n[7] T-Mobile | TextView | - | x:18-30% y:38-40%\n[8] SIMs | TextView | - | x:18-28% y:44-47%\n[9] T-Mobile | TextView | - | x:18-30% y:47-49%\n[10] (no label) | Switch | checkable | x:83-96% y:51-56%\n[11] Airplane mode | TextView | - | x:18-49% y:52-55%\n[12] Hotspot & tethering | TextView | - | x:18-60% y:59-62%\n[13] Off | TextView | - | x:18-22% y:62-64%\n[14] Data Saver | TextView | - | x:18-41% y:67-70%\n[15] Off | TextView | - | x:18-22% y:70-73%\n[16] VPN | TextView | - | x:18-27% y:76-79%\n[17] None | TextView | - | x:18-26% y:79-81%\n[18] Mobile plan | TextView | - | x:6-31% y:85-88%\n[19] Private DNS | TextView | - | x:6-32% y:91-94%\n[20] Automatic | TextView | - | x:6-21% y:94-96%", "action": "click", "probability": 0.9584558864757782, "element": {"id": 4, "label": "Internet", "probability": 0.7605823956605839}, "box": [189, 640, 369, 711], "json_action": {"action_type": "click", "x": 279, "y": 676}, "action_probs": [["click", 0.9584558864757782], ["scroll", 0.028052381713243386], ["done (end task)", 0.006458024964035271], ["wait", 0.005189168840049824], ["back", 0.0013536755709678517], ["long press", 0.00023340294017158], ["type text", 0.00012203755398421336], ["answer", 5.468527304956287e-05], ["open app", 4.487319107364122e-05], ["home", 3.5863477646657265e-05]], "element_probs": [["[4] Internet", 0.7605823956605839], ["[5] Networks available", 0.22482772671523665], ["[3] Navigate up", 0.002830163403934477], ["[9] T-Mobile", 0.002238843526857878], ["[1] (no label)", 0.0012957432255863166]], "model_ms": 125.2, "second": {"title": "Element probabilities (top 5)", "rows": [["[4] Internet", 0.7605823956605839], ["[5] Networks available", 0.22482772671523665], ["[3] Navigate up", 0.002830163403934477], ["[9] T-Mobile", 0.002238843526857878], ["[1] (no label)", 0.0012957432255863166]]}}, {"screenshot": "screens/wifi_on_3.png", "history": ["open_app settings → screen changed", "click \"Network & internet\" → screen changed", "click \"Internet\" → no change"], "state": "Goal: Turn wifi on.\nProgress: step 4, 3 actions done\nCurrent app: settings (com.android.settings)\nPrevious actions:\nStep 1: open_app settings → screen changed\nStep 2: click \"Network & internet\" → screen changed\nStep 3: click \"Internet\" → no change\nElements on screen (id: label | type | state | position):\n[1] (no label) | ScrollView | scroll | x:0-100% y:0-97%\n[2] Network & internet | FrameLayout | - | x:0-100% y:0-25%\n[3] Navigate up | ImageButton | click | x:0-14% y:5-11%\n[4] Internet | TextView | - | x:18-34% y:27-30%\n[5] Networks available | TextView | - | x:18-46% y:30-32%\n[6] Calls & SMS | TextView | - | x:18-44% y:35-38%\n[7] T-Mobile | TextView | - | x:18-30% y:38-40%\n[8] SIMs | TextView | - | x:18-28% y:44-47%\n[9] T-Mobile | TextView | - | x:18-30% y:47-49%\n[10] (no label) | Switch | checkable | x:83-96% y:51-56%\n[11] Airplane mode | TextView | - | x:18-49% y:52-55%\n[12] Hotspot & tethering | TextView | - | x:18-60% y:59-62%\n[13] Off | TextView | - | x:18-22% y:62-64%\n[14] Data Saver | TextView | - | x:18-41% y:67-70%\n[15] Off | TextView | - | x:18-22% y:70-73%\n[16] VPN | TextView | - | x:18-27% y:76-79%\n[17] None | TextView | - | x:18-26% y:79-81%\n[18] Mobile plan | TextView | - | x:6-31% y:85-88%\n[19] Private DNS | TextView | - | x:6-32% y:91-94%\n[20] Automatic | TextView | - | x:6-21% y:94-96%", "action": "status", "probability": 0.7544694982161899, "element": null, "box": null, "json_action": null, "action_probs": [["done (end task)", 0.7544694982161899], ["click", 0.18489070207716082], ["wait", 0.05465358714053441], ["scroll", 0.003959092573510604], ["back", 0.0014116579305502902], ["type text", 0.00017668970762390378], ["home", 0.000154111502077332], ["long press", 0.00010843098415880178], ["answer", 8.897540414676179e-05], ["open app", 8.725446404704625e-05]], "element_probs": [["[6] Calls & SMS", 0.7352474117013889], ["[8] SIMs", 0.08511106555337605], ["[10] (no label)", 0.05495183405724497], ["[7] T-Mobile", 0.03836256280655041], ["[3] Navigate up", 0.026366178123887408]], "model_ms": 130.0, "second": {"title": "No element or app needed for this action", "rows": []}}]}, {"title": "Count an ingredient in a recipe note", "task": "NotesRecipeIngredientCount", "goal": "What quantity of spirulina do I need for the recipe 'Chicken Alfredo' in the Joplin app? Express your answer in the format <amount> <unit> where both the amount and unit exactly match the format in the recipe.", "steps": [{"screenshot": "screens/recipe_count_0.png", "history": [], "state": "Goal: What quantity of spirulina do I need for the recipe 'Chicken Alfredo' in the Joplin app? Express your answer in the format <amount> <unit> where both the amount and unit exactly match the format in the recipe.\nProgress: step 1, 0 actions done\nCurrent app: home screen\nPrevious actions: none\nElements on screen (id: label | type | state | position):\n[1] (no label) | ScrollView | scroll | x:0-100% y:0-100%\n[2] Home | View | - | x:0-100% y:5-97%\n[3] Sun, Oct 15 | TextView | click | x:5-95% y:12-15%\n[4] Gmail | TextView | click,long_click | x:29-48% y:62-73%\n[5] Photos | TextView | click,long_click | x:52-71% y:62-73%\n[6] YouTube | TextView | click,long_click | x:75-95% y:62-73%\n[7] Phone | TextView | click,long_click | x:7-23% y:78-86%\n[8] Messages | TextView | click,long_click | x:30-46% y:78-86%\n[9] Chrome | TextView | click,long_click | x:54-70% y:78-86%\n[10] VLC | TextView | click,long_click | x:77-93% y:78-86%\n[11] Search | FrameLayout | click,long_click | x:7-93% y:89-95%\n[12] Voice search | ImageView | click | x:69-80% y:89-95%\n[13] Google Lens | ImageButton | click | x:80-92% y:89-95%\n[14] Google app | ImageView | click | x:8-20% y:89-95%", "action": "open_app", "probability": 0.9999288456801081, "element": null, "box": null, "json_action": {"action_type": "open_app", "app_name": "joplin"}, "action_probs": [["open app", 0.9999288456801081], ["click", 5.30741186185767e-05], ["wait", 7.182800875778658e-06], ["done (end task)", 3.31431809997302e-06], ["back", 2.3137669279363866e-06], ["home", 1.5293065557268376e-06], ["scroll", 1.2678396653217255e-06], ["type text", 1.0428964614126835e-06], ["long press", 7.453244896242279e-07], ["answer", 6.839481974928297e-07]], "element_probs": [["[10] VLC", 0.47584488282699766], ["[11] Search", 0.1952863464343389], ["[9] Chrome", 0.08665779092579977], ["[14] Google app", 0.07890281653224539], ["[1] (no label)", 0.07184183199467728]], "model_ms": 122.0, "second": {"title": "App probabilities (top 5)", "rows": [["joplin", 0.9998843611892385], ["vlc", 8.219914597970245e-05], ["broccoli", 1.952400848204606e-05], ["open tracks sports tracker", 4.710386256742518e-06], ["retro music", 3.844505216900584e-06]]}}, {"screenshot": "screens/recipe_count_1.png", "history": ["open_app joplin → screen changed"], "state": "Goal: What quantity of spirulina do I need for the recipe 'Chicken Alfredo' in the Joplin app? Express your answer in the format <amount> <unit> where both the amount and unit exactly match the format in the recipe.\nProgress: step 2, 1 actions done\nCurrent app: joplin (net.cozic.joplin)\nPrevious actions:\nStep 1: open_app joplin → screen changed\nElements on screen (id: label | type | state | position):\n[1] Sidebar | Button | click | x:0-13% y:5-11%\n[2] All notes | TextView | - | x:15-76% y:5-11%\n[3] Search | Button | click | x:76-88% y:5-11%\n[4] Sort notes by | Button | click | x:88-100% y:5-11%\n[5]  | TextView | - | x:4-11% y:6-10%\n[6]  | TextView | - | x:78-85% y:6-10%\n[7]  | TextView | - | x:90-98% y:6-10%\n[8] (no label) | ScrollView | scroll | x:0-100% y:11-97%\n[9] to-do: Cheesy Veggie Scramble | CheckBox | click,checkable | x:0-11% y:11-16%\n[10] Cheesy Veggie Scramble | TextView | - | x:11-96% y:12-14%\n[11]  | TextView | - | x:4-9% y:12-14%\n[12] to-do: Bucket List Destinations | CheckBox | click,checkable | x:0-11% y:16-20%\n[13] Bucket List Destinations | TextView | - | x:11-96% y:17-19%\n[14]  | TextView | - | x:4-9% y:17-19%\n[15] to-do: Gardening Tips | CheckBox | click,checkable | x:0-11% y:20-25%\n[16] Gardening Tips | TextView | - | x:11-96% y:21-24%\n[17]  | TextView | - | x:4-9% y:22-24%\n[18] to-do: Photography Portfolio Website | CheckBox | click,checkable | x:0-11% y:25-30%\n[19] Photography Portfolio Website | TextView | - | x:11-96% y:26-28%\n[20]  | TextView | - | x:4-9% y:26-29%\n[21] to-do: Salmon with Roasted Vegetables | CheckBox | click,checkable | x:0-11% y:30-34%\n[22] Salmon with Roasted Vegetables | TextView | - | x:11-96% y:31-33%\n[23]  | TextView | - | x:4-9% y:31-33%\n[24] to-do: Healthy Recipes to Try | CheckBox | click,checkable | x:0-11% y:34-39%\n[25] Healthy Recipes to Try | TextView | - | x:11-96% y:36-38%\n[26]  | TextView | - | x:4-9% y:36-38%\n[27] to-do: Schedule Oil Change for Car | CheckBox | click,checkable | x:0-11% y:39-44%\n[28] Schedule Oil Change for Car | TextView | - | x:11-96% y:40-43%\n[29]  | TextView | - | x:4-9% y:40-43%\n[30] to-do: Tuna Salad Surprise | CheckBox | click,checkable | x:0-11% y:44-48%\n[31] Tuna Salad Surprise | TextView | - | x:11-96% y:45-47%\n[32]  | TextView | - | x:4-9% y:45-47%\n[33] to-do: Personal Finance Resources | CheckBox | click,checkable | x:0-11% y:49-53%\n[34] Personal Finance Resources | TextView | - | x:11-96% y:50-52%\n[35]  | TextView | - | x:4-9% y:50-52%\n[36] to-do: Financial News & Analysis | CheckBox | click,checkable | x:0-11% y:53-58%\n[37] Financial News & Analysis | TextView | - | x:11-96% y:54-57%\n[38]  | TextView | - | x:4-9% y:54-57%\n[39] to-do: Home Renovation Ideas | CheckBox | click,checkable | x:0-11% y:58-63%\n[40] Home Renovation Ideas | TextView | - | x:11-96% y:59-61%\n[41]  | TextView | - | x:4-9% y:59-62%\n[42] to-do: Favorite Recipes | CheckBox | click,checkable | x:0-11% y:63-67%\n[43] Favorite Recipes | TextView | - | x:11-96% y:64-66%\n[44]  | TextView | - | x:4-9% y:64-66%\n[45] to-do: Community Garden Project | CheckBox | click,checkable | x:0-11% y:67-72%\n[46] Community Garden Project | TextView | - | x:11-96% y:68-71%\n[47]  | TextView | - | x:4-9% y:69-71%\n[48] to-do: Pasta Carbonara | CheckBox | click,checkable | x:0-11% y:72-77%\n[49] Pasta Carbonara | TextView | - | x:11-96% y:73-76%\n[50]  | TextView | - | x:4-9% y:73-76%\n[51] to-do: Performance Review Meeting - Sara | CheckBox | click,checkable | x:0-11% y:77-81%\n[52] Performance Review Meeting - Sarah - Feb | TextView | - | x:11-96% y:78-82%\n[53]  | TextView | - | x:4-9% y:78-80%\n[54] to-do: Client Presentation - Proposal Re | CheckBox | click,checkable | x:0-11% y:83-88%\n[55] Client Presentation - Proposal Review -  | TextView | - | x:11-96% y:84-89%\n[56]  | TextView | - | x:4-9% y:85-87%\n[57] Add new, collapsed | Button | click | x:82-96% y:90-96%\n[58] to-do: Hummus and Veggie Delight | CheckBox | click,checkable | x:0-11% y:90-95%\n[59] Hummus and Veggie Delight | TextView | - | x:11-96% y:91-93%\n[60]  | TextView | - | x:4-9% y:91-94%\n[61]  | TextView | - | x:86-92% y:91-94%\n[62] to-do: Breakfast Burritos | CheckBox | click,checkable | x:0-11% y:95-97%\n[63] Breakfast Burritos | TextView | - | x:11-96% y:96-97%\n[64]  | TextView | - | x:4-9% y:96-97%", "action": "click", "probability": 0.5752583225113783, "element": {"id": 3, "label": "Search", "probability": 0.32325980692769496}, "box": [817, 128, 949, 264], "json_action": {"action_type": "click", "x": 883, "y": 196}, "action_probs": [["click", 0.5752583225113783], ["scroll", 0.3953688775973497], ["back", 0.011571777927807367], ["wait", 0.011571777927807367], ["done (end task)", 0.0035291928713322156], ["open app", 0.0011457611734615027], ["long press", 0.0005671929101677287], ["type text", 0.00042813967056199516], ["answer", 0.00032066179687940174], ["home", 0.0002382956132545099]], "element_probs": [["[3] Search", 0.32325980692769496], ["[1] Sidebar", 0.2597465520327703], ["[61] ", 0.05979705161924991], ["[6] ", 0.04443739548986503], ["[57] Add new, collapsed", 0.037420038724826916]], "model_ms": 180.9, "second": {"title": "Element probabilities (top 5)", "rows": [["[3] Search", 0.32325980692769496], ["[1] Sidebar", 0.2597465520327703], ["[61] ", 0.05979705161924991], ["[6] ", 0.04443739548986503], ["[57] Add new, collapsed", 0.037420038724826916]]}}, {"screenshot": "screens/recipe_count_2.png", "history": ["open_app joplin → screen changed", "click \"Search\" → screen changed"], "state": "Goal: What quantity of spirulina do I need for the recipe 'Chicken Alfredo' in the Joplin app? Express your answer in the format <amount> <unit> where both the amount and unit exactly match the format in the recipe.\nProgress: step 3, 2 actions done\nCurrent app: joplin (net.cozic.joplin)\nPrevious actions:\nStep 1: open_app joplin → screen changed\nStep 2: click \"Search\" → screen changed\nElements on screen (id: label | type | state | position):\n[1] Back | Button | click | x:0-12% y:5-11%\n[2] Search | TextView | - | x:15-100% y:5-11%\n[3]  | TextView | - | x:2-10% y:6-10%\n[4] (no label) | EditText | click,edit,long_click | x:0-89% y:11-15%\n[5] Clear | ViewGroup | click | x:89-100% y:12-15%\n[6]  | TextView | - | x:89-100% y:12-15%\n[7] (no label) | ScrollView | scroll | x:0-100% y:16-63%", "action": "type_text", "probability": 0.9482118825658732, "element": {"id": 4, "label": "(no label)", "probability": 0.9709504718652444}, "box": [3, 268, 959, 369], "json_action": {"action_type": "input_text", "x": 481, "y": 318, "text": "spirulina", "clear_text": true}, "action_probs": [["type text", 0.9482118825658732], ["click", 0.04575623113401785], ["wait", 0.0037559001696706503], ["back", 0.0007395805943095643], ["done (end task)", 0.00041486711373261775], ["answer", 0.0003180896499339358], ["scroll", 0.0003035232643427671], ["long press", 0.0002851337193913831], ["open app", 0.0001550245142832611], ["home", 5.976727444517969e-05]], "element_probs": [["[4] (no label)", 0.9709504718652444], ["[5] Clear", 0.011481941073345915], ["[6] ", 0.010786285430755733], ["[2] Search", 0.0032896311947796446], ["[7] (no label)", 0.0014148527465570897]], "model_ms": 111.8, "second": {"title": "Element probabilities (top 5)", "rows": [["[4] (no label)", 0.9709504718652444], ["[5] Clear", 0.011481941073345915], ["[6] ", 0.010786285430755733], ["[2] Search", 0.0032896311947796446], ["[7] (no label)", 0.0014148527465570897]]}}, {"screenshot": "screens/recipe_count_3.png", "history": ["open_app joplin → screen changed", "click \"Search\" → screen changed", "type_text \"spirulina\" into [EditText] → screen changed"], "state": "Goal: What quantity of spirulina do I need for the recipe 'Chicken Alfredo' in the Joplin app? Express your answer in the format <amount> <unit> where both the amount and unit exactly match the format in the recipe.\nProgress: step 4, 3 actions done\nCurrent app: joplin (net.cozic.joplin)\nPrevious actions:\nStep 1: open_app joplin → screen changed\nStep 2: click \"Search\" → screen changed\nStep 3: type_text \"spirulina\" into [EditText] → screen changed\nElements on screen (id: label | type | state | position):\n[1] Back | Button | click | x:0-12% y:5-11%\n[2] Search | TextView | - | x:15-100% y:5-11%\n[3]  | TextView | - | x:2-10% y:6-10%\n[4] spirulina | EditText | click,edit,long_click | x:0-89% y:11-15%\n[5] Clear | ViewGroup | click | x:89-100% y:12-15%\n[6]  | TextView | - | x:89-100% y:12-15%\n[7] (no label) | ScrollView | scroll | x:0-100% y:16-97%\n[8] Chicken Alfredo | TextView | - | x:4-96% y:17-19%", "action": "click", "probability": 0.9378814506940787, "element": {"id": 8, "label": "Chicken Alfredo", "probability": 0.8102219434331199}, "box": [39, 399, 1041, 456], "json_action": {"action_type": "click", "x": 540, "y": 428}, "action_probs": [["click", 0.9378814506940787], ["wait", 0.043865299171332396], ["back", 0.007388121854941539], ["type text", 0.0040168521789446104], ["done (end task)", 0.003382528666026219], ["scroll", 0.0012838630694256086], ["long press", 0.001133005182110851], ["answer", 0.0006160042327230293], ["home", 0.00022573180359397867], ["open app", 0.00020714314682286338]], "element_probs": [["[8] Chicken Alfredo", 0.8102219434331199], ["[6] ", 0.06055537371025501], ["[7] (no label)", 0.05869228072611423], ["[4] spirulina", 0.020927377173106967], ["[3] ", 0.016554917943249817]], "model_ms": 114.5, "second": {"title": "Element probabilities (top 5)", "rows": [["[8] Chicken Alfredo", 0.8102219434331199], ["[6] ", 0.06055537371025501], ["[7] (no label)", 0.05869228072611423], ["[4] spirulina", 0.020927377173106967], ["[3] ", 0.016554917943249817]]}}, {"screenshot": "screens/recipe_count_4.png", "history": ["open_app joplin → screen changed", "click \"Search\" → screen changed", "type_text \"spirulina\" into [EditText] → screen changed", "click \"Chicken Alfredo\" → screen changed"], "state": "Goal: What quantity of spirulina do I need for the recipe 'Chicken Alfredo' in the Joplin app? Express your answer in the format <amount> <unit> where both the amount and unit exactly match the format in the recipe.\nProgress: step 5, 4 actions done\nCurrent app: joplin (net.cozic.joplin)\nPrevious actions:\nStep 1: open_app joplin → screen changed\nStep 2: click \"Search\" → screen changed\nStep 3: type_text \"spirulina\" into [EditText] → screen changed\nStep 4: click \"Chicken Alfredo\" → screen changed\nElements on screen (id: label | type | state | position):\n[1] Back | Button | click | x:0-12% y:5-6%\n[2] Search | TextView | - | x:15-100% y:5-6%\n[3] Back | Button | click | x:0-12% y:6-11%\n[4] (no label) | ScrollView | scroll | x:39-100% y:6-97%\n[5]  | TextView | - | x:2-10% y:7-10%\n[6] Actions | ViewGroup | - | x:87-100% y:7-10%\n[7]  | TextView | - | x:87-100% y:7-10%\n[8] Recipes | TextView | - | x:12-80% y:7-9%\n[9] ▼ | TextView | - | x:80-84% y:7-9%\n[10] Chicken Alfredo | EditText | click,edit,long_click | x:4-96% y:11-16%\n[11] (no label) | WebView | scroll | x:0-100% y:16-98%\n[12] Ingredients: | TextView | - | x:3-97% y:18-20%\n[13] • | View | - | x:7-8% y:23-25%\n[14] 1 cup cooked lentils | TextView | - | x:10-42% y:23-25%\n[15] • | View | - | x:7-8% y:26-29%\n[16] 1/2 cup diced onions | TextView | - | x:10-44% y:26-28%\n[17] • | View | - | x:7-8% y:29-32%\n[18] 1/4 cup chopped carrots | TextView | - | x:10-50% y:29-32%\n[19] • | View | - | x:7-8% y:32-35%\n[20] 1/4 cup chopped celery | TextView | - | x:10-48% y:33-35%\n[21] • | View | - | x:7-8% y:36-38%\n[22] 3/4 cup | TextView | - | x:10-23% y:36-38%\n[23] spirulina | TextView | - | x:23-37% y:36-38%\n[24] • | View | - | x:7-8% y:39-42%\n[25] 1/4 cup vegetable broth | TextView | - | x:10-49% y:39-41%\n[26] Instructions: | TextView | - | x:3-97% y:43-45%\n[27] 1. | View | - | x:6-10% y:47-50%\n[28] In a saucepan, sauté diced onions, chopp | TextView | - | x:10-94% y:48-52%\n[29] 2. | View | - | x:6-10% y:53-56%\n[30] Add cooked lentils and vegetable broth t | TextView | - | x:10-83% y:54-58%\n[31] 3. | View | - | x:6-10% y:59-62%\n[32] Simmer for 10-15 minutes, or until heate | TextView | - | x:10-91% y:60-62%\n[33] 4. | View | - | x:6-10% y:63-65%\n[34] Season with salt and pepper to taste. | TextView | - | x:10-70% y:63-65%\n[35] Edit, collapsed | Button | click | x:82-96% y:90-96%\n[36]  | TextView | - | x:86-92% y:91-94%", "action": "answer", "probability": 0.5855407131028043, "element": {"id": 22, "label": "3/4 cup", "probability": 0.6315712548691723}, "box": [105, 863, 252, 913], "json_action": {"action_type": "answer", "text": "3/4 cup"}, "action_probs": [["answer", 0.5855407131028043], ["done (end task)", 0.2765898481378872], ["click", 0.11175240072220366], ["scroll", 0.017681797422943176], ["wait", 0.0057404391606890115], ["back", 0.0012808651092468574], ["type text", 0.0005055280341681364], ["long press", 0.00044962594115693927], ["open app", 0.00023879453481394448], ["home", 0.00021998783408679377]], "element_probs": [["[22] 3/4 cup", 0.6315712548691723], ["[21] •", 0.12831148312232069], ["[23] spirulina", 0.10975062752856223], ["[19] •", 0.05348818400231545], ["[25] 1/4 cup vegetable broth", 0.009589902957782063]], "model_ms": 149.2, "second": {"title": "Element probabilities (top 5)", "rows": [["[22] 3/4 cup", 0.6315712548691723], ["[21] •", 0.12831148312232069], ["[23] spirulina", 0.10975062752856223], ["[19] •", 0.05348818400231545], ["[25] 1/4 cup vegetable broth", 0.009589902957782063]]}}, {"screenshot": "screens/recipe_count_5.png", "history": ["open_app joplin → screen changed", "click \"Search\" → screen changed", "type_text \"spirulina\" into [EditText] → screen changed", "click \"Chicken Alfredo\" → screen changed", "answer \"3/4 cup\""], "state": "Goal: What quantity of spirulina do I need for the recipe 'Chicken Alfredo' in the Joplin app? Express your answer in the format <amount> <unit> where both the amount and unit exactly match the format in the recipe.\nProgress: step 6, 5 actions done\nCurrent app: joplin (net.cozic.joplin)\nPrevious actions:\nStep 1: open_app joplin → screen changed\nStep 2: click \"Search\" → screen changed\nStep 3: type_text \"spirulina\" into [EditText] → screen changed\nStep 4: click \"Chicken Alfredo\" → screen changed\nStep 5: answer \"3/4 cup\"\nElements on screen (id: label | type | state | position):\n[1] Back | Button | click | x:0-12% y:5-6%\n[2] Search | TextView | - | x:15-100% y:5-6%\n[3] Back | Button | click | x:0-12% y:6-11%\n[4] (no label) | ScrollView | scroll | x:39-100% y:6-97%\n[5]  | TextView | - | x:2-10% y:7-10%\n[6] Actions | ViewGroup | - | x:87-100% y:7-10%\n[7]  | TextView | - | x:87-100% y:7-10%\n[8] Recipes | TextView | - | x:12-80% y:7-9%\n[9] ▼ | TextView | - | x:80-84% y:7-9%\n[10] Chicken Alfredo | EditText | click,edit,long_click | x:4-96% y:11-16%\n[11] (no label) | WebView | scroll | x:0-100% y:16-98%\n[12] Ingredients: | TextView | - | x:3-97% y:18-20%\n[13] • | View | - | x:7-8% y:23-25%\n[14] 1 cup cooked lentils | TextView | - | x:10-42% y:23-25%\n[15] • | View | - | x:7-8% y:26-29%\n[16] 1/2 cup diced onions | TextView | - | x:10-44% y:26-28%\n[17] • | View | - | x:7-8% y:29-32%\n[18] 1/4 cup chopped carrots | TextView | - | x:10-50% y:29-32%\n[19] • | View | - | x:7-8% y:32-35%\n[20] 1/4 cup chopped celery | TextView | - | x:10-48% y:33-35%\n[21] • | View | - | x:7-8% y:36-38%\n[22] 3/4 cup | TextView | - | x:10-23% y:36-38%\n[23] spirulina | TextView | - | x:23-37% y:36-38%\n[24] • | View | - | x:7-8% y:39-42%\n[25] 1/4 cup vegetable broth | TextView | - | x:10-49% y:39-41%\n[26] Instructions: | TextView | - | x:3-97% y:43-45%\n[27] 1. | View | - | x:6-10% y:47-50%\n[28] In a saucepan, sauté diced onions, chopp | TextView | - | x:10-94% y:48-52%\n[29] 2. | View | - | x:6-10% y:53-56%\n[30] Add cooked lentils and vegetable broth t | TextView | - | x:10-83% y:54-58%\n[31] 3. | View | - | x:6-10% y:59-62%\n[32] Simmer for 10-15 minutes, or until heate | TextView | - | x:10-91% y:60-62%\n[33] 4. | View | - | x:6-10% y:63-65%\n[34] Season with salt and pepper to taste. | TextView | - | x:10-70% y:63-65%\n[35] Edit, collapsed | Button | click | x:82-96% y:90-96%\n[36]  | TextView | - | x:86-92% y:91-94%", "action": "status", "probability": 0.9924300675103213, "element": null, "box": null, "json_action": null, "action_probs": [["done (end task)", 0.9924300675103213], ["click", 0.0044544631523213375], ["wait", 0.0020715177457811935], ["back", 0.000488199594870012], ["scroll", 0.00021833636407147898], ["answer", 0.00011000105461045318], ["type text", 8.744392804569086e-05], ["home", 5.8707076052856394e-05], ["open app", 4.134594403868531e-05], ["long press", 3.9917629887065796e-05]], "element_probs": [["[22] 3/4 cup", 0.20829673327777848], ["[21] •", 0.11324896954349294], ["[23] spirulina", 0.10151572020618767], ["[9] ▼", 0.06762404840131486], ["[35] Edit, collapsed", 0.06452731776435768]], "model_ms": 152.7, "second": {"title": "No element or app needed for this action", "rows": []}}]}, {"title": "Reply to an SMS", "task": "SimpleSmsReply", "goal": "Reply to +18407874306 with message: Yoga class every Tuesday and Thursday at 6 PM. in Simple SMS Messenger", "steps": [{"screenshot": "screens/sms_reply_0.png", "history": [], "state": "Goal: Reply to +18407874306 with message: Yoga class every Tuesday and Thursday at 6 PM. in Simple SMS Messenger\nProgress: step 1, 0 actions done\nCurrent app: home screen\nPrevious actions: none\nElements on screen (id: label | type | state | position):\n[1] (no label) | ScrollView | scroll | x:0-100% y:0-100%\n[2] Home | View | - | x:0-100% y:5-97%\n[3] Sun, Oct 15 | TextView | click | x:5-95% y:12-15%\n[4] Gmail | TextView | click,long_click | x:29-48% y:62-73%\n[5] Photos | TextView | click,long_click | x:52-71% y:62-73%\n[6] YouTube | TextView | click,long_click | x:75-95% y:62-73%\n[7] Phone | TextView | click,long_click | x:7-23% y:78-86%\n[8] Messages | TextView | click,long_click | x:30-46% y:78-86%\n[9] Chrome | TextView | click,long_click | x:54-70% y:78-86%\n[10] VLC | TextView | click,long_click | x:77-93% y:78-86%\n[11] Search | FrameLayout | click,long_click | x:7-93% y:89-95%\n[12] Voice search | ImageView | click | x:69-80% y:89-95%\n[13] Google Lens | ImageButton | click | x:80-92% y:89-95%\n[14] Google app | ImageView | click | x:8-20% y:89-95%", "action": "open_app", "probability": 0.9999112674551051, "element": null, "box": null, "json_action": {"action_type": "open_app", "app_name": "simple sms messenger"}, "action_probs": [["open app", 0.9999112674551051], ["click", 6.204884028590072e-05], ["wait", 1.2804501918632288e-05], ["done (end task)", 4.222476572717001e-06], ["back", 2.7476179092581352e-06], ["home", 1.6665145031405834e-06], ["type text", 1.6279097362549718e-06], ["scroll", 1.4535597843612502e-06], ["long press", 1.3708374376954026e-06], ["answer", 7.902867469805623e-07]], "element_probs": [["[3] Sun, Oct 15", 0.773039416220224], ["[2] Home", 0.08809845875459926], ["[8] Messages", 0.059610398988044946], ["[1] (no label)", 0.039709086417371794], ["[14] Google app", 0.015071869185896952]], "model_ms": 171.6, "second": {"title": "App probabilities (top 5)", "rows": [["simple sms messenger", 0.9999779754630811], ["simple calendar pro", 2.1567738844352296e-06], ["dialer", 1.5595460466625083e-06], ["joplin", 1.2778462367500564e-06], ["messages", 1.1910836621269706e-06]]}}, {"screenshot": "screens/sms_reply_1.png", "history": ["open_app simple sms messenger → screen changed"], "state": "Goal: Reply to +18407874306 with message: Yoga class every Tuesday and Thursday at 6 PM. in Simple SMS Messenger\nProgress: step 2, 1 actions done\nCurrent app: simple sms messenger (com.simplemobiletools.smsmessenger)\nPrevious actions:\nStep 1: open_app simple sms messenger → screen changed\nElements on screen (id: label | type | state | position):\n[1] (no label) | ScrollView | scroll | x:0-100% y:5-100%\n[2] Search | ImageView | click | x:4-14% y:6-11%\n[3] Search | EditText | click,edit,long_click | x:14-58% y:6-11%\n[4] Settings | Button | click | x:62-74% y:6-11%\n[5] About | Button | click | x:74-85% y:6-11%\n[6] More options | ImageView | click,long_click | x:85-95% y:6-11%\n[7] +19420128998 | TextView | - | x:19-97% y:14-17%\n[8] Beauty is in the eye of the beholder. | TextView | - | x:19-97% y:17-19%\n[9] 15:34 | TextView | - | x:19-97% y:19-21%\n[10] +13231466913 | TextView | - | x:19-97% y:25-28%\n[11] Lunch meeting with Sarah at 1 PM Cafe L' | TextView | - | x:19-97% y:28-30%\n[12] 15:34 | TextView | - | x:19-97% y:30-32%\n[13] +10283775093 | TextView | - | x:19-97% y:36-38%\n[14] Don't cry over spilled milk. | TextView | - | x:19-97% y:38-41%\n[15] 15:34 | TextView | - | x:19-97% y:41-43%\n[16] +10787430639 | TextView | - | x:19-97% y:46-49%\n[17] It's a bird, it's a plane. | TextView | - | x:19-97% y:49-51%\n[18] 15:34 | TextView | - | x:19-97% y:52-54%\n[19] +18407874306 | TextView | - | x:19-97% y:57-60%\n[20] Book club meets next Tuesday to discuss  | TextView | - | x:19-97% y:60-62%\n[21] 15:34 | TextView | - | x:19-97% y:62-64%\n[22] +11089888875 | TextView | - | x:19-97% y:68-71%\n[23] When in Rome, do as the Romans do. | TextView | - | x:19-97% y:71-73%\n[24] 15:34 | TextView | - | x:19-97% y:73-75%\n[25] (no label) | ImageButton | click | x:82-96% y:90-96%", "action": "click", "probability": 0.967246283399258, "element": {"id": 19, "label": "+18407874306", "probability": 0.5270822314085757}, "box": [201, 1374, 1048, 1442], "json_action": {"action_type": "click", "x": 624, "y": 1408}, "action_probs": [["click", 0.967246283399258], ["wait", 0.01771573364321105], ["long press", 0.008908030302728699], ["scroll", 0.002552193412307704], ["back", 0.0017540951696800322], ["done (end task)", 0.0008030832884019593], ["type text", 0.00048709463671863147], ["open app", 0.00032194989573023475], ["answer", 0.00012583138608936154], ["home", 8.570486587440963e-05]], "element_probs": [["[19] +18407874306", 0.5270822314085757], ["[20] Book club meets next Tuesday to discuss ", 0.3098556590867564], ["[21] 15:34", 0.1332672583452081], ["[22] +11089888875", 0.0030377179925837705], ["[5] About", 0.002853671963376723]], "model_ms": 128.6, "second": {"title": "Element probabilities (top 5)", "rows": [["[19] +18407874306", 0.5270822314085757], ["[20] Book club meets next Tuesday to discuss ", 0.3098556590867564], ["[21] 15:34", 0.1332672583452081], ["[22] +11089888875", 0.0030377179925837705], ["[5] About", 0.002853671963376723]]}}, {"screenshot": "screens/sms_reply_2.png", "history": ["open_app simple sms messenger → screen changed", "click \"+18407874306\" → screen changed"], "state": "Goal: Reply to +18407874306 with message: Yoga class every Tuesday and Thursday at 6 PM. in Simple SMS Messenger\nProgress: step 3, 2 actions done\nCurrent app: simple sms messenger (com.simplemobiletools.smsmessenger)\nPrevious actions:\nStep 1: open_app simple sms messenger → screen changed\nStep 2: click \"+18407874306\" → screen changed\nElements on screen (id: label | type | state | position):\n[1] Back | ImageButton | click | x:0-14% y:6-12%\n[2] Delete | Button | click | x:55-67% y:6-11%\n[3] Dial number | Button | click | x:67-79% y:6-11%\n[4] Add Person | Button | click | x:79-90% y:6-11%\n[5] More options | ImageView | click,long_click | x:90-100% y:6-11%\n[6] +18407874306 | TextView | - | x:15-49% y:7-10%\n[7] 15:34 | TextView | - | x:45-55% y:81-83%\n[8] Book club meets next Tuesday to discuss  | TextView | click,long_click | x:16-78% y:84-91%\n[9] (no label) | ImageView | click | x:4-14% y:87-91%\n[10] Attachment | ImageView | click | x:1-13% y:92-97%\n[11] Type a message… | EditText | click,edit,long_click | x:14-86% y:92-97%\n[12] SMS | Button | long_click | x:87-99% y:92-97%", "action": "click", "probability": 0.8575621699255833, "element": {"id": 11, "label": "Type a message…", "probability": 0.9815505993306228}, "box": [148, 2211, 932, 2337], "json_action": {"action_type": "click", "x": 540, "y": 2274}, "action_probs": [["click", 0.8575621699255833], ["type text", 0.11248767699054472], ["wait", 0.0267181651769395], ["done (end task)", 0.0010522899327133255], ["back", 0.0007943101139863658], ["long press", 0.0005676678387692631], ["scroll", 0.00047802424681773695], ["open app", 0.00013993049454112382], ["answer", 0.00013196702513099495], ["home", 6.779825497376671e-05]], "element_probs": [["[11] Type a message…", 0.9815505993306228], ["[12] SMS", 0.006410155729748207], ["[9] (no label)", 0.004138707601085239], ["[10] Attachment", 0.002549783785180047], ["[8] Book club meets next Tuesday to discuss ", 0.0020810728738140183]], "model_ms": 124.0, "second": {"title": "Element probabilities (top 5)", "rows": [["[11] Type a message…", 0.9815505993306228], ["[12] SMS", 0.006410155729748207], ["[9] (no label)", 0.004138707601085239], ["[10] Attachment", 0.002549783785180047], ["[8] Book club meets next Tuesday to discuss ", 0.0020810728738140183]]}}, {"screenshot": "screens/sms_reply_3.png", "history": ["open_app simple sms messenger → screen changed", "click \"+18407874306\" → screen changed", "click \"Type a message…\" → screen changed"], "state": "Goal: Reply to +18407874306 with message: Yoga class every Tuesday and Thursday at 6 PM. in Simple SMS Messenger\nProgress: step 4, 3 actions done\nCurrent app: simple sms messenger (com.simplemobiletools.smsmessenger)\nPrevious actions:\nStep 1: open_app simple sms messenger → screen changed\nStep 2: click \"+18407874306\" → screen changed\nStep 3: click \"Type a message…\" → screen changed\nElements on screen (id: label | type | state | position):\n[1] Back | ImageButton | click | x:0-14% y:6-12%\n[2] Delete | Button | click | x:55-67% y:6-11%\n[3] Dial number | Button | click | x:67-79% y:6-11%\n[4] Add Person | Button | click | x:79-90% y:6-11%\n[5] More options | ImageView | click,long_click | x:90-100% y:6-11%\n[6] +18407874306 | TextView | - | x:15-49% y:7-10%\n[7] 15:34 | TextView | - | x:45-55% y:47-49%\n[8] Book club meets next Tuesday to discuss  | TextView | click,long_click | x:16-78% y:50-57%\n[9] (no label) | ImageView | click | x:4-14% y:52-57%\n[10] Attachment | ImageView | click | x:1-13% y:58-63%\n[11] Type a message… | EditText | click,edit,long_click | x:14-86% y:58-63%\n[12] SMS | Button | long_click | x:87-99% y:58-63%", "action": "type_text", "probability": 0.9932473660954843, "element": {"id": 11, "label": "Type a message…", "probability": 0.9963192761294187}, "box": [148, 1391, 932, 1517], "json_action": {"action_type": "input_text", "x": 540, "y": 1454, "text": "Yoga class every Tuesday and Thursday at 6 PM.", "clear_text": true}, "action_probs": [["type text", 0.9932473660954843], ["click", 0.005548234354879715], ["wait", 0.0007747070995625024], ["done (end task)", 0.0001367439257774511], ["long press", 7.205898515368078e-05], ["scroll", 6.875916397661698e-05], ["back", 6.163531624171579e-05], ["answer", 4.042142725109964e-05], ["open app", 3.6804128333895494e-05], ["home", 1.3269503339237204e-05]], "element_probs": [["[11] Type a message…", 0.9963192761294187], ["[10] Attachment", 0.001241807233047789], ["[9] (no label)", 0.001241807233047789], ["[12] SMS", 0.0004640294609149164], ["[1] Back", 0.00015422083111802222]], "model_ms": 135.9, "second": {"title": "Element probabilities (top 5)", "rows": [["[11] Type a message…", 0.9963192761294187], ["[10] Attachment", 0.001241807233047789], ["[9] (no label)", 0.001241807233047789], ["[12] SMS", 0.0004640294609149164], ["[1] Back", 0.00015422083111802222]]}}, {"screenshot": "screens/sms_reply_4.png", "history": ["open_app simple sms messenger → screen changed", "click \"+18407874306\" → screen changed", "click \"Type a message…\" → screen changed", "type_text \"Yoga class every Tuesday and Thursday at 6 PM.\" into \"Type a message…\" → screen changed"], "state": "Goal: Reply to +18407874306 with message: Yoga class every Tuesday and Thursday at 6 PM. in Simple SMS Messenger\nProgress: step 5, 4 actions done\nCurrent app: simple sms messenger (com.simplemobiletools.smsmessenger)\nPrevious actions:\nStep 1: open_app simple sms messenger → screen changed\nStep 2: click \"+18407874306\" → screen changed\nStep 3: click \"Type a message…\" → screen changed\nStep 4: type_text \"Yoga class every Tuesday and Thursday at 6 PM.\" into \"Type a message…\" → screen changed\nElements on screen (id: label | type | state | position):\n[1] Back | ImageButton | click | x:0-14% y:6-12%\n[2] Delete | Button | click | x:55-67% y:6-11%\n[3] Dial number | Button | click | x:67-79% y:6-11%\n[4] Add Person | Button | click | x:79-90% y:6-11%\n[5] More options | ImageView | click,long_click | x:90-100% y:6-11%\n[6] +18407874306 | TextView | - | x:15-49% y:7-10%\n[7] 15:34 | TextView | - | x:45-55% y:46-48%\n[8] Book club meets next Tuesday to discuss  | TextView | click,long_click | x:16-78% y:49-56%\n[9] (no label) | ImageView | click | x:4-14% y:51-56%\n[10] Yoga class every Tuesday and Thursday at | EditText | click,edit,long_click | x:14-86% y:57-63%\n[11] Attachment | ImageView | click | x:1-13% y:57-63%\n[12] SMS | Button | click,long_click | x:87-99% y:57-63%", "action": "click", "probability": 0.8187174051225677, "element": {"id": 12, "label": "SMS", "probability": 0.8889303671879826}, "box": [943, 1377, 1069, 1503], "json_action": {"action_type": "click", "x": 1006, "y": 1440}, "action_probs": [["click", 0.8187174051225677], ["done (end task)", 0.11080135191300729], ["wait", 0.03829192259416238], ["type text", 0.019865587741599192], ["back", 0.010633282872937725], ["scroll", 0.000643586703028999], ["long press", 0.0003404737413162317], ["home", 0.00029122262370571495], ["open app", 0.00022547936107817116], ["answer", 0.00018968732659687155]], "element_probs": [["[12] SMS", 0.8889303671879826], ["[11] Attachment", 0.017604312585995426], ["[9] (no label)", 0.017604312585995426], ["[1] Back", 0.01679815241936211], ["[6] +18407874306", 0.014824317479230995]], "model_ms": 171.5, "second": {"title": "Element probabilities (top 5)", "rows": [["[12] SMS", 0.8889303671879826], ["[11] Attachment", 0.017604312585995426], ["[9] (no label)", 0.017604312585995426], ["[1] Back", 0.01679815241936211], ["[6] +18407874306", 0.014824317479230995]]}}, {"screenshot": "screens/sms_reply_5.png", "history": ["open_app simple sms messenger → screen changed", "click \"+18407874306\" → screen changed", "click \"Type a message…\" → screen changed", "type_text \"Yoga class every Tuesday and Thursday at 6 PM.\" into \"Type a message…\" → screen changed", "click \"SMS\" → screen changed"], "state": "Goal: Reply to +18407874306 with message: Yoga class every Tuesday and Thursday at 6 PM. in Simple SMS Messenger\nProgress: step 6, 5 actions done\nCurrent app: simple sms messenger (com.simplemobiletools.smsmessenger)\nPrevious actions:\nStep 1: open_app simple sms messenger → screen changed\nStep 2: click \"+18407874306\" → screen changed\nStep 3: click \"Type a message…\" → screen changed\nStep 4: type_text \"Yoga class every Tuesday and Thursday at 6 PM.\" into \"Type a message…\" → screen changed\nStep 5: click \"SMS\" → screen changed\nElements on screen (id: label | type | state | position):\n[1] Back | ImageButton | click | x:0-14% y:6-12%\n[2] Delete | Button | click | x:55-67% y:6-11%\n[3] Dial number | Button | click | x:67-79% y:6-11%\n[4] Add Person | Button | click | x:79-90% y:6-11%\n[5] More options | ImageView | click,long_click | x:90-100% y:6-11%\n[6] +18407874306 | TextView | - | x:15-49% y:7-10%\n[7] 15:34 | TextView | - | x:45-55% y:36-39%\n[8] Book club meets next Tuesday to discuss  | TextView | click,long_click | x:16-78% y:39-46%\n[9] (no label) | ImageView | click | x:4-14% y:42-46%\n[10] Yoga class every Tuesday and Thursday at | TextView | click,long_click | x:22-96% y:47-54%\n[11] (no label) | RelativeLayout | click,long_click | x:0-100% y:54-57%\n[12] Attachment | ImageView | click | x:1-13% y:58-63%\n[13] Type a message… | EditText | click,edit,long_click | x:14-86% y:58-63%\n[14] SMS | Button | long_click | x:87-99% y:58-63%", "action": "status", "probability": 0.8621733850948186, "element": null, "box": null, "json_action": null, "action_probs": [["done (end task)", 0.8621733850948186], ["click", 0.06859409094807509], ["wait", 0.05342113174443205], ["type text", 0.01102407362918143], ["back", 0.0032587099403445932], ["scroll", 0.0005574995366543989], ["home", 0.0002903589517454115], ["answer", 0.00024594361374014517], ["open app", 0.00021800038491894032], ["long press", 0.0002168061560893087]], "element_probs": [["[14] SMS", 0.5097306998562257], ["[13] Type a message…", 0.2333717199133735], ["[10] Yoga class every Tuesday and Thursday at", 0.07816973457629367], ["[11] (no label)", 0.05047017394044345], ["[9] (no label)", 0.04453977217534711]], "model_ms": 142.1, "second": {"title": "No element or app needed for this action", "rows": []}}]}]
+[
+ {
+  "title": "In the YallaToys app , browse for Jumanji Game in the Games \u2026",
+  "episode": 84,
+  "goal": "In the YallaToys app , browse for Jumanji Game in the Games & puzzle section in toys for all categories . ",
+  "steps": [
+   {
+    "screenshot": "screens/ep84_0.jpg",
+    "instruction": "Open the YallaToys app",
+    "history": [],
+    "state": "Goal: In the YallaToys app , browse for Jumanji Game in the Games & puzzle section in toys for all categories . \nStep instruction: Open the YallaToys app\nProgress: step 1, 0 actions done\nCurrent app: in.amazon.mShop.android.shopping\nPrevious actions: none\nElements on screen (id: label | type | state | position):\n[1] Back | LinearLayout | click | x:0-11% y:6-12%\n[2] Search | LinearLayout | click | x:11-100% y:6-12%\n[3] Search Amazon.in | TextView | - | x:24-89% y:7-11%\n[4] scan it | FrameLayout | click | x:89-99% y:7-11%\n[5] Search | LinearLayout | - | x:16-22% y:8-10%\n[6] Buy Babique Octopus Sitting Plush Soft T | WebView | scroll | x:0-100% y:12-91%\n[7] (no label) | View | scroll | x:0-100% y:12-18%\n[8] Sponsored Ad HUG 'n' FEEL SOFT TOYS Soft | View | click | x:0-100% y:12-18%\n[9] ref=syn_sd_onsite_mobileapp_0?ie=UTF8&ps | View | click | x:0-100% y:12-18%\n[10] HUG 'n' FEEL SOFT TOYS Soft Toys Long So | Image | - | x:1-14% y:12-17%\n[11] HUG 'n' FEEL SOFT TOYS Soft Toys Long So | Image | - | x:1-14% y:12-17%\n[12] HUG 'n' FEEL SOFT TOYS Soft Toys Long So | TextView | - | x:15-98% y:13-18%\n[13] 384.00 | TextView | - | x:17-31% y:14-17%\n[14] \u20b9 | TextView | - | x:15-17% y:15-16%\n[15] Sponsored | TextView | - | x:84-97% y:18-20%\n[16] 4.2 4.2 out of 5 stars1,972 Reviews | View | click | x:69-97% y:21-23%\n[17] Visit the Babique Store | View | click | x:3-36% y:21-23%\n[18] Visit the Babique Store | TextView | - | x:3-36% y:21-23%\n[19] 4.2 out of 5 stars | TextView | - | x:73-88% y:21-23%\n[20] 4.2 | TextView | - | x:69-74% y:21-23%\n[21] 1,972 | TextView | - | x:90-97% y:21-23%\n[22] Babique Octopus Sitting Plush Soft Toy C | View | - | x:3-97% y:23-27%\n[23] Amazon'sChoicefor \"reversible octopus\" | TextView | - | x:3-97% y:27-30%\n[24] Babique Octopus Sitting Plush Soft Toy C | View | click | x:13-87% y:31-63%\n[25] Babique Octopus Sitting Plush Soft Toy C | Image | - | x:15-85% y:31-63%\n[26] ref=lp_75027929031_1_1?sbo=RZvfv%2F%2FHx | View | click | x:100-100% y:31-63%\n[27] Share | Image | - | x:90-96% y:32-35%\n[28] 78% off | TextView | - | x:3-13% y:32-35%\n[29] Heart to save an item to your default li | View | click | x:4-11% y:60-63%\n[30] Heart to save an item to your default li | Image | - | x:6-11% y:60-62%\n[31] Octopus | TextView | - | x:17-32% y:70-73%\n[32] Colour: | TextView | - | x:3-16% y:70-72%\n[33] 17 Cm | TextView | - | x:12-24% y:76-78%\n[34] Size: | TextView | - | x:3-11% y:76-78%\n[35] Reversible Octopus | TextView | - | x:25-58% y:81-83%\n[36] Style Name: | TextView | - | x:3-24% y:81-83%\n[37] Pattern Name: | TextView | - | x:3-28% y:86-88%\n[38] Octopus | TextView | - | x:3-85% y:88-91%\n[39] Home Tab 1 of 5 | FrameLayout | selected | x:5-15% y:91-97%\n[40] Your Amazon.com Tab 2 of 5 | FrameLayout | - | x:25-35% y:91-97%\n[41] Context switcher. Switch between various | FrameLayout | - | x:45-55% y:91-97%\n[42] Cart 1 item Tab 4 of 5 | FrameLayout | - | x:65-75% y:91-97%\n[43] Menu. Contains your orders, your account | FrameLayout | - | x:85-95% y:91-97%\n[44] 1 | TextView | - | x:70-72% y:92-94%\n[45] Home | TextView | selected | x:5-15% y:95-97%\n[46] You | TextView | - | x:26-33% y:95-97%\n[47] More | TextView | - | x:46-54% y:95-97%\n[48] Cart | TextView | - | x:67-74% y:95-97%\n[49] Menu | TextView | - | x:86-95% y:95-97%",
+    "action": "open_app",
+    "probability": 0.9999436026459088,
+    "element": null,
+    "box": null,
+    "json_action": {
+     "action_type": "open_app",
+     "app_name": "Yalla Toys"
+    },
+    "action_probs": [
+     [
+      "open app",
+      0.9999436026459088
+     ],
+     [
+      "click",
+      2.9310744609402913e-05
+     ],
+     [
+      "wait",
+      6.7477165517330615e-06
+     ],
+     [
+      "home",
+      4.2891096002977035e-06
+     ],
+     [
+      "back",
+      3.446396384865669e-06
+     ],
+     [
+      "done",
+      3.089329753161912e-06
+     ],
+     [
+      "answer",
+      2.684056203307842e-06
+     ],
+     [
+      "type text",
+      2.4438609836381458e-06
+     ],
+     [
+      "scroll",
+      2.2957949317298638e-06
+     ],
+     [
+      "long press",
+      2.090345072943809e-06
+     ]
+    ],
+    "second": {
+     "title": "App (top 5)",
+     "rows": [
+      [
+       "434",
+       0.99801259232336
+      ],
+      [
+       "70",
+       9.592063902627333e-05
+      ],
+      [
+       "90",
+       7.952100278725187e-05
+      ],
+      [
+       "96",
+       6.002560209369595e-05
+      ],
+      [
+       "122",
+       5.297240792346208e-05
+      ]
+     ]
+    },
+    "model_ms": 2806.3,
+    "human": {
+     "action_type": "open_app",
+     "app_name": "Yalla Toys"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep84_1.jpg",
+    "instruction": "Go to the Toys for all category ",
+    "history": [
+     "open_app Yalla Toys \u2192 screen changed"
+    ],
+    "state": "Goal: In the YallaToys app , browse for Jumanji Game in the Games & puzzle section in toys for all categories . \nStep instruction: Go to the Toys for all category \nProgress: step 2, 1 actions done\nCurrent app: yallatoys.com.cherry\nPrevious actions:\nStep 1: open_app Yalla Toys \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] What are you looking for? | TextView | - | x:16-93% y:16-18%\n[2] (no label) | ScrollView | scroll | x:0-100% y:21-97%\n[3] (no label) | SliderPager | scroll | x:0-100% y:23-50%\n[4] (no label) | ImageView | click | x:4-96% y:24-48%\n[5] Toys for Boys | TextView | - | x:6-24% y:59-60%\n[6] Toys for Girls | TextView | - | x:29-48% y:59-60%\n[7] Toys For All | TextView | - | x:52-71% y:59-60%\n[8] Toddler Specials | TextView | - | x:76-94% y:59-60%\n[9] Outdoor Toys | TextView | - | x:6-24% y:71-72%\n[10] Ride-Ons | TextView | - | x:29-48% y:71-72%\n[11] Batman Toys | TextView | - | x:52-71% y:71-72%\n[12] Dolls | TextView | - | x:76-94% y:71-72%\n[13] (no label) | RecyclerView | scroll | x:0-100% y:81-86%\n[14] (no label) | ImageView | click | x:5-16% y:81-86%\n[15] (no label) | ImageView | click | x:50-61% y:81-86%\n[16] (no label) | ImageView | click | x:90-100% y:81-86%\n[17] Action Figures | TextView | - | x:19-40% y:83-84%\n[18] Doll Houses | TextView | - | x:64-80% y:83-84%\n[19] (no label) | ImageButton | click | x:42-58% y:84-91%\n[20] Home | FrameLayout | selected | x:0-20% y:90-96%\n[21] Offers | FrameLayout | click | x:20-40% y:90-96%\n[22] Category | FrameLayout | click | x:40-60% y:90-96%\n[23] Cart | FrameLayout | click | x:60-80% y:90-96%\n[24] Account | FrameLayout | click | x:80-100% y:90-96%\n[25] View All | TextView | click | x:77-100% y:90-95%\n[26] Best Sellers | TextView | - | x:4-28% y:91-94%\n[27] Home | TextView | selected | x:6-14% y:94-95%\n[28] Offers | TextView | - | x:25-35% y:94-95%\n[29] Category | TextView | - | x:43-57% y:94-95%\n[30] Cart | TextView | - | x:67-73% y:94-95%\n[31] Account | TextView | - | x:84-96% y:94-95%\n[32] (no label) | SliderPager | scroll | x:0-100% y:95-97%",
+    "action": "click",
+    "probability": 0.9991488676260635,
+    "element": {
+     "id": 7,
+     "label": "Toys For All",
+     "probability": 0.9733247480235504
+    },
+    "box": [
+     377,
+     941,
+     509,
+     967
+    ],
+    "json_action": {
+     "action_type": "click",
+     "x": 665,
+     "y": 1432
+    },
+    "action_probs": [
+     [
+      "click",
+      0.9991488676260635
+     ],
+     [
+      "wait",
+      0.0006460707792424354
+     ],
+     [
+      "scroll",
+      8.881309125468551e-05
+     ],
+     [
+      "done",
+      6.297791209007434e-05
+     ],
+     [
+      "type text",
+      1.7217203082206702e-05
+     ],
+     [
+      "back",
+      1.3200887513080374e-05
+     ],
+     [
+      "open app",
+      1.0042705631534045e-05
+     ],
+     [
+      "long press",
+      8.390994632141298e-06
+     ],
+     [
+      "answer",
+      3.228704386943114e-06
+     ],
+     [
+      "home",
+      1.1900961035776377e-06
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[7] Toys For All",
+       0.9733247480235504
+      ],
+      [
+       "[4] (no label)",
+       0.005609534762340119
+      ],
+      [
+       "[3] (no label)",
+       0.002608675929827465
+      ],
+      [
+       "[1] What are you looking for?",
+       0.0020001412159284934
+      ],
+      [
+       "[8] Toddler Specials",
+       0.0018789587857148558
+      ]
+     ]
+    },
+    "model_ms": 232.7,
+    "human": {
+     "action_type": "click"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep84_2.jpg",
+    "instruction": "Open the games & Puzzles section",
+    "history": [
+     "open_app Yalla Toys \u2192 screen changed",
+     "click [ImageView] \u2192 screen changed"
+    ],
+    "state": "Goal: In the YallaToys app , browse for Jumanji Game in the Games & puzzle section in toys for all categories . \nStep instruction: Open the games & Puzzles section\nProgress: step 3, 2 actions done\nCurrent app: yallatoys.com.cherry\nPrevious actions:\nStep 1: open_app Yalla Toys \u2192 screen changed\nStep 2: click [ImageView] \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] (no label) | ImageView | click | x:73-83% y:8-12%\n[2] What are you looking for? | TextView | - | x:16-93% y:16-18%\n[3] (no label) | RecyclerView | scroll | x:0-100% y:21-34%\n[4] (no label) | ImageView | click | x:6-21% y:21-28%\n[5] (no label) | ImageView | click | x:29-44% y:21-28%\n[6] (no label) | ImageView | click | x:52-68% y:21-28%\n[7] (no label) | ImageView | click | x:75-91% y:21-28%\n[8] (no label) | ImageView | click | x:99-100% y:21-28%\n[9] Education & Learning | TextView | - | x:4-23% y:29-32%\n[10] Lifestyle | TextView | - | x:27-46% y:29-32%\n[11] Games & Puzzles | TextView | - | x:50-69% y:29-32%\n[12] Soft Toys & Teddy Bears | TextView | - | x:74-92% y:29-32%\n[13] Arts & Crafts | TextView | - | x:97-100% y:29-32%\n[14] (no label) | RecyclerView | scroll | x:1-99% y:34-97%\n[15] Yalla Toys | ImageView | - | x:3-49% y:37-58%\n[16] Yalla Toys | ImageView | - | x:51-97% y:37-58%\n[17] (no label) | CheckBox | click,checkable | x:36-46% y:38-42%\n[18] (no label) | CheckBox | click,checkable | x:84-94% y:38-42%\n[19] ThreadBear Design Baby Threads Taupe Bun | TextView | - | x:6-46% y:60-64%\n[20] Gund Sesame Street Elmo Hand Puppet | TextView | - | x:54-94% y:60-64%\n[21] BHD 35.950 | TextView | - | x:6-45% y:64-66%\n[22] BHD 15.500 | TextView | - | x:54-93% y:64-66%\n[23] Yalla Toys | ImageView | - | x:3-49% y:73-94%\n[24] Yalla Toys | ImageView | - | x:51-97% y:73-94%\n[25] (no label) | CheckBox | click,checkable | x:36-46% y:75-79%\n[26] (no label) | CheckBox | click,checkable | x:84-94% y:75-79%\n[27] (no label) | ImageButton | click | x:42-58% y:84-91%\n[28] Home | FrameLayout | selected | x:0-20% y:90-96%\n[29] Offers | FrameLayout | click | x:20-40% y:90-96%\n[30] Category | FrameLayout | click | x:40-60% y:90-96%\n[31] Cart | FrameLayout | click | x:60-80% y:90-96%\n[32] Account | FrameLayout | click | x:80-100% y:90-96%\n[33] Home | TextView | selected | x:6-14% y:94-95%\n[34] Offers | TextView | - | x:25-35% y:94-95%\n[35] Category | TextView | - | x:43-57% y:94-95%\n[36] Cart | TextView | - | x:67-73% y:94-95%\n[37] Account | TextView | - | x:84-96% y:94-95%\n[38] Jelli Rez Animals Jewelry Pack | TextView | - | x:6-46% y:97-97%\n[39] Delsit Arm Chair-Farm Animals Blue | TextView | - | x:54-94% y:97-97%",
+    "action": "click",
+    "probability": 0.9798294354519941,
+    "element": {
+     "id": 6,
+     "label": "(no label)",
+     "probability": 0.935504303573788
+    },
+    "box": [
+     375,
+     343,
+     487,
+     455
+    ],
+    "json_action": {
+     "action_type": "click",
+     "x": 646,
+     "y": 599
+    },
+    "action_probs": [
+     [
+      "click",
+      0.9798294354519941
+     ],
+     [
+      "done",
+      0.016858896692176956
+     ],
+     [
+      "wait",
+      0.0031185823110115147
+     ],
+     [
+      "scroll",
+      9.56560351463796e-05
+     ],
+     [
+      "type text",
+      2.495336767497683e-05
+     ],
+     [
+      "back",
+      2.404433493200736e-05
+     ],
+     [
+      "open app",
+      1.9662780618468848e-05
+     ],
+     [
+      "long press",
+      1.5456117563756472e-05
+     ],
+     [
+      "answer",
+      9.545513848519887e-06
+     ],
+     [
+      "home",
+      3.7673950333492696e-06
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[6] (no label)",
+       0.935504303573788
+      ],
+      [
+       "[11] Games & Puzzles",
+       0.03742488082740804
+      ],
+      [
+       "[5] (no label)",
+       0.007142663499934843
+      ],
+      [
+       "[3] (no label)",
+       0.00573929135846256
+      ],
+      [
+       "[4] (no label)",
+       0.00128060899995225
+      ]
+     ]
+    },
+    "model_ms": 239.7,
+    "human": {
+     "action_type": "click"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep84_3.jpg",
+    "instruction": "Open the Jumanji the Game in a real wooden box",
+    "history": [
+     "open_app Yalla Toys \u2192 screen changed",
+     "click [ImageView] \u2192 screen changed",
+     "click [ImageView] \u2192 screen changed"
+    ],
+    "state": "Goal: In the YallaToys app , browse for Jumanji Game in the Games & puzzle section in toys for all categories . \nStep instruction: Open the Jumanji the Game in a real wooden box\nProgress: step 4, 3 actions done\nCurrent app: yallatoys.com.cherry\nPrevious actions:\nStep 1: open_app Yalla Toys \u2192 screen changed\nStep 2: click [ImageView] \u2192 screen changed\nStep 3: click [ImageView] \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] (no label) | ImageView | click | x:73-83% y:8-12%\n[2] What are you looking for? | TextView | - | x:16-93% y:16-18%\n[3] (no label) | RecyclerView | scroll | x:0-100% y:21-34%\n[4] (no label) | ImageView | click | x:6-21% y:21-28%\n[5] (no label) | ImageView | click | x:29-44% y:21-28%\n[6] (no label) | ImageView | click | x:52-68% y:21-28%\n[7] (no label) | ImageView | click | x:75-91% y:21-28%\n[8] (no label) | ImageView | click | x:99-100% y:21-28%\n[9] Education & Learning | TextView | - | x:4-23% y:29-32%\n[10] Lifestyle | TextView | - | x:27-46% y:29-32%\n[11] Games & Puzzles | TextView | - | x:50-69% y:29-32%\n[12] Soft Toys & Teddy Bears | TextView | - | x:74-92% y:29-32%\n[13] Arts & Crafts | TextView | - | x:97-100% y:29-32%\n[14] (no label) | RecyclerView | scroll | x:0-100% y:34-40%\n[15] Puzzles | TextView | - | x:17-27% y:35-37%\n[16] Card games | TextView | - | x:44-60% y:35-37%\n[17] Board games | TextView | - | x:77-95% y:35-37%\n[18] (2) | TextView | - | x:17-21% y:37-39%\n[19] (1) | TextView | - | x:44-47% y:37-39%\n[20] (4) | TextView | - | x:77-81% y:37-39%\n[21] (no label) | RecyclerView | scroll | x:1-99% y:40-97%\n[22] Yalla Toys | ImageView | - | x:3-49% y:43-64%\n[23] Yalla Toys | ImageView | - | x:51-97% y:43-64%\n[24] (no label) | CheckBox | click,checkable | x:36-46% y:45-48%\n[25] (no label) | CheckBox | click,checkable | x:84-94% y:45-48%\n[26] Baby Shark Party At The Reef Board Game | TextView | - | x:6-46% y:66-70%\n[27] Jumanji The Game In Real Wooden Box | TextView | - | x:54-94% y:66-70%\n[28] BHD 12.950 | TextView | - | x:6-45% y:71-72%\n[29] BHD 20.500 | TextView | - | x:54-93% y:71-72%\n[30] Yalla Toys | ImageView | - | x:3-49% y:80-97%\n[31] Yalla Toys | ImageView | - | x:51-97% y:80-97%\n[32] (no label) | CheckBox | click,checkable | x:36-46% y:81-85%\n[33] (no label) | CheckBox | click,checkable | x:84-94% y:81-85%\n[34] (no label) | ImageButton | click | x:42-58% y:84-91%\n[35] Home | FrameLayout | selected | x:0-20% y:90-96%\n[36] Offers | FrameLayout | click | x:20-40% y:90-96%\n[37] Category | FrameLayout | click | x:40-60% y:90-96%\n[38] Cart | FrameLayout | click | x:60-80% y:90-96%\n[39] Account | FrameLayout | click | x:80-100% y:90-96%\n[40] Home | TextView | selected | x:6-14% y:94-95%\n[41] Offers | TextView | - | x:25-35% y:94-95%\n[42] Category | TextView | - | x:43-57% y:94-95%\n[43] Cart | TextView | - | x:67-73% y:94-95%\n[44] Account | TextView | - | x:84-96% y:94-95%",
+    "action": "click",
+    "probability": 0.9870894248445947,
+    "element": {
+     "id": 23,
+     "label": "Yalla Toys",
+     "probability": 0.8957395771652658
+    },
+    "box": [
+     369,
+     691,
+     697,
+     1027
+    ],
+    "json_action": {
+     "action_type": "click",
+     "x": 800,
+     "y": 1288
+    },
+    "action_probs": [
+     [
+      "click",
+      0.9870894248445947
+     ],
+     [
+      "done",
+      0.008539996841979086
+     ],
+     [
+      "wait",
+      0.004162062056037835
+     ],
+     [
+      "scroll",
+      9.413250496740013e-05
+     ],
+     [
+      "type text",
+      2.7989034038762114e-05
+     ],
+     [
+      "back",
+      2.7287321134156568e-05
+     ],
+     [
+      "long press",
+      2.100636500558633e-05
+     ],
+     [
+      "open app",
+      1.9236563018556784e-05
+     ],
+     [
+      "answer",
+      1.5885496799537768e-05
+     ],
+     [
+      "home",
+      2.978972424298354e-06
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[23] Yalla Toys",
+       0.8957395771652658
+      ],
+      [
+       "[27] Jumanji The Game In Real Wooden Box",
+       0.0432241652759651
+      ],
+      [
+       "[29] BHD 20.500",
+       0.018590481831332866
+      ],
+      [
+       "[25] (no label)",
+       0.00906027724194336
+      ],
+      [
+       "[22] Yalla Toys",
+       0.006130490237507716
+      ]
+     ]
+    },
+    "model_ms": 262.8,
+    "human": {
+     "action_type": "click"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep84_4.jpg",
+    "instruction": "Open the Jumanji the Game in a real wooden box",
+    "history": [
+     "open_app Yalla Toys \u2192 screen changed",
+     "click [ImageView] \u2192 screen changed",
+     "click [ImageView] \u2192 screen changed",
+     "click \"Yalla Toys\" \u2192 screen changed"
+    ],
+    "state": "Goal: In the YallaToys app , browse for Jumanji Game in the Games & puzzle section in toys for all categories . \nStep instruction: Open the Jumanji the Game in a real wooden box\nProgress: step 5, 4 actions done\nCurrent app: yallatoys.com.cherry\nPrevious actions:\nStep 1: open_app Yalla Toys \u2192 screen changed\nStep 2: click [ImageView] \u2192 screen changed\nStep 3: click [ImageView] \u2192 screen changed\nStep 4: click \"Yalla Toys\" \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] (no label) | ImageView | click | x:0-9% y:8-13%\n[2] Yalla Toys | ImageView | click | x:65-74% y:8-12%\n[3] Yalla Toys | ImageView | click | x:77-85% y:8-12%\n[4] (no label) | ImageView | click | x:88-97% y:8-12%\n[5] Back | TextView | click | x:9-21% y:9-12%\n[6] (no label) | ScrollView | scroll | x:0-100% y:13-88%\n[7] (no label) | ViewPager | scroll | x:0-100% y:13-57%\n[8] (no label) | ImageView | click | x:85-100% y:13-19%\n[9] (no label) | RecyclerView | scroll | x:3-97% y:14-57%\n[10] (no label) | ImageView | click | x:3-97% y:14-57%\n[11] (no label) | CheckBox | click,checkable | x:85-100% y:19-24%\n[12] (no label) | ImageView | click | x:11-25% y:59-65%\n[13] (no label) | ImageView | click | x:28-42% y:59-65%\n[14] (no label) | ImageView | click | x:0-8% y:60-64%\n[15] (no label) | ImageView | click | x:92-100% y:60-64%\n[16] See More by | TextView | click | x:20-92% y:71-72%\n[17] Spin Master | TextView | - | x:20-92% y:73-74%\n[18] Jumanji The Game In Real Wooden Box | TextView | - | x:7-96% y:77-81%\n[19] BHD 20.500 | TextView | - | x:7-33% y:83-86%\n[20] 01 | TextView | - | x:79-82% y:84-85%\n[21] Add to cart | TextView | click | x:53-94% y:90-96%\n[22] Price | TextView | - | x:6-13% y:91-93%\n[23] BHD 20.500 | TextView | - | x:6-31% y:93-95%",
+    "action": "wait",
+    "probability": 0.2213713994198873,
+    "element": null,
+    "box": null,
+    "json_action": {
+     "action_type": "wait"
+    },
+    "action_probs": [
+     [
+      "done",
+      0.7726621049486759
+     ],
+     [
+      "wait",
+      0.2213713994198873
+     ],
+     [
+      "click",
+      0.0052061563113459915
+     ],
+     [
+      "scroll",
+      0.0002914255617302721
+     ],
+     [
+      "back",
+      0.000269524584907108
+     ],
+     [
+      "open app",
+      6.0139063794262083e-05
+     ],
+     [
+      "answer",
+      5.727312467502977e-05
+     ],
+     [
+      "type text",
+      3.1199735285286424e-05
+     ],
+     [
+      "long press",
+      2.647887142697942e-05
+     ],
+     [
+      "home",
+      2.429837827180161e-05
+     ]
+    ],
+    "second": {
+     "title": "",
+     "rows": []
+    },
+    "model_ms": 212.1,
+    "human": {
+     "action_type": "wait"
+    },
+    "matches_human": true
+   }
+  ]
+ },
+ {
+  "title": "Open the smart news App search for covid 19 in the search ba\u2026",
+  "episode": 104,
+  "goal": "Open the smart news App search for covid 19 in the search bar",
+  "steps": [
+   {
+    "screenshot": "screens/ep104_0.jpg",
+    "instruction": "Open the SmartNews App",
+    "history": [],
+    "state": "Goal: Open the smart news App search for covid 19 in the search bar\nStep instruction: Open the SmartNews App\nProgress: step 1, 0 actions done\nCurrent app: home screen\nPrevious actions: none\nElements on screen (id: label | type | state | position):\n[1] (no label) | ScrollView | scroll | x:0-100% y:0-100%\n[2] Home | View | - | x:0-100% y:6-97%\n[3] Thu, Aug 10 | TextView | - | x:9-35% y:12-15%\n[4] 34\u00b0C | TextView | click | x:9-24% y:16-18%\n[5] Play Store | TextView | click,long_click | x:5-25% y:62-73%\n[6] Gmail | TextView | click,long_click | x:29-48% y:62-73%\n[7] Photos | TextView | click,long_click | x:52-71% y:62-73%\n[8] YouTube | TextView | click,long_click | x:75-95% y:62-73%\n[9] Phone | TextView | click,long_click | x:7-23% y:78-86%\n[10] Messages | TextView | click,long_click | x:30-46% y:78-86%\n[11] Chrome | TextView | click,long_click | x:54-70% y:78-86%\n[12] Camera | TextView | click,long_click | x:77-93% y:78-86%\n[13] Search | FrameLayout | click,long_click | x:7-93% y:89-95%\n[14] Voice search | ImageView | click | x:69-80% y:89-95%\n[15] Google Lens | ImageButton | click | x:80-92% y:89-95%\n[16] Google app | ImageView | click | x:8-20% y:89-95%",
+    "action": "open_app",
+    "probability": 0.999926012211898,
+    "element": null,
+    "box": null,
+    "json_action": {
+     "action_type": "open_app",
+     "app_name": "SmartNews"
+    },
+    "action_probs": [
+     [
+      "open app",
+      0.999926012211898
+     ],
+     [
+      "click",
+      2.9310228991604574e-05
+     ],
+     [
+      "wait",
+      1.428466476007114e-05
+     ],
+     [
+      "done",
+      6.747597849775858e-06
+     ],
+     [
+      "home",
+      4.936648044742772e-06
+     ],
+     [
+      "answer",
+      4.860112410798975e-06
+     ],
+     [
+      "back",
+      3.905210032743339e-06
+     ],
+     [
+      "type text",
+      3.7850593513452955e-06
+     ],
+     [
+      "long press",
+      3.1873395355813055e-06
+     ],
+     [
+      "scroll",
+      2.9709271251113936e-06
+     ]
+    ],
+    "second": {
+     "title": "App (top 5)",
+     "rows": [
+      [
+       "347",
+       0.99245342198595
+      ],
+      [
+       "87",
+       0.0014920933718183867
+      ],
+      [
+       "346",
+       0.0007986600296832266
+      ],
+      [
+       "373",
+       0.00028477100340094827
+      ],
+      [
+       "341",
+       0.00021495643086518205
+      ]
+     ]
+    },
+    "model_ms": 206.6,
+    "human": {
+     "action_type": "open_app",
+     "app_name": "SmartNews"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep104_1.jpg",
+    "instruction": "Click on the search bar at the bottom ",
+    "history": [
+     "open_app SmartNews \u2192 screen changed"
+    ],
+    "state": "Goal: Open the smart news App search for covid 19 in the search bar\nStep instruction: Click on the search bar at the bottom \nProgress: step 2, 1 actions done\nCurrent app: jp.gocro.smartnews.android\nPrevious actions:\nStep 1: open_app SmartNews \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] Notifications | Button | click | x:88-100% y:6-11%\n[2] (no label) | RecyclerView | scroll | x:0-100% y:12-21%\n[3] (no label) | ImageView | click | x:2-16% y:13-19%\n[4] Following | TextView | - | x:2-16% y:19-21%\n[5] Top News | TextView | - | x:17-30% y:19-21%\n[6] India | TextView | - | x:31-45% y:19-21%\n[7] Health | TextView | - | x:46-59% y:19-21%\n[8] Movies | TextView | - | x:60-74% y:19-21%\n[9] Food | TextView | - | x:75-89% y:19-21%\n[10] Science | TextView | - | x:90-100% y:19-21%\n[11] August 10, 2023 | TextView | - | x:7-93% y:24-26%\n[12] Welcome to SmartNews | TextView | - | x:7-93% y:26-30%\n[13] Start reading and watch your feed evolve | TextView | - | x:7-93% y:30-34%\n[14] (no label) | RecyclerView | scroll | x:0-100% y:36-91%\n[15] Breaking | TextView | - | x:7-21% y:38-40%\n[16] At least 36 people have died as wildfire | TextView | - | x:7-93% y:61-67%\n[17] Mauro Farinelli and his wife Judit stand | TextView | - | x:7-93% y:67-73%\n[18] Associated Press | TextView | - | x:7-30% y:74-76%\n[19] \u2022 | TextView | - | x:31-32% y:74-76%\n[20] 4h ago | TextView | - | x:33-42% y:74-76%\n[21] 7.1k views | TextView | - | x:79-93% y:74-76%\n[22] 381 | TextView | - | x:14-21% y:78-80%\n[23] Because you follow Fitness | TextView | - | x:7-45% y:84-86%\n[24] For You | FrameLayout | selected | x:0-33% y:91-97%\n[25] Search | FrameLayout | click | x:33-67% y:91-97%\n[26] Profile | FrameLayout | click | x:67-100% y:91-97%\n[27] For You | TextView | selected | x:11-22% y:95-97%\n[28] Search | TextView | - | x:45-55% y:95-97%\n[29] Profile | TextView | - | x:79-88% y:95-97%",
+    "action": "click",
+    "probability": 0.9995109480760866,
+    "element": {
+     "id": 25,
+     "label": "Search",
+     "probability": 0.9743854909632997
+    },
+    "box": [
+     240,
+     1460,
+     480,
+     1558
+    ],
+    "json_action": {
+     "action_type": "click",
+     "x": 540,
+     "y": 2264
+    },
+    "action_probs": [
+     [
+      "click",
+      0.9995109480760866
+     ],
+     [
+      "wait",
+      0.00029589994881205667
+     ],
+     [
+      "done",
+      7.599339179312293e-05
+     ],
+     [
+      "scroll",
+      6.202399872843403e-05
+     ],
+     [
+      "type text",
+      1.7631884571519387e-05
+     ],
+     [
+      "back",
+      1.4963986082432489e-05
+     ],
+     [
+      "open app",
+      1.1745367251979041e-05
+     ],
+     [
+      "long press",
+      5.859981147393873e-06
+     ],
+     [
+      "answer",
+      3.1875725393395766e-06
+     ],
+     [
+      "home",
+      1.7457929873036975e-06
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[25] Search",
+       0.9743854909632997
+      ],
+      [
+       "[28] Search",
+       0.013898862560635586
+      ],
+      [
+       "[24] For You",
+       0.002131459607168488
+      ],
+      [
+       "[1] Notifications",
+       0.0017396466303888605
+      ],
+      [
+       "[23] Because you follow Fitness",
+       0.0008478360548875344
+      ]
+     ]
+    },
+    "model_ms": 246.1,
+    "human": {
+     "action_type": "click"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep104_2.jpg",
+    "instruction": "Type Covid 19 in the search bar",
+    "history": [
+     "open_app SmartNews \u2192 screen changed",
+     "click \"Search\" \u2192 screen changed"
+    ],
+    "state": "Goal: Open the smart news App search for covid 19 in the search bar\nStep instruction: Type Covid 19 in the search bar\nProgress: step 3, 2 actions done\nCurrent app: jp.gocro.smartnews.android\nPrevious actions:\nStep 1: open_app SmartNews \u2192 screen changed\nStep 2: click \"Search\" \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] Search anything\u2026 | EditText | click,edit,long_click | x:4-79% y:7-13%\n[2] Cancel | TextView | click | x:83-96% y:7-13%\n[3] No search history | TextView | - | x:33-67% y:39-42%",
+    "action": "type_text",
+    "probability": 0.9939473686829403,
+    "element": {
+     "id": 1,
+     "label": "Search anything\u2026",
+     "probability": 0.9990847251647967
+    },
+    "box": [
+     28,
+     119,
+     568,
+     203
+    ],
+    "json_action": {
+     "action_type": "input_text",
+     "x": 447,
+     "y": 241,
+     "text": "covid 19",
+     "clear_text": true
+    },
+    "action_probs": [
+     [
+      "type text",
+      0.9939473686829403
+     ],
+     [
+      "wait",
+      0.003937060017195688
+     ],
+     [
+      "click",
+      0.0016412107903636972
+     ],
+     [
+      "long press",
+      0.00011704570917650447
+     ],
+     [
+      "done",
+      0.00010824958522393923
+     ],
+     [
+      "scroll",
+      6.514574790608064e-05
+     ],
+     [
+      "back",
+      6.024996763702075e-05
+     ],
+     [
+      "open app",
+      5.8396271009924674e-05
+     ],
+     [
+      "home",
+      4.044991472021387e-05
+     ],
+     [
+      "answer",
+      2.482331382645303e-05
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[1] Search anything\u2026",
+       0.9990847251647967
+      ],
+      [
+       "[3] No search history",
+       0.0005612799855557603
+      ],
+      [
+       "[2] Cancel",
+       0.0003539948496474025
+      ]
+     ]
+    },
+    "model_ms": 192.5,
+    "human": {
+     "action_type": "type_text",
+     "text": "Covid 19"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep104_3.jpg",
+    "instruction": "Select the suggestion below  covid 19",
+    "history": [
+     "open_app SmartNews \u2192 screen changed",
+     "click \"Search\" \u2192 screen changed",
+     "type_text \"Covid 19\" into \"Search anything\u2026\" \u2192 screen changed"
+    ],
+    "state": "Goal: Open the smart news App search for covid 19 in the search bar\nStep instruction: Select the suggestion below  covid 19\nProgress: step 4, 3 actions done\nCurrent app: jp.gocro.smartnews.android\nPrevious actions:\nStep 1: open_app SmartNews \u2192 screen changed\nStep 2: click \"Search\" \u2192 screen changed\nStep 3: type_text \"Covid 19\" into \"Search anything\u2026\" \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] Covid 19 | EditText | click,edit,long_click | x:4-79% y:7-13%\n[2] Cancel | TextView | click | x:83-96% y:7-13%\n[3] COVID-19 | TextView | - | x:15-96% y:16-18%\n[4] COVID-19 pandemic | TextView | - | x:15-96% y:21-24%\n[5] COVID-19 vaccine | TextView | - | x:15-96% y:27-30%\n[6] Covina, California | TextView | - | x:15-96% y:33-35%\n[7] Covington Avenue | TextView | - | x:15-96% y:39-41%",
+    "action": "click",
+    "probability": 0.9982538268815201,
+    "element": {
+     "id": 3,
+     "label": "COVID-19",
+     "probability": 0.9745546737991746
+    },
+    "box": [
+     106,
+     249,
+     692,
+     291
+    ],
+    "json_action": {
+     "action_type": "click",
+     "x": 598,
+     "y": 406
+    },
+    "action_probs": [
+     [
+      "click",
+      0.9982538268815201
+     ],
+     [
+      "wait",
+      0.0008288281689069412
+     ],
+     [
+      "done",
+      0.0005786153134107932
+     ],
+     [
+      "scroll",
+      0.00016320594319589048
+     ],
+     [
+      "type text",
+      6.856795919600726e-05
+     ],
+     [
+      "back",
+      4.062517135086378e-05
+     ],
+     [
+      "open app",
+      2.25231598956055e-05
+     ],
+     [
+      "long press",
+      2.208752254831436e-05
+     ],
+     [
+      "answer",
+      1.7370588909529372e-05
+     ],
+     [
+      "home",
+      4.34929106609899e-06
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[3] COVID-19",
+       0.9745546737991746
+      ],
+      [
+       "[4] COVID-19 pandemic",
+       0.020226236976421307
+      ],
+      [
+       "[5] COVID-19 vaccine",
+       0.0022341383362209197
+      ],
+      [
+       "[1] Covid 19",
+       0.001114652973385618
+      ],
+      [
+       "[2] Cancel",
+       0.0007873258086118389
+      ]
+     ]
+    },
+    "model_ms": 210.9,
+    "human": {
+     "action_type": "click"
+    },
+    "matches_human": true
+   }
+  ]
+ },
+ {
+  "title": "Open the Cx file Explorer and rename the Flowers folder to F\u2026",
+  "episode": 27,
+  "goal": "Open the Cx file Explorer and rename the Flowers folder to Flora.",
+  "steps": [
+   {
+    "screenshot": "screens/ep27_0.jpg",
+    "instruction": "Open the Cx file Explorer app",
+    "history": [],
+    "state": "Goal: Open the Cx file Explorer and rename the Flowers folder to Flora.\nStep instruction: Open the Cx file Explorer app\nProgress: step 1, 0 actions done\nCurrent app: filemanager.files.fileexplorer\nPrevious actions: none\nElements on screen (id: label | type | state | position):\n[1] Refresh | TextView | - | x:56-96% y:12-14%\n[2] Sort by | TextView | - | x:56-96% y:17-20%\n[3] Create folder | TextView | - | x:56-96% y:23-25%",
+    "action": "open_app",
+    "probability": 0.9999034740049189,
+    "element": null,
+    "box": null,
+    "json_action": {
+     "action_type": "open_app",
+     "app_name": "Cx File Explorer"
+    },
+    "action_probs": [
+     [
+      "open app",
+      0.9999034740049189
+     ],
+     [
+      "click",
+      5.143989441338162e-05
+     ],
+     [
+      "wait",
+      1.241045208087753e-05
+     ],
+     [
+      "done",
+      7.527319687946672e-06
+     ],
+     [
+      "back",
+      5.9545999833511495e-06
+     ],
+     [
+      "answer",
+      5.014275915848247e-06
+     ],
+     [
+      "type text",
+      3.905122009798701e-06
+     ],
+     [
+      "long press",
+      3.6685226278853135e-06
+     ],
+     [
+      "scroll",
+      3.611647456226809e-06
+     ],
+     [
+      "home",
+      2.9941609058141973e-06
+     ]
+    ],
+    "second": {
+     "title": "App (top 5)",
+     "rows": [
+      [
+       "76",
+       0.983438573732955
+      ],
+      [
+       "102",
+       0.00333194153980547
+      ],
+      [
+       "440",
+       0.0017834597883380399
+      ],
+      [
+       "310",
+       0.0014785400956360884
+      ],
+      [
+       "128",
+       0.0012257527916795512
+      ]
+     ]
+    },
+    "model_ms": 207.1,
+    "human": {
+     "action_type": "open_app",
+     "app_name": "Cx File Explorer"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep27_1.jpg",
+    "instruction": "Click on the square icon next to the Flowers folder",
+    "history": [
+     "open_app Cx File Explorer \u2192 screen changed"
+    ],
+    "state": "Goal: Open the Cx file Explorer and rename the Flowers folder to Flora.\nStep instruction: Click on the square icon next to the Flowers folder\nProgress: step 2, 1 actions done\nCurrent app: com.cxinventor.file.explorer\nPrevious actions:\nStep 1: open_app Cx File Explorer \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] Navigate up | ImageButton | click | x:0-14% y:5-11%\n[2] View | TextView | click | x:79-90% y:6-11%\n[3] More options | ImageView | click,long_click | x:90-100% y:6-11%\n[4] Main storage | TextView | - | x:18-43% y:7-10%\n[5] (no label) | ImageView | click | x:44-50% y:7-10%\n[6] Home | TextView | click | x:1-11% y:11-16%\n[7] Root folder | TextView | click | x:13-23% y:11-16%\n[8] Download | TextView | click | x:25-48% y:11-16%\n[9] (no label) | ListView | scroll,long_click | x:0-100% y:16-97%\n[10] Toggle selection | ImageView | - | x:90-100% y:16-22%\n[11] Favorite Song | TextView | - | x:15-89% y:17-20%\n[12] 0 items | TextView | - | x:15-58% y:20-22%\n[13] Toggle selection | ImageView | - | x:90-100% y:23-29%\n[14] Flowers | TextView | - | x:15-89% y:23-26%\n[15] 7 items | TextView | - | x:15-58% y:26-28%\n[16] Toggle selection | ImageView | - | x:90-100% y:29-35%\n[17] MEGA Downloads | TextView | - | x:15-89% y:29-32%\n[18] 0 items | TextView | - | x:15-58% y:32-34%\n[19] Toggle selection | ImageView | - | x:90-100% y:35-41%\n[20] TeraBox | TextView | - | x:15-89% y:36-38%\n[21] 1 item | TextView | - | x:15-57% y:38-40%\n[22] Toggle selection | ImageView | - | x:90-100% y:41-47%\n[23] beach waves.mp4 | TextView | - | x:15-89% y:42-45%\n[24] 3.29 MB | TextView | - | x:15-58% y:45-47%\n[25] Toggle selection | ImageView | - | x:90-100% y:48-54%\n[26] beach-1.mp4 | TextView | - | x:15-89% y:48-51%\n[27] 1.78 MB | TextView | - | x:15-58% y:51-53%\n[28] Toggle selection | ImageView | - | x:90-100% y:54-60%\n[29] beach.mp4 | TextView | - | x:15-89% y:54-57%\n[30] 1.78 MB | TextView | - | x:15-58% y:57-59%\n[31] Toggle selection | ImageView | - | x:90-100% y:60-66%\n[32] Copy of screenshot-1.txt | TextView | - | x:15-89% y:61-63%\n[33] 0.91 MB | TextView | - | x:15-58% y:63-65%\n[34] Toggle selection | ImageView | - | x:90-100% y:66-72%\n[35] Copy of screenshot.txt | TextView | - | x:15-89% y:67-70%\n[36] 0.91 MB | TextView | - | x:15-58% y:70-72%\n[37] Toggle selection | ImageView | - | x:90-100% y:73-79%\n[38] images~2.jpeg | TextView | - | x:15-89% y:73-76%\n[39] 22.48 kB | TextView | - | x:15-59% y:76-78%\n[40] Toggle selection | ImageView | - | x:90-100% y:79-85%\n[41] Maki-zushi.jpg | TextView | - | x:15-89% y:79-82%\n[42] 197 kB | TextView | - | x:15-57% y:82-84%\n[43] showcase_android_prod_arm64-v8a.apk | TextView | - | x:15-89% y:85-90%\n[44] Toggle selection | ImageView | - | x:90-100% y:85-92%\n[45] 178 MB | TextView | - | x:15-58% y:90-92%\n[46] Toggle selection | ImageView | - | x:90-100% y:92-97%\n[47] Taj Mahal.jpeg | TextView | - | x:15-89% y:93-96%\n[48] 39.52 kB | TextView | - | x:15-59% y:96-97%",
+    "action": "click",
+    "probability": 0.9994281831037781,
+    "element": {
+     "id": 13,
+     "label": "Toggle selection",
+     "probability": 0.987451068781448
+    },
+    "box": [
+     650,
+     361,
+     720,
+     459
+    ],
+    "json_action": {
+     "action_type": "click",
+     "x": 1028,
+     "y": 614
+    },
+    "action_probs": [
+     [
+      "click",
+      0.9994281831037781
+     ],
+     [
+      "wait",
+      0.0004044137863814692
+     ],
+     [
+      "scroll",
+      7.138327352305873e-05
+     ],
+     [
+      "done",
+      4.2624899486734306e-05
+     ],
+     [
+      "back",
+      1.7087993416689267e-05
+     ],
+     [
+      "type text",
+      1.2404552936503664e-05
+     ],
+     [
+      "open app",
+      1.0203706917154382e-05
+     ],
+     [
+      "long press",
+      9.510900648785749e-06
+     ],
+     [
+      "answer",
+      2.7851149952376005e-06
+     ],
+     [
+      "home",
+      1.4026679160941301e-06
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[13] Toggle selection",
+       0.987451068781448
+      ],
+      [
+       "[14] Flowers",
+       0.0019362477388439208
+      ],
+      [
+       "[9] (no label)",
+       0.0016304840679720522
+      ],
+      [
+       "[12] 0 items",
+       0.001086136544233414
+      ],
+      [
+       "[15] 7 items",
+       0.0006903903925705383
+      ]
+     ]
+    },
+    "model_ms": 276.6,
+    "human": {
+     "action_type": "click"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep27_2.jpg",
+    "instruction": "Click on the rename option at the bottom of the screen",
+    "history": [
+     "open_app Cx File Explorer \u2192 screen changed",
+     "click \"Toggle selection\" \u2192 screen changed"
+    ],
+    "state": "Goal: Open the Cx file Explorer and rename the Flowers folder to Flora.\nStep instruction: Click on the rename option at the bottom of the screen\nProgress: step 3, 2 actions done\nCurrent app: com.cxinventor.file.explorer\nPrevious actions:\nStep 1: open_app Cx File Explorer \u2192 screen changed\nStep 2: click \"Toggle selection\" \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] Navigate up | ImageButton | click | x:0-14% y:5-11%\n[2] Done | ImageView | click | x:0-14% y:6-11%\n[3] Select All | TextView | click | x:77-88% y:6-11%\n[4] Select a range | TextView | click | x:88-100% y:6-11%\n[5] 1/16 | TextView | - | x:18-27% y:7-10%\n[6] Main storage | TextView | - | x:18-43% y:7-10%\n[7] Home | TextView | click | x:1-11% y:11-16%\n[8] Root folder | TextView | click | x:13-23% y:11-16%\n[9] Download | TextView | click | x:25-48% y:11-16%\n[10] (no label) | ListView | scroll | x:0-100% y:16-91%\n[11] Toggle selection | ImageView | - | x:90-100% y:16-22%\n[12] Favorite Song | TextView | - | x:15-89% y:17-20%\n[13] 0 items | TextView | - | x:15-58% y:20-22%\n[14] Toggle selection | ImageView | - | x:90-100% y:23-29%\n[15] selected | View | - | x:15-89% y:23-24%\n[16] Flowers | TextView | - | x:15-89% y:23-26%\n[17] 7 items | TextView | - | x:15-58% y:26-28%\n[18] Toggle selection | ImageView | - | x:90-100% y:29-35%\n[19] MEGA Downloads | TextView | - | x:15-89% y:29-32%\n[20] 0 items | TextView | - | x:15-58% y:32-34%\n[21] Toggle selection | ImageView | - | x:90-100% y:35-41%\n[22] TeraBox | TextView | - | x:15-89% y:36-38%\n[23] 1 item | TextView | - | x:15-57% y:38-40%\n[24] Toggle selection | ImageView | - | x:90-100% y:41-47%\n[25] beach waves.mp4 | TextView | - | x:15-89% y:42-45%\n[26] 3.29 MB | TextView | - | x:15-58% y:45-47%\n[27] Toggle selection | ImageView | - | x:90-100% y:48-54%\n[28] beach-1.mp4 | TextView | - | x:15-89% y:48-51%\n[29] 1.78 MB | TextView | - | x:15-58% y:51-53%\n[30] Toggle selection | ImageView | - | x:90-100% y:54-60%\n[31] beach.mp4 | TextView | - | x:15-89% y:54-57%\n[32] 1.78 MB | TextView | - | x:15-58% y:57-59%\n[33] Toggle selection | ImageView | - | x:90-100% y:60-66%\n[34] Copy of screenshot-1.txt | TextView | - | x:15-89% y:61-63%\n[35] 0.91 MB | TextView | - | x:15-58% y:63-65%\n[36] Toggle selection | ImageView | - | x:90-100% y:66-72%\n[37] Copy of screenshot.txt | TextView | - | x:15-89% y:67-70%\n[38] 0.91 MB | TextView | - | x:15-58% y:70-72%\n[39] Toggle selection | ImageView | - | x:90-100% y:73-79%\n[40] images~2.jpeg | TextView | - | x:15-89% y:73-76%\n[41] 22.48 kB | TextView | - | x:15-59% y:76-78%\n[42] Toggle selection | ImageView | - | x:90-100% y:79-85%\n[43] Maki-zushi.jpg | TextView | - | x:15-89% y:79-82%\n[44] 197 kB | TextView | - | x:15-57% y:82-84%\n[45] showcase_android_prod_arm64-v8a.apk | TextView | - | x:15-89% y:85-90%\n[46] Toggle selection | ImageView | - | x:90-100% y:85-91%\n[47] (no label) | View | click | x:0-100% y:89-91%\n[48] 178 MB | TextView | - | x:15-58% y:90-91%\n[49] Copy | TextView | - | x:0-20% y:95-97%\n[50] Move | TextView | - | x:20-40% y:95-97%\n[51] Rename | TextView | - | x:40-60% y:95-97%\n[52] Delete | TextView | - | x:60-80% y:95-97%\n[53] More | TextView | - | x:80-100% y:95-97%",
+    "action": "click",
+    "probability": 0.9975644759732897,
+    "element": {
+     "id": 51,
+     "label": "Rename",
+     "probability": 0.7555640268937351
+    },
+    "box": [
+     290,
+     1515,
+     430,
+     1549
+    ],
+    "json_action": {
+     "action_type": "click",
+     "x": 540,
+     "y": 2298
+    },
+    "action_probs": [
+     [
+      "click",
+      0.9975644759732897
+     ],
+     [
+      "done",
+      0.0012433592437433123
+     ],
+     [
+      "wait",
+      0.0010635015193003329
+     ],
+     [
+      "scroll",
+      5.999865007532674e-05
+     ],
+     [
+      "type text",
+      2.0097030407391043e-05
+     ],
+     [
+      "back",
+      1.692339633789102e-05
+     ],
+     [
+      "long press",
+      1.3077387101930485e-05
+     ],
+     [
+      "open app",
+      1.1450942754226523e-05
+     ],
+     [
+      "answer",
+      5.3460251022431975e-06
+     ],
+     [
+      "home",
+      1.7698318874345878e-06
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[51] Rename",
+       0.7555640268937351
+      ],
+      [
+       "[48] 178 MB",
+       0.1739407155330128
+      ],
+      [
+       "[53] More",
+       0.02839504124379488
+      ],
+      [
+       "[50] Move",
+       0.006958504119103321
+      ],
+      [
+       "[47] (no label)",
+       0.006850622512144678
+      ]
+     ]
+    },
+    "model_ms": 252.6,
+    "human": {
+     "action_type": "click"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep27_3.jpg",
+    "instruction": "Click on the cross icon on the keyboard",
+    "history": [
+     "open_app Cx File Explorer \u2192 screen changed",
+     "click \"Toggle selection\" \u2192 screen changed",
+     "click [ImageView] \u2192 screen changed"
+    ],
+    "state": "Goal: Open the Cx file Explorer and rename the Flowers folder to Flora.\nStep instruction: Click on the cross icon on the keyboard\nProgress: step 4, 3 actions done\nCurrent app: com.cxinventor.file.explorer\nPrevious actions:\nStep 1: open_app Cx File Explorer \u2192 screen changed\nStep 2: click \"Toggle selection\" \u2192 screen changed\nStep 3: click [ImageView] \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] Rename | TextView | - | x:12-88% y:26-29%\n[2] Flowers | EditText | click,edit,long_click | x:11-89% y:31-36%\n[3] CANCEL | Button | click | x:56-75% y:37-43%\n[4] OK | Button | click | x:75-91% y:37-43%",
+    "action": "click",
+    "probability": 0.24137568356478395,
+    "element": {
+     "id": 2,
+     "label": "Flowers",
+     "probability": 0.9495406171827839
+    },
+    "box": [
+     82,
+     501,
+     638,
+     579
+    ],
+    "json_action": {
+     "action_type": "click",
+     "x": 540,
+     "y": 810
+    },
+    "action_probs": [
+     [
+      "done",
+      0.7434894474353546
+     ],
+     [
+      "click",
+      0.24137568356478395
+     ],
+     [
+      "wait",
+      0.014271000950280702
+     ],
+     [
+      "back",
+      0.0002673198253186682
+     ],
+     [
+      "scroll",
+      0.0002192480202771037
+     ],
+     [
+      "type text",
+      0.000180348502080273
+     ],
+     [
+      "long press",
+      6.257071465849577e-05
+     ],
+     [
+      "answer",
+      6.064561615195025e-05
+     ],
+     [
+      "open app",
+      5.22797889425425e-05
+     ],
+     [
+      "home",
+      2.145558215167219e-05
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[2] Flowers",
+       0.9495406171827839
+      ],
+      [
+       "[1] Rename",
+       0.026312413046238006
+      ],
+      [
+       "[3] CANCEL",
+       0.01725610177091203
+      ],
+      [
+       "[4] OK",
+       0.006890868000066234
+      ]
+     ]
+    },
+    "model_ms": 206.4,
+    "human": {
+     "action_type": "click"
+    },
+    "matches_human": false
+   },
+   {
+    "screenshot": "screens/ep27_4.jpg",
+    "instruction": "Enter the folder name as Flora",
+    "history": [
+     "open_app Cx File Explorer \u2192 screen changed",
+     "click \"Toggle selection\" \u2192 screen changed",
+     "click [ImageView] \u2192 screen changed",
+     "click [ImageView] \u2192 screen changed"
+    ],
+    "state": "Goal: Open the Cx file Explorer and rename the Flowers folder to Flora.\nStep instruction: Enter the folder name as Flora\nProgress: step 5, 4 actions done\nCurrent app: com.cxinventor.file.explorer\nPrevious actions:\nStep 1: open_app Cx File Explorer \u2192 screen changed\nStep 2: click \"Toggle selection\" \u2192 screen changed\nStep 3: click [ImageView] \u2192 screen changed\nStep 4: click [ImageView] \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] Rename | TextView | - | x:12-88% y:25-28%\n[2] Folder name cannot be empty. | EditText | click,edit,long_click | x:11-89% y:30-35%\n[3] Folder name cannot be empty. | TextView | - | x:12-88% y:35-37%\n[4] CANCEL | Button | click | x:56-75% y:38-43%\n[5] OK | Button | click | x:75-91% y:38-43%",
+    "action": "type_text",
+    "probability": 0.990010090269012,
+    "element": {
+     "id": 2,
+     "label": "Folder name cannot be empty.",
+     "probability": 0.9971784045887686
+    },
+    "box": [
+     82,
+     486,
+     638,
+     565
+    ],
+    "json_action": {
+     "action_type": "input_text",
+     "x": 540,
+     "y": 788,
+     "text": "Flora",
+     "clear_text": true
+    },
+    "action_probs": [
+     [
+      "type text",
+      0.990010090269012
+     ],
+     [
+      "wait",
+      0.006266482141742322
+     ],
+     [
+      "click",
+      0.0025318876601479823
+     ],
+     [
+      "done",
+      0.0007484245627786758
+     ],
+     [
+      "long press",
+      0.0001496943298941629
+     ],
+     [
+      "scroll",
+      7.826949331555149e-05
+     ],
+     [
+      "back",
+      6.694744537817651e-05
+     ],
+     [
+      "open app",
+      6.00113021860206e-05
+     ],
+     [
+      "home",
+      5.093093067038375e-05
+     ],
+     [
+      "answer",
+      3.7261864875250615e-05
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[2] Folder name cannot be empty.",
+       0.9971784045887686
+      ],
+      [
+       "[3] Folder name cannot be empty.",
+       0.0013650344895219182
+      ],
+      [
+       "[5] OK",
+       0.0006971913970952171
+      ],
+      [
+       "[1] Rename",
+       0.0005963394037443276
+      ],
+      [
+       "[4] CANCEL",
+       0.00016303012087004907
+      ]
+     ]
+    },
+    "model_ms": 208.9,
+    "human": {
+     "action_type": "type_text",
+     "text": "Flora"
+    },
+    "matches_human": true
+   },
+   {
+    "screenshot": "screens/ep27_5.jpg",
+    "instruction": "Click on the OK button",
+    "history": [
+     "open_app Cx File Explorer \u2192 screen changed",
+     "click \"Toggle selection\" \u2192 screen changed",
+     "click [ImageView] \u2192 screen changed",
+     "click [ImageView] \u2192 screen changed",
+     "type_text \"Flora\" into \"Folder name cannot be empty.\" \u2192 screen changed"
+    ],
+    "state": "Goal: Open the Cx file Explorer and rename the Flowers folder to Flora.\nStep instruction: Click on the OK button\nProgress: step 6, 5 actions done\nCurrent app: com.cxinventor.file.explorer\nPrevious actions:\nStep 1: open_app Cx File Explorer \u2192 screen changed\nStep 2: click \"Toggle selection\" \u2192 screen changed\nStep 3: click [ImageView] \u2192 screen changed\nStep 4: click [ImageView] \u2192 screen changed\nStep 5: type_text \"Flora\" into \"Folder name cannot be empty.\" \u2192 screen changed\nElements on screen (id: label | type | state | position):\n[1] Rename | TextView | - | x:12-88% y:26-29%\n[2] Flora | EditText | click,edit,long_click | x:11-89% y:31-36%\n[3] CANCEL | Button | click | x:56-75% y:37-43%\n[4] OK | Button | click | x:75-91% y:37-43%",
+    "action": "click",
+    "probability": 0.9998015322583745,
+    "element": {
+     "id": 4,
+     "label": "OK",
+     "probability": 0.9995521607616356
+    },
+    "box": [
+     540,
+     587,
+     652,
+     681
+    ],
+    "json_action": {
+     "action_type": "click",
+     "x": 894,
+     "y": 951
+    },
+    "action_probs": [
+     [
+      "click",
+      0.9998015322583745
+     ],
+     [
+      "wait",
+      9.914288282818009e-05
+     ],
+     [
+      "type text",
+      3.822298631073951e-05
+     ],
+     [
+      "done",
+      2.6683944915689973e-05
+     ],
+     [
+      "scroll",
+      1.4507809208065014e-05
+     ],
+     [
+      "back",
+      8.074811866130678e-06
+     ],
+     [
+      "long press",
+      4.494309632715472e-06
+     ],
+     [
+      "open app",
+      4.459334637676098e-06
+     ],
+     [
+      "answer",
+      2.1479863470948416e-06
+     ],
+     [
+      "home",
+      7.336758791193988e-07
+     ]
+    ],
+    "second": {
+     "title": "Element probabilities (top 5)",
+     "rows": [
+      [
+       "[4] OK",
+       0.9995521607616356
+      ],
+      [
+       "[3] CANCEL",
+       0.00016992805106190765
+      ],
+      [
+       "[2] Flora",
+       0.00015113713725767978
+      ],
+      [
+       "[1] Rename",
+       0.00012677405004487424
+      ]
+     ]
+    },
+    "model_ms": 205.0,
+    "human": {
+     "action_type": "click"
+    },
+    "matches_human": true
+   }
+  ]
+ }
+]

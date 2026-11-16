@@ -14,8 +14,8 @@ repository. This notice records which files were changed, as Section 4(b) of the
 
 | File | Change |
 |---|---|
-| `model.safetensors` | **Modified.** Full fine-tune (seed 0, 2,482 optimizer steps; the tied input embedding / output head stayed frozen) on AndroidControl training-split steps and goal-to-app rows from the AndroidWorld task generator, as an Android GUI action selector. See README.md for data, recipe and evaluation. |
-| `contract.json` | **Added by the fine-tune.** Names the question set this checkpoint was trained on (contract v4). |
+| `model.safetensors` | **Modified.** Full fine-tune (seed 0, one epoch over 116,139 rows, released at optimizer step 7,000; the tied input embedding / output head stayed frozen) on the AndroidControl training split, as an Android GUI action selector. See README.md for data, recipe and evaluation. |
+| `contract.json` | **Added by the fine-tune.** Names the question set this checkpoint was trained on. |
 | `README.md` | **Replaced.** This repository's model card replaces the base model card. |
 
 ## Unchanged files
@@ -30,16 +30,14 @@ copies from the revision above.
 |---|---|
 | `NOTICE.md` | this notice |
 | `ac_common.py` | input building and answer decoding, copied verbatim from the fine-tuning project's code (standard library only) |
-| `example.py` | runs the model on one recorded AndroidWorld step and decodes the answer |
-| `examples/wifi_step2.json`, `examples/wifi_step2.png` | that step: goal, history, accessibility elements, emulator screenshot, recorded decision |
-| `aw_apps.json` | the 33 apps the AndroidWorld emulator can launch (name, aliases, package), derived from AndroidWorld (google-research/android_world, Apache-2.0) |
+| `example.py` | runs the model on one AndroidControl test step and decodes the answer |
+| `examples/ac_test_ep27_step1.json`, `examples/ac_test_ep27_step1.jpg` | that step: goal, step instruction, history, accessibility elements, app list, screenshot, recorded decision |
 
 ## Attribution
 
 The base model, its architecture and its remote code are the work of Liquid AI. Training data: AndroidControl
-(Li et al., NeurIPS 2024 Datasets and Benchmarks) and goals from the AndroidWorld task generator (Rawles et al.,
-ICLR 2025). Neither dataset is redistributed in this repository. The example screenshot was captured from the
-AndroidWorld emulator.
+(Li et al., NeurIPS 2024 Datasets and Benchmarks), which is not redistributed in this repository except for the one
+test step used by the example (screenshot, accessibility elements and instruction of episode 27, step 1).
 
 "Liquid AI", "LFM" and "d1" are names of Liquid AI, Inc.; they are used here only to describe the origin of the
 work (license Section 7).

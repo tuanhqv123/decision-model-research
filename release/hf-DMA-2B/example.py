@@ -1,13 +1,17 @@
-"""Run DMA-2B on one recorded AndroidWorld step and decode the answer into an AndroidWorld action.
+"""Run DMA-2B on one AndroidControl test step and decode the answer into an action.
 
-The example is a real decision from our evaluation run: task "Turn wifi on." (SystemWifiTurnOnVerify, seed 30),
-step 2, on the Settings home screen. The recorded run chose `click` (p = 0.988) on element [6] "Network & internet"
-(p = 0.776). This script rebuilds the same inputs with `ac_common.py` (the code used for training, evaluation and
-serving), runs one forward pass, and compares the result with the recording.
+The example is step 1 of AndroidControl test episode 27: goal "Open the Cx file Explorer and rename the Flowers
+folder to Flora.", step instruction "Click on the square icon next to the Flowers folder". In our evaluation the
+model chose `click` (p = 0.999) on element [13] (p = 0.988), which is the correct action. This script rebuilds the
+same inputs with `ac_common.py` (the code used for training and evaluation), runs one forward pass, and compares the
+result with the recording.
 
     python example.py                     # model from this directory, GPU
     python example.py --model <repo id>   # or from the Hub
+    python example.py --no-instruction    # goal only (the AndroidControl-High setting)
     python example.py --inputs-only       # print the state and the questions; no model, no GPU
+
+AndroidControl's action space has no "done" action, so `status` is not taken here unless --allow-done is given.
 """
 import argparse
 import io
@@ -31,20 +35,21 @@ def load_image(path, width=720):
     return im
 
 
-def build_inputs(goal, history, elements, screenshot, apps):
-    """State text, questions and kept elements for one step under contract v4."""
-    from PIL import Image
-    W, H = Image.open(screenshot).size          # element boxes are in pixels of the original screenshot
+def build_inputs(goal, history, elements, width, height, apps, instruction=None):
+    """State text, questions and kept elements for one step. `width`, `height`: the original screen size in pixels
+    (element boxes are in those pixels). `instruction`: the step instruction, or None for goal only."""
     rule = v.CONTRACTS["v4"]["element_rule"]    # "all_reading_noime"
-    state, kept, keep_idx = v.element_inputs_v3(goal, history, elements, W, H, rule)
+    state, kept, keep_idx = v.element_inputs_v3(goal, history, elements, width, height, rule, instruction)
     questions = v.build_questions("VA", kept, contract="v4", apps=apps)
     return state, questions, kept, keep_idx
 
 
-def decode(ans, history, kept, keep_idx, elements, apps):
-    """Model answers -> an AndroidWorld JSONAction dict (None for `status`, which ends the episode)."""
+def decode(ans, kept, keep_idx, elements, apps, allow_done=False):
+    """Model answers -> an action dict. Without `allow_done`, `status` is never taken: the best other action of the
+    same forward pass is used (AndroidControl's action space)."""
     probs = {v.FROM_OPTION[k]: float(p) for k, p in ans["action"]["probabilities"].items()}
-    action = v.restrict_first_step(probs, history)   # step 1 (empty history): open_app or status only
+    allowed = {k: p for k, p in probs.items() if allow_done or k != "status"}
+    action = max(allowed, key=allowed.get)
     out = {"action": action, "probability": probs[action]}
     if action in v.SPATIAL:                          # click, long_press, type_text
         el_id, el = v.chosen_element(ans, kept)
@@ -67,7 +72,7 @@ def decode(ans, history, kept, keep_idx, elements, apps):
         _, text = v.answer_text(ans, elements, kept, keep_idx)
         out["json_action"] = {"action_type": "answer", "text": text}
     elif action == "status":
-        out["json_action"] = None                    # declare the task complete
+        out["json_action"] = None                    # the instruction or task is complete
     else:                                            # wait, navigate_back, navigate_home
         out["json_action"] = {"action_type": action}
     return out
@@ -76,14 +81,17 @@ def decode(ans, history, kept, keep_idx, elements, apps):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default=HERE, help="local directory or Hub repo id")
-    ap.add_argument("--example", default=os.path.join(HERE, "examples", "wifi_step2.json"))
+    ap.add_argument("--example", default=os.path.join(HERE, "examples", "ac_test_ep27_step1.json"))
+    ap.add_argument("--no-instruction", action="store_true")
+    ap.add_argument("--allow-done", action="store_true")
     ap.add_argument("--inputs-only", action="store_true")
     a = ap.parse_args()
 
     ex = json.load(open(a.example))
-    screenshot = os.path.join(os.path.dirname(a.example), os.path.basename(a.example).replace(".json", ".png"))
-    apps = [x["name"] for x in json.load(open(os.path.join(HERE, "aw_apps.json")))]
-    state, questions, kept, keep_idx = build_inputs(ex["goal"], ex["history"], ex["elements"], screenshot, apps)
+    screenshot = os.path.join(os.path.dirname(a.example), os.path.basename(a.example).replace(".json", ".jpg"))
+    instruction = None if a.no_instruction else ex.get("instruction")
+    state, questions, kept, keep_idx = build_inputs(ex["goal"], ex["history"], ex["elements"], ex["width"],
+                                                    ex["height"], ex["apps"], instruction)
     if a.inputs_only:
         print(state)
         print("\nquestions:", list(questions))
@@ -96,12 +104,11 @@ def main():
     with torch.inference_mode():
         ans = model.system_one_batch([(state, questions, [load_image(screenshot)])])[0]["answers"]
 
-    out = decode(ans, ex["history"], kept, keep_idx, ex["elements"], apps)
+    out = decode(ans, kept, keep_idx, ex["elements"], ex["apps"], a.allow_done)
     print(json.dumps(out, indent=1))
     rec = ex.get("recorded")
-    if rec:
-        same = (v.TO_OPTION[out["action"]] == rec["action"]
-                and str((out.get("element") or {}).get("id")) == rec["target_el"])
+    if rec and instruction is not None and not a.allow_done:
+        same = out["action"] == rec["action"] and str((out.get("element") or {}).get("id")) == str(rec["target_el"])
         print(f"recorded: {rec['action']} p={rec['action_probability']:.3f}, element [{rec['target_el']}] "
               f"p={rec['target_el_probability']:.3f} -> {'same decision' if same else 'DIFFERENT decision'}")
 
