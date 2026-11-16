@@ -84,6 +84,16 @@ class Device:
     def screenshot(self):
         return self.env.get_state().pixels.convert("RGB")
 
+    def fast_screenshot(self):
+        """For the live view: uiautomator2's screenshot (~0.1 s) when available, else the ADB one."""
+        u2 = self._u2()
+        if u2 is not None:
+            try:
+                return u2.screenshot()
+            except Exception:  # noqa: BLE001 - fall back to ADB
+                pass
+        return self.screenshot()
+
     def current_package(self) -> str:
         return self.d.app_current().package
 
@@ -170,8 +180,23 @@ class Device:
         if kind in ("click", "long_press"):
             a = [Action(name=kind, parameters={"coordinate": (int(p["x"]), int(p["y"]))})]
         elif kind == "type":
+            # The typed text REPLACES the field (AndroidControl/AndroidWorld semantics: the text is the field's final
+            # content). uiautomator2 clears the field and types any script (Vietnamese, emoji) through its own input
+            # method; plain `adb input text` would append and handles ASCII only, so it is the fallback.
             a = [Action(name="click", parameters={"coordinate": (int(p["x"]), int(p["y"]))})] if "x" in p else []
+            u2 = self._u2()
+            if u2 is not None:
+                if getattr(self, "_ime_before", None) is None:      # remember the person's keyboard
+                    self._ime_before = self.d.shell("settings get secure default_input_method").strip()
+                self._run(a)
+                time.sleep(0.3)
+                u2.send_keys(p["text"], clear=True)
+                return
             a.append(Action(name="type", parameters={"text": p["text"]}))
+        elif kind == "collapse_shade":
+            self.d.shell("cmd statusbar collapse")
+            time.sleep(0.5)
+            return
         elif kind == "scroll":
             s, e = swipe_for_scroll(p["direction"], W, H)
             a = [Action(name="swipe", parameters={"coordinate": s, "coordinate2": e})]
@@ -186,7 +211,17 @@ class Device:
             a = [Action(name="wait", parameters={"time": p.get("seconds", 2.0)})]
         else:
             raise ValueError("unknown action %r" % kind)
-        for action in a:
+        self._run(a)
+
+    def restore_keyboard(self) -> None:
+        """uiautomator2 types through its own input method and makes it the default; put the person's keyboard back."""
+        before = getattr(self, "_ime_before", None)
+        if before and "uiautomator" not in before:
+            self.d.shell("ime set %s" % before)
+        self._ime_before = None
+
+    def _run(self, actions) -> None:
+        for action in actions:
             for attempt in range(2):
                 try:
                     self.env.execute_action(action)

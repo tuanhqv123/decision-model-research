@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DMA-2B Talk</title>
+<style>
+  :root { --bg:#f7f6f2; --card:#ffffff; --ink:#1f2328; --muted:#5b6470; --accent:#2f5fa8; --accent2:#c0582f;
+          --ok:#2e7d4f; --line:#e3e0d8; --soft:#eef3fb; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink);
+              font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+  .deck { height:100%; display:flex; align-items:center; justify-content:center; padding:16px; }
+  .slide { display:none; width:min(1100px,100%); min-height:min(640px,92vh); background:var(--card);
+           border:1px solid var(--line); border-radius:18px; padding:44px 56px; box-shadow:0 10px 30px rgba(0,0,0,.06);
+           position:relative; overflow:auto; }
+  .slide.on { display:block; }
+  h1 { font-size:42px; margin:0 0 12px; letter-spacing:-.5px; }
+  h2 { font-size:30px; margin:0 0 18px; color:var(--accent); }
+  h3 { font-size:19px; margin:18px 0 6px; }
+  p, li { font-size:19px; line-height:1.55; }
+  .muted { color:var(--muted); }
+  .kicker { text-transform:uppercase; letter-spacing:2px; font-size:13px; color:var(--accent2); font-weight:700; }
+  .big { font-size:64px; font-weight:800; color:var(--accent); line-height:1; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .box { background:var(--soft); border-radius:12px; padding:16px 18px; }
+  .box.warm { background:#fbefe8; }
+  .box.green { background:#e8f4ec; }
+  .box h3 { margin-top:0; }
+  table { border-collapse:collapse; width:100%; font-size:17px; }
+  th, td { padding:7px 10px; border-bottom:1px solid var(--line); text-align:left; }
+  td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.ours td { background:var(--soft); font-weight:700; }
+  .analogy { border-left:5px solid var(--accent2); padding:8px 16px; background:#fdf8f4; border-radius:6px;
+             font-style:italic; }
+  .nav { position:fixed; bottom:14px; right:20px; font-size:14px; color:var(--muted); }
+  .nav button { border:1px solid var(--line); background:#fff; border-radius:8px; padding:6px 12px; cursor:pointer;
+                font-size:14px; margin-left:6px; }
+  .num { position:absolute; top:18px; right:24px; color:var(--muted); font-size:14px; }
+  svg text { font-family: inherit; }
+  @media (max-width:760px) { .slide { padding:26px 20px; } .grid2, .grid3 { grid-template-columns:1fr; }
+    h1 { font-size:30px; } h2 { font-size:24px; } p, li { font-size:17px; } .big { font-size:46px; } }
+  @media print { .slide { display:block; page-break-after:always; box-shadow:none; } .nav { display:none; } }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<section class="slide on">
+  <div class="kicker">Talk · 16 November 2026</div>
+  <h1>DMA-2B: a 2B model that picks the next phone action in one look</h1>
+  <p class="muted">Why this approach, before and after training, what we learned, what is missing, and where the limits are.</p>
+  <div class="grid3" style="margin-top:34px">
+    <div class="box"><div class="big">90.5</div><p>AC-Low: % of steps right (base: 59.8)</p></div>
+    <div class="box"><div class="big">74.2</div><p>AC-High: % of steps right (base: 40.2)</p></div>
+    <div class="box"><div class="big">0</div><p>tokens generated per decision</p></div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>1. The problem, in plain words</h2>
+  <p>A "phone agent" looks at the screen and decides the next step: where to tap, whether to scroll, what to type.</p>
+  <p>The usual way today: a large language model <b>writes</b> the action as text, often after a passage of reasoning,
+     and software parses that text. This costs three things:</p>
+  <ul>
+    <li><b>Slow:</b> it writes one token at a time, and longer reasoning takes longer.</li>
+    <li><b>Fragile:</b> a badly formatted answer cannot be parsed.</li>
+    <li><b>No sense of doubt:</b> no number says whether to act, ask, or stop.</li>
+  </ul>
+  <p class="analogy">Like a waiter who takes an order by writing a paragraph by hand, when ticking boxes on a printed
+     form, plus "90% sure", would do.</p>
+</section>
+
+<section class="slide">
+  <h2>2. Why a decision model, and why d1-2B</h2>
+  <div class="grid2">
+    <div>
+      <p>A <b>decision model</b> writes no text. It reads the screen once and answers questions with fixed options:
+         which action? which element? which direction? which app? Every answer comes with a probability.</p>
+      <p>Why Liquid AI's <b>d1-2B</b>:</p>
+      <ul>
+        <li><b>The right kind:</b> one pass, no tokens, probabilities built in.</li>
+        <li><b>Small:</b> 1.92 billion parameters; about 0.25 s per decision on a shared, busy 24 GB GPU.</li>
+        <li><b>Open:</b> the weights can be fine-tuned.</li>
+        <li><b>Reads the image and the on-screen element list</b>, so it picks a button instead of guessing coordinates.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Research question</h3>
+      <p>Can a model that <b>writes nothing</b> and only "ticks options" pick phone actions as well as text-writing
+         models many times its size?</p>
+      <p>And are its probabilities <b>usable</b> for deciding when to act alone and when to ask a person?</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>3. The test: AndroidControl</h2>
+  <p>Google recorded real people using Android apps. The test set has 1,543 episodes and 8,444 steps. At each step the
+     model sees the screen and what the person did before, and must predict the person's next action.</p>
+  <div class="grid2">
+    <div class="box"><h3>AC-Low: with a step instruction</h3>
+      <p>"Click the square next to the Flowers folder." Tests <b>following</b> an instruction.</p></div>
+    <div class="box warm"><h3>AC-High: goal only</h3>
+      <p>"Rename the Flowers folder to Flora." Tests <b>working out</b> the next step. Much harder.</p></div>
+  </div>
+  <p>A step counts as right only if the action type and every detail are right: the element, the direction, the text.</p>
+</section>
+
+<section class="slide">
+  <h2>4. Before and after training</h2>
+  <table>
+    <tr><th></th><th class="n">AC-Low</th><th class="n">AC-High</th><th class="n">Episodes with every step right (High)</th></tr>
+    <tr><td>d1-2B base (not trained)</td><td class="n">59.8</td><td class="n">40.2</td><td class="n">9.4%</td></tr>
+    <tr class="ours"><td>DMA-2B (trained)</td><td class="n">90.5</td><td class="n">74.2</td><td class="n">30.6%</td></tr>
+  </table>
+  <h3>What we did</h3>
+  <ul>
+    <li>Used <b>all</b> of AndroidControl's training split: 13,594 episodes, 88,308 steps, with every test episode removed.</li>
+    <li>Showed each step in several forms: sometimes the goal only, sometimes with 1–4 step instructions.</li>
+    <li>Trained one pass over the data (about 16 hours on one RTX 4090).</li>
+  </ul>
+  <p class="analogy">Like a trainee who watches an expert use a phone 88,000 times, sometimes with the expert's
+     instructions read aloud and sometimes without.</p>
+</section>
+
+<section class="slide">
+  <h2>5. Compared with other models (AC-High, % of steps right)</h2>
+  <svg viewBox="0 0 980 430" width="100%" role="img" aria-label="AC-High comparison">
+    <g font-size="15">
+      <g fill="#9aa5b1">
+        <rect x="300" y="10"  width="469.0" height="24"/><text x="290" y="28" text-anchor="end" fill="#1f2328">UI-TARS-2B (2B)</text><text x="775" y="28" fill="#1f2328">68.9</text>
+        <rect x="300" y="42"  width="458.1" height="24"/><text x="290" y="60" text-anchor="end" fill="#1f2328">MAI-UI-2B (2B)</text><text x="764" y="60" fill="#1f2328">67.3</text>
+        <rect x="300" y="74"  width="470.4" height="24"/><text x="290" y="92" text-anchor="end" fill="#1f2328">AgentCPM-GUI (8B)</text><text x="776" y="92" fill="#1f2328">69.2</text>
+        <rect x="300" y="106" width="483.9" height="24"/><text x="290" y="124" text-anchor="end" fill="#1f2328">InfiGUI-R1 (3B)</text><text x="790" y="124" fill="#1f2328">71.1</text>
+        <rect x="300" y="138" width="493.5" height="24"/><text x="290" y="156" text-anchor="end" fill="#1f2328">UI-TARS-7B (7B)</text><text x="799" y="156" fill="#1f2328">72.5</text>
+        <rect x="300" y="170" width="503.4" height="24"/><text x="290" y="188" text-anchor="end" fill="#1f2328">MobileRL-9B (9B)</text><text x="809" y="188" fill="#1f2328">73.9</text>
+      </g>
+      <rect x="300" y="202" width="505.4" height="24" fill="#2f5fa8"/><text x="290" y="220" text-anchor="end" font-weight="700" fill="#2f5fa8">DMA-2B (2B, writes no text)</text><text x="811" y="220" font-weight="700" fill="#2f5fa8">74.2</text>
+      <g fill="#c9b8a8">
+        <rect x="300" y="234" width="507.5" height="24"/><text x="290" y="252" text-anchor="end" fill="#1f2328">UI-Genie-7B (7B)</text><text x="813" y="252" fill="#1f2328">74.5</text>
+        <rect x="300" y="266" width="513.6" height="24"/><text x="290" y="284" text-anchor="end" fill="#1f2328">GUI-SAGE-3B (3B)</text><text x="819" y="284" fill="#1f2328">75.4</text>
+        <rect x="300" y="298" width="518.4" height="24"/><text x="290" y="316" text-anchor="end" fill="#1f2328">UI-Venus-Navi-7B (7B)</text><text x="824" y="316" fill="#1f2328">76.1</text>
+        <rect x="300" y="330" width="523.2" height="24"/><text x="290" y="348" text-anchor="end" fill="#1f2328">GUI-SAGE-7B (7B)</text><text x="829" y="348" fill="#1f2328">76.8</text>
+        <rect x="300" y="362" width="538.9" height="24"/><text x="290" y="380" text-anchor="end" fill="#1f2328">OmegaUse (30B)</text><text x="845" y="380" fill="#1f2328">79.1</text>
+      </g>
+      <text x="300" y="418" fill="#5b6470" font-size="13">Other models' numbers are taken from their papers; scoring differs, so the comparison is approximate.</text>
+    </g>
+  </svg>
+  <p><b>Reading the chart:</b> DMA-2B is the best 2B model reported, and above several 7–9B models that write text.
+     Four 3–7B models and the very large ones are still higher.</p>
+</section>
+
+<section class="slide">
+  <h2>6. Are the probabilities usable?</h2>
+  <div class="grid2">
+    <div>
+      <p>The idea: let the model <b>act alone</b> only when it is sure enough, and <b>ask a person</b> otherwise.</p>
+      <p>Choose the threshold on half of the episodes, test it on the other half, and repeat 200 times:</p>
+      <ul>
+        <li>For at most 20% wrong: the model acts alone on <b>80%</b> of steps, <b>19%</b> wrong.</li>
+        <li>For at most 15% wrong: it acts alone on 50%, 13.7% wrong.</li>
+        <li>The untrained base model: almost no threshold reaches the 20% level.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>To be honest</h3>
+      <p>The model is somewhat <b>over-confident</b>: on average it says "88.7% sure" but is right 74.2% of the time.
+         Use the probability to <b>rank</b> how sure it is and pick the threshold on real data; do not read it as an
+         exact probability.</p>
+      <p class="analogy">Like a driver who knows which roads they tend to get lost on and asks there, while being
+         a little over-confident overall.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>7. What we tried, and what each did</h2>
+  <table>
+    <tr><th>Tried</th><th>Result (Low / High)</th><th>Why</th></tr>
+    <tr><td>Small, curated data (about 40 thousand rows)</td><td>89.3 / 69.7</td><td>Little data in the test's format</td></tr>
+    <tr><td><b>All of the training data (116 thousand rows)</b></td><td><b>90.5 / 74.2</b></td><td>More data, closer to the test's format</td></tr>
+    <tr><td>Let the model say "done" when scored</td><td>Low drops to 86.8</td><td>Says done one step early on 449 steps</td></tr>
+    <tr><td>Weight repeated-instruction steps ×3</td><td>Wrong "done" 720 → 449</td><td>Helped, but not enough</td></tr>
+    <tr><td>Train longer</td><td>No gain</td><td>Flat on held-out data from about step 4,000</td></tr>
+    <tr><td>Average the weights of two models</td><td>No gain</td><td>5 of 690 steps apart: noise</td></tr>
+  </table>
+  <p class="muted">For every attempt, the pass/fail rule was written down before looking at the result.</p>
+</section>
+
+<section class="slide">
+  <h2>8. What we learned</h2>
+  <div class="grid2">
+    <div class="box green"><h3>1. The right data, and enough of it, beats every trick</h3>
+      <p>The largest jump came from using all of the data, not from a technique.</p></div>
+    <div class="box green"><h3>2. Score with one rule</h3>
+      <p>The same model moves 3.7 points when "may it say done?" changes. State the scoring rule.</p></div>
+    <div class="box warm"><h3>3. Knowing when to stop is the hardest part</h3>
+      <p>The main error is not a wrong tap, but deciding the task is done while the screen is still loading.</p></div>
+    <div class="box warm"><h3>4. Right steps are not a finished task</h3>
+      <p>74% of steps right, but only 30.6% of episodes with every step right; longer episodes are harder.</p></div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>9. What is still needed, and why</h2>
+  <table>
+    <tr><th>Needed</th><th>Why</th></tr>
+    <tr><td>One training run for AC only: every step in both the Low and the High form, without the "done" row</td><td>Data in the test's format helped most; there would be about 3.5 times as much High-form data</td></tr>
+    <tr><td>A "has the screen settled?" signal</td><td>The largest error is taking a loading screen for a finished one</td></tr>
+    <tr><td>More training seeds</td><td>Only one seed so far, so the real spread is unknown</td></tr>
+    <tr><td>Reinforcement learning after fine-tuning</td><td>The four 3–7B models above us all use RL or self-improvement</td></tr>
+  </table>
+</section>
+
+<section class="slide">
+  <h2>10. Limits, stated plainly</h2>
+  <ul>
+    <li><b>One seed.</b> A gap of a few points to another model is not enough to rank them.</li>
+    <li><b>Other models' numbers come from their papers:</b> different prompts, action sets and scoring, so the comparison is approximate.</li>
+    <li><b>Two scoring rules:</b> DMA-2B is scored in AC's own action set (no "done"); the base model is scored with "done".</li>
+    <li><b>Imitation with the correct history:</b> the model never saw its own mistakes, and AC does not measure whole-task success.</li>
+    <li><b>Needs the screen's element list;</b> it cannot run from the image alone.</li>
+    <li><b>Types only text that appears</b> in the goal or the instruction.</li>
+    <li><b>Over-confident:</b> 88.7% sure on average, 74.2% right.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>In one sentence</h2>
+  <p style="font-size:26px; line-height:1.5">A 2B model that <b>writes no text</b> and only ticks options in one look gets
+     90.5% / 74.2% of AndroidControl steps right, level with text-writing models many times larger, and
+     <b>knows when it is unsure</b> well enough to act alone on 80% of steps with 19% of them wrong.</p>
+  <p class="muted" style="margin-top:30px">Paper: papers/latex/dma-2b-androidcontrol/main.pdf ·
+     Model: huggingface.co/tuanhqv123/DMA-2B</p>
+</section>
+
+</div>
+<div class="nav"><span id="pos"></span><button onclick="go(-1)">◀</button><button onclick="go(1)">▶</button></div>
+<script>
+  const s = [...document.querySelectorAll('.slide')]; let i = 0;
+  s.forEach((el, k) => { const d = document.createElement('div'); d.className = 'num'; d.textContent = (k + 1) + ' / ' + s.length; el.appendChild(d); });
+  function show() { s.forEach((el, k) => el.classList.toggle('on', k === i)); document.getElementById('pos').textContent = (i + 1) + ' / ' + s.length; }
+  function go(d) { i = Math.max(0, Math.min(s.length - 1, i + d)); show(); }
+  document.addEventListener('keydown', e => { if (['ArrowRight', 'PageDown', ' '].includes(e.key)) go(1); if (['ArrowLeft', 'PageUp'].includes(e.key)) go(-1); });
+  show();
+</script>
+</body>
+</html>

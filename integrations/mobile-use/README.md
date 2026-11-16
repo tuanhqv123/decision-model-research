@@ -1,9 +1,9 @@
-> **This copy of [MobileUse](https://github.com/MadeAgents/mobile-use) (MIT) adds `DMAgent`**: an LLM planner + the
-> DMA-2B decision model, with UIAutomator / uiautomator2 / OCR screen reading, self-correction for pop-ups and errors,
-> safety gates with human-in-the-loop, a web dashboard (`python -m mobile_use.dma_dashboard`) and a 12-task scenario
-> suite checked over ADB (`benchmark/dma_scenarios/`, 12/12 on the last run). Documentation (Vietnamese):
-> [`docs/dma_agent_vi.md`](docs/dma_agent_vi.md); how to start it: [`docs/dma_quickstart_vi.md`](docs/dma_quickstart_vi.md).
-> Tests: `tests/test_dma_agent.py`.
+> **This copy of [MobileUse](https://github.com/MadeAgents/mobile-use) (MIT) adds `DMAgent`**: an LLM planner and the
+> DMA-2B decision model working together, with accessibility-tree / OCR screen reading, self-correction for pop-ups,
+> errors and the notification shade, a safety gate with human in the loop, a live web dashboard
+> (`python -m mobile_use.dma_dashboard`), an app-list generator for any device, and a 20-task suite checked over ADB
+> (`benchmark/dma_scenarios/`). Architecture and results: [`docs/dma_agent.md`](docs/dma_agent.md).
+> How to start it: [`docs/dma_quickstart.md`](docs/dma_quickstart.md).
 
 # MobileUse: Open-Source GUI Agent for Android Automation📱
 

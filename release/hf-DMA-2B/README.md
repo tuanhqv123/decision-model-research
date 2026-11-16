@@ -51,7 +51,8 @@ which on-screen element, which app, which scroll direction, which span to type) 
 option.
 
 - **No parsing.** Every answer is one of the listed options, so every decoded action is valid.
-- **One forward pass per decision.** 135 ms at the median on one shared 24 GB GPU, served over HTTP.
+- **One forward pass per decision.** 255 ms at the median and 305 ms at the 95th percentile, served over HTTP on
+  one RTX 4090 that another job kept busy (500 AndroidControl-High steps, batch 1); no tokens are generated.
 - **A probability for each decision.** On AndroidControl-High, acting only when the action probability is above a
   threshold chosen on held-out episodes keeps the error rate at 19% while acting on 80% of the steps.
 

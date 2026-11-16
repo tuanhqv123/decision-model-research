@@ -69,6 +69,27 @@ def to_device_action(dec: Dict[str, Any]) -> Tuple[str, Dict[str, Any], str]:
     return "wait", {"seconds": 2.0}, act
 
 
+MULTILINE_PX = 250     # an editable field at least this tall is a text body (a note), not a one-line input
+
+
+def text_to_type(field: Optional[Dict[str, Any]], typed: str) -> str:
+    """The text the field should hold after typing. DMA-2B gives the words to type; how they combine with what is
+    already there depends on the field, as for a person: a one-line input (name, phone, search) is replaced, while a
+    text body that already has content gets the words on a new line (otherwise "add a line" would erase the note).
+    The device then sets the field to exactly this text."""
+    if not field:
+        return typed
+    current = str(field.get("text") or "")
+    hint = str(field.get("hint_text") or "")
+    b = field.get("bbox_pixels") or {}
+    tall = (b.get("y_max", 0) - b.get("y_min", 0)) >= MULTILINE_PX
+    if not current.strip() or current == hint or not tall:
+        return typed
+    if typed.strip() and typed.strip() in current:
+        return current
+    return current.rstrip("\n") + "\n" + typed
+
+
 def history_line(dec: Dict[str, Any], changed: Optional[bool]) -> str:
     return v.history_entry_with_label({"action_type": dec["action"], "direction": dec.get("direction"),
                                        "app_name": dec.get("app_name"), "text": dec.get("text")},

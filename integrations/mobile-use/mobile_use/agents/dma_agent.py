@@ -18,10 +18,10 @@ from typing import Any, Callable, Dict, Iterator, List, Optional
 
 from mobile_use.agents.base import Agent
 from mobile_use.agents.dma.device_ext import Device
-from mobile_use.agents.dma.executor import (Executor, element_label, history_line, probability, screen_changed,
+from mobile_use.agents.dma.executor import (Executor, element_label, text_to_type, history_line, probability, screen_changed,
                                             to_device_action)
 from mobile_use.agents.dma.planner import Planner
-from mobile_use.agents.dma.recovery import StuckDetector, centre, detect_popup
+from mobile_use.agents.dma.recovery import StuckDetector, centre, detect_popup, shade_open
 from mobile_use.agents.dma.safety import AutoApprover, Policy
 from mobile_use.schema.schema import Action, AgentState, BaseEpisodeData, SingleAgentStepData
 
@@ -91,6 +91,12 @@ class DMAgent(Agent):
                     time.sleep(2.0)
             if step is not None:
                 yield step
+        restore = getattr(self.device, "restore_keyboard", None)
+        if restore is not None:
+            try:
+                restore()
+            except Exception as exc:  # noqa: BLE001 - a keyboard that stays switched is not worth failing the task
+                logger.warning("could not restore the keyboard: %s", exc)
         self.state = AgentState.READY
         self._emit("end", outcome=self.outcome, summary=self.summary())
 
@@ -114,6 +120,13 @@ class DMAgent(Agent):
                 self._emit("unreadable_screen")
                 self.device.act("wait", seconds=2.0)
                 return self._record("wait", {}, "screen not readable; waited", image)
+            if shade_open(els):                                        # DMA-2B cannot see the system UI
+                self.counts["recoveries"] += 1
+                self.device.act("collapse_shade")
+                self.log.append("The notification shade was open and has been closed: the helper cannot operate it. "
+                                "Use the Settings app (or the app itself) instead.")
+                self._emit("recovery", kind="notification_shade", reason="closed the notification shade", point=None)
+                return self._record("collapse_shade", {}, "recovery: closed the notification shade", image)
             popup = detect_popup(els, self.anr_seen, self.policy.allow_permissions)
             if popup:                                                  # self-correction comes first
                 self.anr_seen += popup["kind"] == "app_not_responding"
@@ -135,6 +148,10 @@ class DMAgent(Agent):
                 self._goal_done()
                 continue
             kind, params, desc = to_device_action(dec)
+            if kind == "type":
+                idx = (dec.get("element") or {}).get("aw_index")
+                fld = els[idx] if isinstance(idx, int) and 0 <= idx < len(els) else None
+                params["text"] = text_to_type(fld, params["text"])
             if kind in ("click", "long_press") and "x" not in params:   # no element to act on
                 self.counts["blocked"] += 1
                 self.log.append('Local goal "%s": BLOCKED (the helper wanted to %s but found no matching element on '
@@ -204,18 +221,8 @@ class DMAgent(Agent):
             self.answer, self.outcome = plan["text"], "answered"
             self.env.execute_action(Action(name="answer", parameters={"text": plan["text"]}))
             return self._record("answer", {"text": plan["text"]}, "answer: " + plan["text"], self.last_image)
-        if nxt == "scroll":                                             # an unambiguous move done by the harness
-            before = self.device.elements()
-            self.device.act("scroll", direction=plan["direction"])
-            changed = screen_changed(before, self.device.elements())
-            line = "scroll %s" % plan["direction"] + (" → screen changed" if changed else " → no change")
-            self.history.append(line)
-            self.log.append("Scrolled %s: %s" % (plan["direction"], "the screen changed" if changed else
-                                                 "nothing moved (already at the end of the list)"))
-            self._emit("action", action="scroll %s (planner)" % plan["direction"], probability=None,
-                       local_goal=None, changed=changed, point=None)
-            return self._record("scroll", {"direction": plan["direction"]}, "scroll %s (planner)" % plan["direction"],
-                                self.last_image)
+        if nxt in ("scroll", "back", "home"):                          # unambiguous moves done by the harness
+            return self._harness_move(nxt, {"direction": plan["direction"]} if nxt == "scroll" else {})
         if nxt == "ask_user":
             self.counts["questions"] += 1
             resp = self.approver.ask({"kind": "question", "reason": plan["question"]})
@@ -231,9 +238,30 @@ class DMAgent(Agent):
             self.local_goal, self.goal_steps, self.goal_actions = plan["instruction"], 0, []
         return None
 
+    def _harness_move(self, kind, params) -> SingleAgentStepData:
+        """Scroll, Back and Home chosen by the planner and executed directly: no element is involved, and DMA-2B was
+        trained on AndroidControl's own conventions for them (its "scroll up" is the annotators' word for a swipe), so
+        routing them through the executor only adds a way to get them wrong."""
+        before = self.device.elements()
+        self.device.act(kind, **params)
+        changed = screen_changed(before, self.device.elements())
+        name = {"scroll": "scroll %s" % params.get("direction"), "back": "navigate_back", "home": "navigate_home"}[kind]
+        self.history.append(name + (" → screen changed" if changed else " → no change"))
+        if kind == "scroll":
+            self.log.append("Scrolled %s: %s" % (params["direction"], "the screen changed" if changed else
+                                                 "nothing moved (already at the end of the list)"))
+        else:
+            self.log.append("Pressed %s: %s" % ("Back" if kind == "back" else "Home",
+                                               "the screen changed" if changed else "nothing changed"))
+        self._emit("action", action="%s (planner)" % name, probability=None, local_goal=None, changed=changed,
+                   point=None)
+        return self._record(kind, params, "%s (planner)" % name, self.last_image)
+
     def _goal_done(self):
         if self.goal_steps == 0:
-            self.log.append('Local goal "%s": the helper did nothing and reports it already DONE' % self.local_goal)
+            self.log.append('Local goal "%s": the helper did nothing and reports it already DONE. If the screen shows the '
+                            'result, go on to the next part of the task or finish; do not ask for the same thing again.'
+                            % self.local_goal)
             self.idle_done_goal = self.local_goal
         else:
             self.log.append('Local goal "%s": DONE; actions: %s' % (self.local_goal, "; ".join(self.goal_actions)))

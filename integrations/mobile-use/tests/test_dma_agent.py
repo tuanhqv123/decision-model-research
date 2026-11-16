@@ -213,3 +213,131 @@ def test_a_planner_scroll_is_done_by_the_harness_in_the_stated_direction():
     run(a)
     assert a.device.acts[0] == ("scroll", {"direction": "up"}) and a.history[0].startswith("scroll up")
     assert a.executor.calls == []
+
+
+def test_vietnamese_sensitive_labels_are_gated_with_or_without_diacritics():
+    for label in ("Xóa", "Xoá ghi chú", "xoa", "Gửi", "Thanh toán", "Chuyển tiền", "Mua ngay", "Gọi",
+                  "Gỡ cài đặt", "Đặt lại", "Đăng xuất", "Chia sẻ", "Đặt hàng"):
+        assert sensitive_reason("click", label, None), label
+    assert sensitive_reason("click", "Lưu", None) is None
+    assert sensitive_reason("click", "Cài đặt", None) is None          # Settings is not "Gỡ cài đặt"
+    assert sensitive_reason("click", "Mua sắm", None) is None          # a "Shopping" tab is not a purchase
+
+
+def test_sensitive_words_do_not_fire_inside_other_words():
+    assert sensitive_reason("click", "Recall", None) is None           # contains "call"
+    assert sensitive_reason("click", "Xoay màn hình", None) is None    # "xoay" (rotate) is not "xoa"
+
+
+SHADE = [dict(el("Do Not Disturb", 300, 400, pkg="com.android.systemui"),
+              resource_name="com.android.systemui:id/quick_settings_panel"),
+         dict(el("Internet", 600, 400, pkg="com.android.systemui"), resource_name="com.android.systemui:id/qs_frame")]
+
+
+def test_an_open_notification_shade_is_closed_and_the_planner_is_told_to_use_settings():
+    a = agent([SHADE, SCREEN], [FINISH], [], [{"complete": True}])
+    run(a)
+    assert a.device.acts[0] == ("collapse_shade", {})
+    assert any("notification shade" in line and "Settings" in line for line in a.log)
+    assert a.executor.calls == []
+
+
+def test_back_and_home_from_the_planner_are_done_by_the_harness():
+    a = agent([SCREEN, SCREEN, SCREEN], [{"next": "back"}, {"next": "home"}, FINISH], [], [{"complete": True}])
+    run(a)
+    assert [k for k, _ in a.device.acts] == ["back", "home"]
+    assert a.executor.calls == []
+    assert parse_plan('{"thought": "t", "next": "back"}')["next"] == "back"
+
+
+def test_typing_replaces_the_field_contents_through_uiautomator2():
+    from mobile_use.agents.dma.device_ext import Device
+
+    class FakeU2:
+        def __init__(self):
+            self.calls = []
+
+        def send_keys(self, text, clear=False):
+            self.calls.append((text, clear))
+
+    class FakeAdb:
+        def __init__(self):
+            self.cmds = []
+
+        def shell(self, cmd):
+            self.cmds.append(cmd)
+            return "com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME\n"
+
+    d = Device.__new__(Device)
+    d.env, d.d, d.wait_after_action_s, d._u2dev = FakeEnv(), FakeAdb(), 0, FakeU2()
+    d.act("type", x=10, y=20, text="bánh mì và bơ")
+    assert d._u2dev.calls == [("bánh mì và bơ", True)]
+    assert [x.name for x in d.env.done] == ["click"]          # focus the field by tapping it, then u2 types
+    d.restore_keyboard()
+    assert d.d.cmds[-1] == "ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME"
+
+
+def test_the_keyboard_is_restored_when_the_task_ends():
+    a = agent([SCREEN], [FINISH], [], [{"complete": True}])
+    restored = []
+    a.device.restore_keyboard = lambda: restored.append(True)
+    run(a)
+    assert restored == [True]
+
+
+QUERY = """3 activities found:
+  Activity #0:
+    priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=true
+    com.android.settings/.Settings
+  Activity #1:
+    priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=true
+    net.gsantner.markor/.activity.MainActivity
+  Activity #2:
+    com.android.settings/.SubSettings
+"""
+
+
+def test_the_app_list_is_built_from_launchable_packages_with_labels_or_package_names():
+    from mobile_use.agents.dma.make_app_list import build_app_list, parse_launchables
+    pkgs = parse_launchables(QUERY)
+    assert pkgs == ["com.android.settings", "net.gsantner.markor"]
+    apps = build_app_list(pkgs, {"com.android.settings": "Settings"}.get)
+    assert apps[0] == {"name": "settings", "aliases": ["settings"], "package": "com.android.settings"}
+    assert apps[1] == {"name": "markor", "aliases": ["markor"], "package": "net.gsantner.markor"}
+
+
+def test_the_app_list_rejects_bad_labels_disambiguates_duplicates_and_skips_the_helper_app():
+    from mobile_use.agents.dma.make_app_list import build_app_list
+    labels = {"com.android.chrome": "This policy controls whether request methods are uppercased when matching",
+              "com.google.android.calendar": "Calendar", "com.simplemobiletools.calendar.pro": "Calendar"}
+    apps = build_app_list(["com.android.chrome", "com.google.android.calendar", "com.simplemobiletools.calendar.pro",
+                           "com.github.uiautomator"], labels.get)
+    names = [a["name"] for a in apps]
+    assert names == ["chrome", "calendar (google)", "calendar (simplemobiletools)"]
+    assert "calendar" in apps[1]["aliases"]
+
+
+def field(text, height, hint=None):
+    return {"text": text, "hint_text": hint, "is_editable": True, "class_name": "android.widget.EditText",
+            "bbox_pixels": {"x_min": 0, "y_min": 300, "x_max": 1080, "y_max": 300 + height}}
+
+
+def test_typed_text_replaces_a_short_field_and_adds_a_line_to_a_note_body():
+    from mobile_use.agents.dma.executor import text_to_type
+    assert text_to_type(field("John", 120), "Alex") == "Alex"                          # name field: replace
+    assert text_to_type(field("buy stamps", 1400), "call mom") == "buy stamps\ncall mom"  # note body: add a line
+    assert text_to_type(field("", 1400), "bread") == "bread"                           # empty body
+    assert text_to_type(field("Search", 120, hint="Search"), "wifi") == "wifi"         # only the hint is shown
+    assert text_to_type(field("buy stamps\ncall mom", 1400), "call mom") == "buy stamps\ncall mom"  # already there
+    assert text_to_type(None, "x") == "x"
+
+
+def test_the_agent_types_the_whole_note_body_into_the_chosen_field():
+    body = dict(el("buy stamps", 540, 900, clickable=True, cls="android.widget.EditText"), is_editable=True)
+    body["bbox_pixels"] = {"x_min": 0, "y_min": 300, "x_max": 1080, "y_max": 1700}
+    typ = {"action": "type_text", "probabilities": {"type_text": 0.95}, "text": "call mom",
+           "element": {"history_label": "buy stamps", "aw_index": 0}, "element_point": [540, 1000]}
+    a = agent([[body], [body], [body]], [{"next": "local_goal", "instruction": "add call mom"}, FINISH],
+              [typ, {"action": "status", "probabilities": {"status": 0.9}}], [{"complete": True}])
+    run(a)
+    assert a.device.acts[0] == ("type", {"text": "buy stamps\ncall mom", "x": 540, "y": 1000})

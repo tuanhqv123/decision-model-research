@@ -8,6 +8,7 @@ on the device. Writes results.json (one row per run, with the agent's summary an
 """
 import argparse
 import json
+import math
 import os
 import sys
 import time
@@ -60,7 +61,12 @@ def main():
             s = agent.summary()
             time.sleep(1)
             ok = bool(sc.check(d, agent.answer))
-            row = {"scenario": sc.name, "category": sc.category, "repeat": rep, "success": ok, "error": err,
+            for cmd in sc.teardown:
+                d.shell(cmd)
+            # strict: the device check passes AND the agent itself declared the task done (or answered)
+            strict = ok and s["outcome"] in ("finished", "answered")
+            row = {"scenario": sc.name, "category": sc.category, "held_out": sc.held_out, "repeat": rep,
+                   "success": ok, "strict": strict, "error": err,
                    "human_requests": len(approver.requests) - n_req, **s, "events": agent.events}
             rows.append(row)
             print("%-16s %-7s steps=%-3s %5.0fs llm=%-3s outcome=%s" % (sc.name, "OK" if ok else "FAIL", s["steps"],
@@ -70,24 +76,47 @@ def main():
     write_table(rows, os.path.join(a.out, "results.md"))
 
 
+def wilson(k, n, z=1.96):
+    if n == 0:
+        return 0.0, 0.0
+    p = k / n
+    c = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    m = (p + z * z / (2 * n)) / (1 + z * z / n)
+    return max(0.0, m - c), min(1.0, m + c)
+
+
+def rate(rows, key):
+    k, n = sum(r[key] for r in rows), len(rows)
+    lo, hi = wilson(k, n)
+    return "%d/%d = %.1f%% (95%% CI %.1f–%.1f%%)" % (k, n, 100.0 * k / max(1, n), 100 * lo, 100 * hi)
+
+
 def write_table(rows, path):
-    n = len(rows)
-    ok = sum(r["success"] for r in rows)
-    avg = lambda k: sum((r.get(k) or 0) for r in rows) / n  # noqa: E731
-    lines = ["| Scenario | Category | Result | Steps | Time (s) | LLM calls | Recoveries | Human requests |",
-             "|---|---|---|---|---|---|---|---|"]
-    for r in rows:
-        lines.append("| %s | %s | %s | %d | %.0f | %d | %d | %d |" % (
-            r["scenario"], r["category"], "✓" if r["success"] else "✗", r["steps"], r["seconds"], r["llm_calls"],
-            r["recoveries"], r["human_requests"]))
+    names = list(dict.fromkeys(r["scenario"] for r in rows))
+    mean = lambda xs: sum(xs) / max(1, len(xs))  # noqa: E731
+    lines = ["| Scenario | Set | Category | Success | Strict | Steps | Time (s) | LLM calls | Human requests |",
+             "|---|---|---|---|---|---|---|---|---|"]
+    for name in names:
+        rs = [r for r in rows if r["scenario"] == name]
+        lines.append("| %s | %s | %s | %d/%d | %d/%d | %.1f | %.0f | %.1f | %.1f |" % (
+            name, "held-out" if rs[0].get("held_out") else "tuned", rs[0]["category"],
+            sum(r["success"] for r in rs), len(rs), sum(r.get("strict", False) for r in rs), len(rs),
+            mean([r["steps"] for r in rs]), mean([r["seconds"] for r in rs]), mean([r["llm_calls"] for r in rs]),
+            mean([r["human_requests"] for r in rs])))
+    lines.append("")
+    for label, sel in (("Held-out", [r for r in rows if r.get("held_out")]),
+                       ("Tuned", [r for r in rows if not r.get("held_out")]), ("All", rows)):
+        if sel:
+            lines.append("%s: completed %s; strict %s." % (label, rate(sel, "success"), rate(sel, "strict")))
     model = [r["model_ms_avg"] for r in rows if r.get("model_ms_avg")]
     llm = [r["llm_ms_avg"] for r in rows if r.get("llm_ms_avg")]
-    lines += ["", "Completion rate: **%d/%d = %.1f%%**." % (ok, n, 100.0 * ok / n),
-              "Mean per task: %.1f steps, %.0f s, %.1f LLM calls." % (avg("steps"), avg("seconds"), avg("llm_calls")),
-              "Mean latency: DMA-2B %.0f ms per decision, LLM %.0f ms per call." % (
-                  sum(model) / max(1, len(model)), sum(llm) / max(1, len(llm)))]
+    lines += ["Mean per run: %.1f steps, %.0f s, %.1f LLM calls." % (
+                  mean([r["steps"] for r in rows]), mean([r["seconds"] for r in rows]),
+                  mean([r["llm_calls"] for r in rows])),
+              "Mean latency per call (client side of the shared GPU / LLM endpoint): DMA-2B %.0f ms, LLM %.0f ms." % (
+                  mean(model), mean(llm))]
     open(path, "w").write("\n".join(lines) + "\n")
-    print("\n".join(lines[-3:]))
+    print("\n".join(lines[-6:]))
 
 
 if __name__ == "__main__":

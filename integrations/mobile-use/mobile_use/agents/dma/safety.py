@@ -2,7 +2,8 @@
 
 Three gates decide whether an executor action runs, waits for a person, or is refused:
   1. sensitive actions  the action, its element or the local goal mentions an irreversible or costly operation
-                        (delete, send, pay, call, purchase, uninstall, reset, ...): the person must approve it;
+                        (delete, send, pay, call, purchase, uninstall, reset, ...; English and Vietnamese labels):
+                        the person must approve it;
   2. low confidence     DMA-2B's probability for its chosen action is below `confidence_threshold`: the person is asked.
                         The default 0.79 is measured, not guessed: on AndroidControl-High (8,444 steps) the steps with
                         p >= 0.79 are 80% of all steps and 18.7% of them are wrong, while 54.3% of the steps below it
@@ -14,11 +15,28 @@ the dashboard's queue.
 import re
 import threading
 import time
+import unicodedata
 from typing import Any, Dict, Optional
 
 SENSITIVE = re.compile(
     r"\b(delete|remove|erase|wipe|uninstall|reset|format|send|share|post|publish|pay|payment|purchase|buy|order|"
     r"checkout|transfer|call|dial|sign out|log out|logout|unsubscribe|block|report)\b", re.I)
+# Vietnamese interfaces. A label with diacritics is matched against the accented words, so "Gói" (a plan) is not taken
+# for "Gọi" (call); a label written without diacritics is matched against the plain spellings.
+SENSITIVE_VI = re.compile(
+    r"\b(xóa|xoá|gửi|thanh toán|chuyển tiền|chuyển khoản|mua ngay|mua hàng|đặt hàng|gọi|gỡ cài đặt|gỡ bỏ|đặt lại|"
+    r"đăng xuất|chia sẻ|đăng bài)\b", re.I)
+SENSITIVE_VI_PLAIN = re.compile(
+    r"\b(xoa|gui|thanh toan|chuyen tien|chuyen khoan|mua ngay|mua hang|dat hang|goi|go cai dat|go bo|dat lai|"
+    r"dang xuat|chia se|dang bai)\b", re.I)
+
+
+def _match_sensitive(text: Optional[str]):
+    text = unicodedata.normalize("NFC", text or "")
+    m = SENSITIVE.search(text) or SENSITIVE_VI.search(text)
+    if m is None and text.isascii():
+        m = SENSITIVE_VI_PLAIN.search(text)
+    return m
 
 
 def sensitive_reason(action: str, element_label: Optional[str], local_goal: Optional[str]) -> Optional[str]:
@@ -27,7 +45,7 @@ def sensitive_reason(action: str, element_label: Optional[str], local_goal: Opti
     if action not in ("click", "long_press", "type_text"):
         return None
     for source, text in (("element", element_label), ("local goal", local_goal)):
-        m = SENSITIVE.search(text or "")
+        m = _match_sensitive(text)
         if m and (source == "element" or action == "click"):
             return "%s mentions %r" % (source, m.group(0).lower())
     return None

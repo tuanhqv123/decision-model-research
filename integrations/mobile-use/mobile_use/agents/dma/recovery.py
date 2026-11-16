@@ -7,6 +7,9 @@ them and both tend to treat them as part of the task:
   app_crashed         "X has stopped" / "keeps stopping" -> Close app / OK
   permission          the Android permission controller -> "While using the app" / "Allow" (only if allowed by policy)
   system_alert        a one-button system notice ("OK", "Got it") owned by the system UI
+`shade_open` recognises the notification shade / quick settings panel. DMA-2B never sees it: its element list drops
+the system UI package (as in training, where AndroidControl has no shade), so every click there finds no element. The
+agent closes the shade and points the planner to the Settings app instead.
 Everything else is left to the planner, which sees "BLOCKED" or "no change" reports and re-plans (`StuckDetector`).
 """
 from typing import Any, Dict, List, Optional
@@ -69,3 +72,14 @@ class StuckDetector:
     def update(self, changed: Optional[bool]) -> bool:
         self.count = 0 if changed else self.count + 1
         return self.count >= self.limit
+
+
+SHADE_IDS = ("notification_panel", "quick_settings_panel", "quick_settings_container", "qs_frame",
+             "notification_stack_scroller")
+
+
+def shade_open(elements: List[Dict[str, Any]]) -> bool:
+    """True when the notification shade or quick settings panel covers the screen."""
+    pkgs = {e.get("package_name") for e in elements} - {None}
+    ids = {str(e.get("resource_name") or "").rsplit("/", 1)[-1] for e in elements}
+    return pkgs == {"com.android.systemui"} and bool(ids & set(SHADE_IDS))

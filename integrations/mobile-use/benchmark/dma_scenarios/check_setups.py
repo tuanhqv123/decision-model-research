@@ -8,4 +8,7 @@ for sc in SCENARIOS:
     for cmd in sc.setup:
         d.shell(cmd)
     done = sc.check(d, None)
-    print("%-16s setup ok: %s" % (sc.name, "yes" if not done else "NO - already complete"))
+    for cmd in sc.teardown:
+        d.shell(cmd)
+    print("%-16s %-8s setup ok: %s" % (sc.name, "held-out" if sc.held_out else "tuned",
+                                       "yes" if not done else "NO - already complete"))

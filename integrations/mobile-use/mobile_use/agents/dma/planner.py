@@ -20,12 +20,15 @@ Think step by step, then reply with ONE JSON object and nothing else, one of:
   {"thought": "...", "next": "local_goal", "instruction": "<what to do next>"}
   {"thought": "...", "next": "answer", "text": "<the answer to the user's question>"}
   {"thought": "...", "next": "scroll", "direction": "down" | "up"}
+  {"thought": "...", "next": "back"}
+  {"thought": "...", "next": "home"}
   {"thought": "...", "next": "ask_user", "question": "<a question for the person>"}
   {"thought": "...", "next": "finish"}
 Use "scroll" to move a list yourself: "down" shows the items further down the list, "up" shows the items above (for
-example to get back to the top). Do not ask the helper to scroll in a local goal.
-What the helper can do: click or long-press an element, type text into a field, scroll a list up/down/left/right, press
-Back, go Home, open an app by name, and wait. It cannot drag sliders, swipe from the screen edge, pinch, or open the
+example to get back to the top). Use "back" to press the Back key (close a keyboard, a menu or a dialog, or go to the
+previous screen) and "home" to go to the home screen. Do not ask the helper to scroll, press Back or go Home in a local
+goal.
+What the helper can do: click or long-press an element, type text into a field, scroll a list up/down/left/right, open an app by name, and wait. It cannot drag sliders, swipe from the screen edge, pinch, or open the
 notification shade: use the app's own buttons or the Settings app instead.
 Rules:
 - Before each instruction, reflect: did the last local goal do what you wanted? If not, correct course.
@@ -82,6 +85,8 @@ def parse_plan(text: str) -> Dict[str, Any]:
         return {"next": nxt, "text": str(obj["text"]).strip(), "thought": th}
     if nxt == "scroll" and obj.get("direction") in ("up", "down", "left", "right"):
         return {"next": nxt, "direction": obj["direction"], "thought": th}
+    if nxt in ("back", "home"):
+        return {"next": nxt, "thought": th}
     if nxt == "ask_user" and str(obj.get("question") or "").strip():
         return {"next": nxt, "question": str(obj["question"]).strip(), "thought": th}
     if nxt == "finish":
