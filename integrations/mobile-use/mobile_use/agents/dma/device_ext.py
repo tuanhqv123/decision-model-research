@@ -191,6 +191,7 @@ class Device:
                 self._run(a)
                 time.sleep(0.3)
                 u2.send_keys(p["text"], clear=True)
+                self.restore_keyboard()      # a visible keyboard again, as on the screens DMA-2B was trained on
                 return
             a.append(Action(name="type", parameters={"text": p["text"]}))
         elif kind == "collapse_shade":

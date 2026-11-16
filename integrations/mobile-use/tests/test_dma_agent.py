@@ -273,7 +273,8 @@ def test_typing_replaces_the_field_contents_through_uiautomator2():
     d.act("type", x=10, y=20, text="bánh mì và bơ")
     assert d._u2dev.calls == [("bánh mì và bơ", True)]
     assert [x.name for x in d.env.done] == ["click"]          # focus the field by tapping it, then u2 types
-    d.restore_keyboard()
+    # the person's keyboard is back right after typing: with uiautomator2's invisible keyboard, focusing the next
+    # field changes nothing on screen, and DMA-2B (trained on screens with a keyboard) keeps clicking it
     assert d.d.cmds[-1] == "ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME"
 
 
@@ -341,3 +342,18 @@ def test_the_agent_types_the_whole_note_body_into_the_chosen_field():
               [typ, {"action": "status", "probabilities": {"status": 0.9}}], [{"complete": True}])
     run(a)
     assert a.device.acts[0] == ("type", {"text": "buy stamps\ncall mom", "x": 540, "y": 1000})
+
+
+def test_the_quoted_text_of_the_instruction_wins_when_the_copied_span_overruns_it():
+    from mobile_use.agents.dma.executor import quoted_text
+    ins = 'Click on the text field, then type "\\ncall mom".'
+    assert quoted_text(ins, "call mom.\nStep instruction: Click on the text field") == "call mom"
+    assert quoted_text('Type "Alex" in First name', "Alex") == "Alex"
+    assert quoted_text('Type "Alex" in First name', "Nguyen") == "Nguyen"        # unrelated: keep the model's
+    assert quoted_text('Type "a" then "b"', "a") == "a"                            # two quotes: keep the model's
+    assert quoted_text("Type the name", "Alex") == "Alex"
+
+
+def test_a_full_new_body_that_starts_with_the_old_one_is_typed_as_given():
+    from mobile_use.agents.dma.executor import text_to_type
+    assert text_to_type(field("buy stamps", 1400), "buy stamps\ncall mom") == "buy stamps\ncall mom"

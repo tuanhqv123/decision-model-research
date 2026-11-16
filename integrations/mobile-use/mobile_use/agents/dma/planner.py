@@ -33,7 +33,8 @@ notification shade: use the app's own buttons or the Settings app instead.
 Rules:
 - Before each instruction, reflect: did the last local goal do what you wanted? If not, correct course.
 - Write instructions like step instructions for a human, about the CURRENT screen; one to three steps joined with
-  ", then". Put text that must be typed in double quotes, exactly as it must appear.
+  ", then". Put text that must be typed in double quotes, exactly as it must appear (no \\n or other escapes). To
+  add a line to a note, quote only the new words: the helper puts them on a new line.
 - Do not repeat a local goal reported BLOCKED; try another way. If a goal was reported DONE but the screen shows it is
   not, write a DIFFERENT, more specific instruction.
 - Use "ask_user" only when the task lacks information you cannot find on the phone.

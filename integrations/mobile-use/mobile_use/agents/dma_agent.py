@@ -18,7 +18,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional
 
 from mobile_use.agents.base import Agent
 from mobile_use.agents.dma.device_ext import Device
-from mobile_use.agents.dma.executor import (Executor, element_label, text_to_type, history_line, probability, screen_changed,
+from mobile_use.agents.dma.executor import (Executor, element_label, quoted_text, text_to_type, history_line, probability, screen_changed,
                                             to_device_action)
 from mobile_use.agents.dma.planner import Planner
 from mobile_use.agents.dma.recovery import StuckDetector, centre, detect_popup, shade_open
@@ -151,7 +151,7 @@ class DMAgent(Agent):
             if kind == "type":
                 idx = (dec.get("element") or {}).get("aw_index")
                 fld = els[idx] if isinstance(idx, int) and 0 <= idx < len(els) else None
-                params["text"] = text_to_type(fld, params["text"])
+                params["text"] = text_to_type(fld, quoted_text(self.local_goal, params["text"]))
             if kind in ("click", "long_press") and "x" not in params:   # no element to act on
                 self.counts["blocked"] += 1
                 self.log.append('Local goal "%s": BLOCKED (the helper wanted to %s but found no matching element on '

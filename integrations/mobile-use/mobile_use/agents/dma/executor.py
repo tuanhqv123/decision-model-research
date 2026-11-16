@@ -6,6 +6,7 @@ the element list, and returns the decision with its probability. `to_device_acti
 """
 import base64
 import io
+import re
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -69,6 +70,19 @@ def to_device_action(dec: Dict[str, Any]) -> Tuple[str, Dict[str, Any], str]:
     return "wait", {"seconds": 2.0}, act
 
 
+def quoted_text(instruction: Optional[str], typed: str) -> str:
+    """The text to type. The planner quotes it in the local goal and DMA-2B copies a span of its input; when the copy
+    overruns or truncates the one quoted text (it once copied 'call mom.\\nStep instruction: ...'), the quote wins.
+    A copy unrelated to the quote, or an instruction with zero or several quotes, keeps DMA-2B's text."""
+    quotes = re.findall(r'"([^"]*)"', instruction or "")
+    if len(quotes) != 1:
+        return typed
+    q, t = quotes[0].replace("\\n", "\n").strip(), typed.strip()
+    if not q or q == t:
+        return typed
+    return q if (q in t or (t and t in q)) else typed
+
+
 MULTILINE_PX = 250     # an editable field at least this tall is a text body (a note), not a one-line input
 
 
@@ -84,6 +98,8 @@ def text_to_type(field: Optional[Dict[str, Any]], typed: str) -> str:
     b = field.get("bbox_pixels") or {}
     tall = (b.get("y_max", 0) - b.get("y_min", 0)) >= MULTILINE_PX
     if not current.strip() or current == hint or not tall:
+        return typed
+    if typed.startswith(current.strip()):          # the whole new body, starting with the old one
         return typed
     if typed.strip() and typed.strip() in current:
         return current
