@@ -1,7 +1,7 @@
 """build_final_data (2026-11-12): the consolidated final mix, from the v5 curated rows plus the base episodes.
 
 Each test pins one decision taken from the 2026-11-12 trace analysis of the 91 failed AndroidWorld tasks and the
-ckpt_250 early warning (docs/research/2026-11-12-FINAL-PLAN-vi.md)."""
+ckpt_250 early warning (docs/research/2026-11-12-FINAL-PLAN.md)."""
 import os
 import random
 import sys

@@ -1,4 +1,4 @@
-"""Harness changes for contract v4 and the 2026-11-12 harness review (docs/research/2026-11-12-V4-WORKLOG-vi.md):
+"""Harness changes for contract v4 and the 2026-11-12 harness review (docs/research/2026-11-12-V4-WORKLOG.md):
 * deferred effect: a step's "→ screen changed / no change" is decided against the NEXT step's observation (the training
   definition), not an immediate re-read (9% of v3's "no change" clicks were reads taken before the screen updated);
 * effect "v4": focus flag and keyboard elements do not count;

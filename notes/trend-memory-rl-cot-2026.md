@@ -1,133 +1,133 @@
-# Trend 2026: Memory, RL, CoT cho GUI Agents — Pros/Cons (nối vào quyết định của dự án)
+# Trend 2026: Memory, RL, CoT for GUI Agents — Pros/Cons (tied into the project's decision)
 
-> Ngày: 2026-10-29. Tổng hợp từ primary sources (arXiv/ACL), mỗi claim có bibkey. Mục đích: trả lời câu hỏi
-> của user — "CoT / RL / memory có thực sự phù hợp không, pros/cons?" — để quyết định hướng xây dựng cho
-> d1-2B (single-pass decision model của dự án). Không đoán, chỉ nêu điều verify được.
+> Date: 2026-10-29. Compiled from primary sources (arXiv/ACL), every claim has a bibkey. Purpose: answer the user's question
+> — "are CoT / RL / memory really suitable, pros/cons?" — to decide the build direction for
+> d1-2B (the project's single-pass decision model). No guessing, only what can be verified.
 
 ---
 
-## 1. CoT / Reasoning — KẾT LUẬN: KHÔNG đáng đầu tư cho trục của mình
+## 1. CoT / Reasoning — CONCLUSION: NOT worth investing in for our axis
 
-### Nguồn quan trọng nhất: "Does Chain-of-Thought Reasoning Help Mobile GUI Agents?" (ACL 2026 Findings, Zhang/Gao/Xu, BUPT+Tsinghua)
-Đây là **empirical study đầu tiên** (6 cặp VLM: Gemini, Claude, AgentCPM-GUI, GLM-4.5V, Qwen3-VL-4B/8B) trên
+### Most important source: "Does Chain-of-Thought Reasoning Help Mobile GUI Agents?" (ACL 2026 Findings, Zhang/Gao/Xu, BUPT+Tsinghua)
+This is the **first empirical study** (6 VLM pairs: Gemini, Claude, AgentCPM-GUI, GLM-4.5V, Qwen3-VL-4B/8B) on
 ScreenSpot + AndroidControl (static) + AndroidWorld (interactive).
 
-**Kết quả chính — rất quan trọng cho dự án:**
-1. **Static benchmarks: reasoning gần như không cải thiện, thậm chí giảm.**
-   - AndroidControl: Gemini Thinking chỉ hơn 0.8% (54.4%).
-   - ScreenSpot: giảm tới **29.7%** ở nhiều setup.
-2. **AndroidWorld (interactive): model-specific.** Claude Thinking +6.3%, Gemini/Qwen3-VL **giảm**.
-3. **Reasoning và non-reasoning THẤT BẠI trên các task KHÁC NHAU** — lợi và hại **triệt tiêu lẫn nhau**.
-4. **Chi phí token tăng 3.11× → 14.78×** (ScreenSpot: 37.6 → 238.5 token) — tăng latency + tiền, không rõ lợi.
-5. **Reasoning budget nhỏ (128 token) là tốt nhất**; nhiều hơn thì **giảm dần** (76.83 → 77.81 (128) → 76.90 (unconstrained)).
-6. **Phần lớn lỗi do benchmark** (47.8% weak-evaluation; 14.9% static-input) **không phải do model** — ủng hộ
-   luận điểm của dự án: benchmark static có lỗi, đừng đổ lỗi cho model.
+**Main results — very important for the project:**
+1. **Static benchmarks: reasoning barely improves, even lowers.**
+   - AndroidControl: Gemini Thinking is only 0.8% higher (54.4%).
+   - ScreenSpot: drops by up to **29.7%** in many setups.
+2. **AndroidWorld (interactive): model-specific.** Claude Thinking +6.3%, Gemini/Qwen3-VL **drop**.
+3. **Reasoning and non-reasoning FAIL on DIFFERENT tasks** — the gains and losses **cancel each other out**.
+4. **Token cost rises 3.11× → 14.78×** (ScreenSpot: 37.6 → 238.5 tokens) — raises latency + money, with no clear gain.
+5. **A small reasoning budget (128 tokens) is best**; more gives **diminishing returns** (76.83 → 77.81 (128) → 76.90 (unconstrained)).
+6. **Most errors come from the benchmark** (47.8% weak-evaluation; 14.9% static-input) **not from the model** — supports the
+   project's thesis: static benchmarks have errors, do not blame the model.
 
-### Magma-R1 (arXiv 2510.18488) — bổ trợ: CoT có thể HẠ grounding
-Paper nói rõ: long CoT SFT *hurt* grounding. Giải pháp của họ là **action-aware SFT** (reweight token về
-action/grounding) + RL. → Nghĩa là **CoT không phải "kim chỉ nam"**, nó còn cần được sửa.
+### Magma-R1 (arXiv 2510.18488) — supporting: CoT can LOWER grounding
+The paper says explicitly: long CoT SFT *hurt* grounding. Their solution is **action-aware SFT** (reweight tokens toward
+action/grounding) + RL. → That means **CoT is not a "compass"**, it even needs to be corrected.
 
-### GUI-Libra (arXiv 2602.22190) — xác nhận cùng điều
+### GUI-Libra (arXiv 2602.22190) — confirms the same thing
 - "standard SFT with long CoT often **hurts grounding**."
-- ASFT + conservative GRPO (KL trust region) mới giữ được grounding khi có CoT.
+- ASFT + conservative GRPO (KL trust region) is what preserves grounding when CoT is present.
 
-### 🎯 Pros/Cons CoT cho DỰ ÁN
+### 🎯 Pros/Cons of CoT for the PROJECT
 | Pros | Cons |
 |---|---|
-| Có thể giúp task khó / multi-step (Claude Thinking +6.3% AndroidWorld) | **Tăng token 3–15×** → phá vỡ trục "0-token, latency thấp" của mình |
-| Duy trì được với budget nhỏ (128 token) | CoT dài **hạ grounding** (Magma-R1, GUI-Libra) |
-| — | Kết quả **model-specific**, không nhất quán |
-| — | Reasoning/non-reasoning fail trên task khác nhau → không phải "giải pháp chung" |
+| May help hard / multi-step tasks (Claude Thinking +6.3% AndroidWorld) | **Raises tokens 3–15×** → breaks our "0-token, low latency" axis |
+| Can be sustained with a small budget (128 tokens) | Long CoT **lowers grounding** (Magma-R1, GUI-Libra) |
+| — | Results are **model-specific**, inconsistent |
+| — | Reasoning/non-reasoning fail on different tasks → not a "general solution" |
 
-**KẾT LUẬN CHO DỰ ÁN:** CoT **KHÔNG phù hợp** với trục "calibrated single-pass 0-token" của mình. Nó vừa
-phá latency, vừa hạ grounding, vừa không nhất quán. Trục của mình (quyết định trực tiếp, đọc logits, xác suất
-calibrated) **mạnh hơn** về latency/calibration — và bằng chứng ACL 2026 cho thấy **reasoning không phải là
-điều kiện cần để giỏi GUI**.
+**CONCLUSION FOR THE PROJECT:** CoT is **NOT suitable** for our "calibrated single-pass 0-token" axis. It breaks
+latency, lowers grounding, and is inconsistent. Our axis (direct decision, reading logits, calibrated
+probabilities) is **stronger** on latency/calibration — and the ACL 2026 evidence shows that **reasoning is not a
+necessary condition to be good at GUI**.
 
 ---
 
-## 2. RL — KẾT LUẬN: ĐÂNG ĐẦU TƯ, đây là con đường có bằng chứng nhất
+## 2. RL — CONCLUSION: WORTH INVESTING IN, this is the path with the most evidence
 
-### Trend 2026: RL là "động cơ" chính của GUI agents
-| Paper | Cách RL | Kết quả |
+### Trend 2026: RL is the main "engine" of GUI agents
+| Paper | How RL is done | Result |
 |---|---|---|
-| **MobileRL** (ICLR 2026) | AdaGRPO online, sparse terminal reward, difficulty-adaptive replay/filter/spa | 27.6 → 50.2 (SFT) → 56.8 (reason SFT) → **72.0** (RL) |
-| **GUI-Libra** (NeurIPS 2026) | conservative GRPO + **KL trust region** (đối phó partial verifiability) | base 30.4 → **42.6** AndroidWorld |
-| **Magma-R1** (AC-Curated) | GRPO one-stage, **dense 2D-Gaussian grounding reward** | 2.4k curated → 3-4B = 235B |
-| **UI-AGILE** (arXiv) | RL + inference-time grounding; nêu vấn đề "ineffective/sparse reward" | — |
+| **MobileRL** (ICLR 2026) | online AdaGRPO, sparse terminal reward, difficulty-adaptive replay/filter/spa | 27.6 → 50.2 (SFT) → 56.8 (reason SFT) → **72.0** (RL) |
+| **GUI-Libra** (NeurIPS 2026) | conservative GRPO + **KL trust region** (against partial verifiability) | base 30.4 → **42.6** AndroidWorld |
+| **Magma-R1** (AC-Curated) | one-stage GRPO, **dense 2D-Gaussian grounding reward** | 2.4k curated → 3-4B = 235B |
+| **UI-AGILE** (arXiv) | RL + inference-time grounding; names the problem of "ineffective/sparse reward" | — |
 | **HyperClick** (arXiv) | Self-critiqued RL: correctness + **confidence-alignment reward** | — |
 
-### Điểm chung của các paper RL thành công (quan trọng):
-1. **Reward phải DENSE, không binary.** Magma-R1: `exp(−‖c−p‖²/2σ²)` thay cho hit/miss. UI-AGILE/MobileRL cũng
-   than "sparse reward = no effective signal".
-2. **Partial verifiability là vấn đề lớn.** GUI-Libra: nhiều hành động đúng nhưng chỉ verify 1 → cần **KL trust
-   region** (β=0.001) để ổn định.
-3. **Class imbalance.** Magma-R1: stratified sampling theo action type.
-4. **RL hiệu quả NHẤT sau SFT tốt.** MobileRL: SFT → +22.6, RL → +15.2. GUI-Libra: base 3.5 → ASFT 13.0 → +RL 25.2.
+### What the successful RL papers share (important):
+1. **The reward must be DENSE, not binary.** Magma-R1: `exp(−‖c−p‖²/2σ²)` in place of hit/miss. UI-AGILE/MobileRL also
+   complain that "sparse reward = no effective signal".
+2. **Partial verifiability is a big problem.** GUI-Libra: many actions are right but only 1 is verified → needs a **KL trust
+   region** (β=0.001) to stabilise.
+3. **Class imbalance.** Magma-R1: stratified sampling by action type.
+4. **RL is MOST effective after a good SFT.** MobileRL: SFT → +22.6, RL → +15.2. GUI-Libra: base 3.5 → ASFT 13.0 → +RL 25.2.
 
-### 🎯 Pros/Cons RL cho DỰ ÁN
+### 🎯 Pros/Cons of RL for the PROJECT
 | Pros | Cons |
 |---|---|
-| Bằng chứng mạnh nhất để nâng **grounding** (Magma-R1: 2.4k → 235B) | **Online RL cần emulator + compute lớn** (MobileRL: 2k task, nhiều AVD) |
-| GUI-Libra làm "offline RL" (không cần online data) → vẫn +12.2 | Cần **reward design** khó (dense, xử lý partial verifiability) |
-| Nâng được **cả AC-v2 lẫn AndroidWorld** | Rủi ro overfit / mất calibration (RLVR làm confidence phồng lên ~0.99) |
-| Phù hợp với việc **đóng gap grounding 56.5 → 70+** của mình | — |
+| Strongest evidence for raising **grounding** (Magma-R1: 2.4k → 235B) | **Online RL needs an emulator + large compute** (MobileRL: 2k tasks, many AVDs) |
+| GUI-Libra does "offline RL" (no online data needed) → still +12.2 | **Reward design** is hard (dense, handling partial verifiability) |
+| Can raise **both AC-v2 and AndroidWorld** | Risk of overfit / losing calibration (RLVR inflates confidence to ~0.99) |
+| Fits **closing our grounding gap 56.5 → 70+** | — |
 
-**KẾT LUẬN CHO DỰ ÁN:** RL **đáng đầu tư nhất** — đặc biệt **dense grounding reward** (Magma-R1) + **KL trust region**
-(GUI-Libra) để vs partial verifiability. Đây là con đường có bằng chứng để nâng AC-v2 và AndroidWorld.
+**CONCLUSION FOR THE PROJECT:** RL is **the most worth investing in** — especially a **dense grounding reward** (Magma-R1) + a **KL trust region**
+(GUI-Libra) against partial verifiability. This is the path with evidence for raising AC-v2 and AndroidWorld.
 
 ---
 
-## 3. Memory — KẾT LUẬN: ĐÁNG làm, NHƯNG phải chọn đúng cơ chế
+## 3. Memory — CONCLUSION: WORTH doing, BUT the right mechanism must be chosen
 
-### Trend 2026: từ text-summary → latent/continuous memory
-| Paper | Cơ chế | Điểm |
+### Trend 2026: from text-summary → latent/continuous memory
+| Paper | Mechanism | Score |
 |---|---|---|
-| **Mem-W** (2605.09317, LV-NUS) | **latent memory token** (trajectory-to-latent compressor) — memory native vào embedding | +30.0 |
+| **Mem-W** (2605.09317, LV-NUS) | **latent memory token** (trajectory-to-latent compressor) — memory native in the embedding | +30.0 |
 | **MementoGUI** (2605.18652) | working + episodic memory, multimodal (ROI image) | UI-Venus-1.5-8B: AMS 54.58→67.69 |
-| **CoMEM / Auto-scaling** (2510.09038) | continuous memory 8 embeddings/traj (giữ visual cues) | giảm context, giữ ảnh |
-| **FocusMem** (2608.04530) | factorize content/readout/trust trong latent memory | — |
+| **CoMEM / Auto-scaling** (2510.09038) | continuous memory, 8 embeddings/traj (keeps visual cues) | shrinks context, keeps the image |
+| **FocusMem** (2608.04530) | factorize content/readout/trust in latent memory | — |
 | **AndroTMem** (2603.18429) | anchored memory (intermediate-state anchors) | — |
 | **MemGUI-Agent** (2606.19926) | proactive context management | TSR 5.56→72.22 |
 
-### Phát hiện quan trọng từ ablation:
-- **MementoGUI**: bỏ ROI image khỏi working memory → AMS 67.69→64.22. → **Visual grounding trong memory là cần
-  thiết, không chỉ là text summary.** (Điều này TRÁI với cái mình thử TF-IDF text memory — giải thích vì sao
-  mình bị **−6.0**.)
-- **Benchmark under-represent memory**: MemGUI-Bench chỉ 5.2–11.8% task là memory-related → **memory chưa được
-  đo lường đúng** trong các benchmark hiện có.
-- **Từ passive records → active task-driving states** (2606.31612): "retrieving a value does not reveal its current
-  role in the workflow" — memory cần biết trạng thái, không chỉ lưu.
+### Important findings from ablations:
+- **MementoGUI**: removing the ROI image from working memory → AMS 67.69→64.22. → **Visual grounding in memory is
+  necessary, not just a text summary.** (This CONTRADICTS what we tried with TF-IDF text memory — it explains why
+  we got **−6.0**.)
+- **Benchmarks under-represent memory**: MemGUI-Bench has only 5.2–11.8% memory-related tasks → **memory is not yet
+  measured correctly** in current benchmarks.
+- **From passive records → active task-driving states** (2606.31612): "retrieving a value does not reveal its current
+  role in the workflow" — memory must know the state, not only store it.
 
-### 🎯 Pros/Cons memory cho DỰ ÁN
+### 🎯 Pros/Cons of memory for the PROJECT
 | Pros | Cons |
 |---|---|
-| **Cần cho multi-step** (AndroidWorld, long-horizon) | Model single-pass của mình cần **đổi cơ chế** — không đơn giản thêm prompt |
-| **Latent/continuous memory** giữ visual cue, giảm context (tốt cho on-device latency) | Complexity: cần **trajectory compressor / encoder** |
-| Bằng chứng mạnh: Mem-W +30, MementoGUI +13 AMS | **Memory cần được train** (self-distillation, outcome-aware supervision) |
-| — | Text memory thuần (như TF-IDF của mình) **không đủ** — mình đã test, −6.0 |
+| **Needed for multi-step** (AndroidWorld, long-horizon) | Our single-pass model needs a **change of mechanism** — it is not simply adding a prompt |
+| **Latent/continuous memory** keeps visual cues, shrinks context (good for on-device latency) | Complexity: needs a **trajectory compressor / encoder** |
+| Strong evidence: Mem-W +30, MementoGUI +13 AMS | **Memory must be trained** (self-distillation, outcome-aware supervision) |
+| — | Pure text memory (like our TF-IDF) is **not enough** — we tested it, −6.0 |
 
-**KẾT LUẬN CHO DỰ ÁN:** Memory **đáng làm** nhưng **phải là latent/multimodal**, không phải text-summary (mình
-đã thử text → −6.0). Cách đơn giản nhất cho d1-2B: **compact latent memory token** (theo Mem-W) hoặc **ROI
-crop** (theo MementoGUI) — để giữ visual cue. Đây là hướng để không thua trên multi-step.
+**CONCLUSION FOR THE PROJECT:** Memory is **worth doing** but **must be latent/multimodal**, not a text summary (we
+tried text → −6.0). The simplest way for d1-2B: a **compact latent memory token** (following Mem-W) or a **ROI
+crop** (following MementoGUI) — to keep the visual cue. This is the direction so as not to lose on multi-step.
 
 ---
 
-## 4. Tổng hợp cho dự án (thứ tự ưu tiên)
+## 4. Summary for the project (priority order)
 
-| Hướng | Đáng làm? | Lý do | Cách làm |
+| Direction | Worth doing? | Reason | How |
 |---|---|---|---|
-| **RL + dense grounding reward** | ✅ **ƯU TIÊN #1** | Bằng chứng mạnh nhất để **đóng gap grounding 56.5 → 70+**, nâng cả AC-v2 & AndroidWorld | Magma-R1 (2D-Gaussian reward) + GUI-Libra (KL trust region) |
-| **Latent/multimodal memory** | ✅ #2 | Cần cho multi-step, không thua họ; text memory đã thất bại | Mem-W latent token hoặc MementoGUI ROI crop |
-| **CoT/reasoning** | ❌ **KHÔNG** | ACL 2026: không cải thiện nhất quán, hạ grounding, tăng token 3–15× phá latency | Bỏ — trục của mình là quyết định trực tiếp + calibration |
+| **RL + dense grounding reward** | ✅ **PRIORITY #1** | Strongest evidence for **closing the grounding gap 56.5 → 70+**, raises both AC-v2 & AndroidWorld | Magma-R1 (2D-Gaussian reward) + GUI-Libra (KL trust region) |
+| **Latent/multimodal memory** | ✅ #2 | Needed for multi-step, does not lose to them; text memory already failed | Mem-W latent token or MementoGUI ROI crop |
+| **CoT/reasoning** | ❌ **NO** | ACL 2026: no consistent improvement, lowers grounding, raises tokens 3–15× which breaks latency | Drop — our axis is direct decision + calibration |
 
-### Điểm mấu chốt cho paper
-- **CoT không phải là yêu cầu để giỏi GUI** — bằng chứng ACL 2026 + Magma-R1 + GUI-Libra đều chỉ ra CoT có thể
-  **hạ** grounding. Trục "0-token calibrated" của mình **mạnh hơn** về latency + calibration.
-- **Cái mình cần để KHÔNG thua trên multi-step = memory (latent/multimodal) + RL (dense reward)**, KHÔNG phải
-  bắt chước reasoning.
-- **Benchmark static có lỗi** (ACL 2026: 47.8% weak-eval; Magma-R1: ~20% annotation lỗi) → ủng hộ nội dung paper
-  về việc audit benchmark.
+### Key points for the paper
+- **CoT is not a requirement to be good at GUI** — the ACL 2026 evidence + Magma-R1 + GUI-Libra all point out that CoT can
+  **lower** grounding. Our "0-token calibrated" axis is **stronger** on latency + calibration.
+- **What we need so as NOT to lose on multi-step = memory (latent/multimodal) + RL (dense reward)**, NOT
+  imitating reasoning.
+- **Static benchmarks have errors** (ACL 2026: 47.8% weak-eval; Magma-R1: ~20% annotation errors) → supports the paper's content
+  on auditing benchmarks.
 
 ---
 

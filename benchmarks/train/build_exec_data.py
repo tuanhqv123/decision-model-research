@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Executor training data for the LLM + decision-model harness (2026-11-13). AndroidControl train split only; no emulator,
-no AndroidWorld rows, no external model. Design and evidence: docs/research/2026-11-13-LLM-PLUS-DECISION-HARNESS-vi.md.
+no AndroidWorld rows, no external model. Design and evidence: docs/research/2026-11-13-LLM-PLUS-DECISION-HARNESS.md.
 
 Roles: the LLM plans, writes text, answers and decides when the whole task is finished; the decision model executes a
 LOCAL GOAL (one or a few steps) and says when that local goal is done (`status`). So:

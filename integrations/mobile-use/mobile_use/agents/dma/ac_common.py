@@ -733,7 +733,7 @@ CONTRACTS = {
     # v3 + AndroidControl's step instruction on about half the training rows (AC-Low); served without it (AndroidWorld)
     "v3i": {"actions": tuple(ACTIONS), "is_done": False, "elements": True, "element_rule": "cap40_reading_noime",
             "app_choice": True, "history": "v3", "option_texts": "v3", "instruction": True},
-    # 2026-11-12 (docs/research/2026-11-12-V4-WORKLOG-vi.md): no element cap, effect without focus/keyboard, an
+    # 2026-11-12 (docs/research/2026-11-12-V4-WORKLOG.md): no element cap, effect without focus/keyboard, an
     # `answer` action (+ `answer_value`), AC-Low step instruction on half the rows (as v3i), avoid-only rows.
     "v4": {"actions": tuple(ACTIONS) + ("answer",), "is_done": False, "elements": True,
            "element_rule": "all_reading_noime", "app_choice": True, "history": "v3", "effect": "v4",

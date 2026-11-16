@@ -1,4 +1,4 @@
-"""Contract v4 (2026-11-12, docs/research/2026-11-12-V4-WORKLOG-vi.md):
+"""Contract v4 (2026-11-12, docs/research/2026-11-12-V4-WORKLOG.md):
 * element rule `all_reading_noime`: contract v3's list without the 40 cap (New Event is never cut);
 * `effect_changed_v4`: the "→ screen changed / no change" label ignores the focused flag and keyboard elements, because
   AndroidWorld never reports focus (0/18,470 elements) and a click on an already-focused field leaves the app unchanged;

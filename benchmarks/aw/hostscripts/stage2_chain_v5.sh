@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# v4 seed 0 online (2026-11-12), paired with aw116_v3h_s0 (same harness awhV8). Worklog docs/research/2026-11-12-V4-WORKLOG-vi.md.
+# v4 seed 0 online (2026-11-12), paired with aw116_v3h_s0 (same harness awhV8). Worklog docs/research/2026-11-12-V4-WORKLOG.md.
 # Serves the v2a checkpoint (health must name it), runs the 116 tasks in chunks of 3 with the infra sweep after every
 # chunk, keeps a run_bench watchdog alive during the run, then audits every preflight health line.
 # Usage: ID=... TARGET=... EMU=... PORT=... [HARNESS=~/awhV6.tgz] stage2_chain_par2.sh   (one chain per emulator; each its own run dir and config $ID.yaml)

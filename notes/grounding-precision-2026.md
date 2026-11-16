@@ -6,7 +6,7 @@
 > 56.50% grounding is the step-705 checkpoint (938 pure is 56.05%). See
 > `benchmarks/results/2026-11-03-acv2-error-budget-and-routed-gate.md` and paper §5.1.
 
-> Chủ đề: d1-2B hit a ceiling on AC-v2 (~64.3–64.8 across 3 SFT recipes). Remaining gap is **grounding**,
+> Topic: d1-2B hit a ceiling on AC-v2 (~64.3–64.8 across 3 SFT recipes). Remaining gap is **grounding**,
 > not type. This note records (1) our measured error decomposition, (2) the 3 papers that target it, and
 > (3) the decision: close grounding via **training-time** fixes (V2P + ConClick), NOT RL. Sources in
 > `references/ledger.md` (bibkeys: v2p2026, conclick2026, seg2click2026, magmar1dense2026).

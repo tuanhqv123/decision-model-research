@@ -11,7 +11,7 @@
 - Task-prefix for quality: `task: classification | query: ...` (symmetric task). Applies to text; image passed without prefix.
 - MRL truncation 768->256 (near-lossless, 3x smaller) optional for on-device.
 
-## 2. Novelty framing (the "ko nhảm" check — critical)
+## 2. Novelty framing (the "no-nonsense" check — critical)
 Evidence: none of the 8 competitors (d1, decider, TypedBench, AgentAbstain, THX-01, CORA, CAAG, Re-TRAC) does a **controlled CE-only vs proper-scoring vs joint calibration comparison**. 
 - **(a) calibrated single-pass decision head = NOT our differentiator** (d1/decider/THX-01 already do it) -> do NOT claim it.
 - **(b) CE vs proper-scoring calibration-objective comparison = GENUINELY UNCONTESTED** -> this is our strongest, most defensible claim (Q2).

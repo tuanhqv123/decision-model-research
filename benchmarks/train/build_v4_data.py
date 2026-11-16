@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build the contract-v4 training data from the v3 AndroidControl rows (2026-11-12). No emulator, no external model.
-Decisions and evidence: docs/research/2026-11-12-V4-WORKLOG-vi.md.
+Decisions and evidence: docs/research/2026-11-12-V4-WORKLOG.md.
 
 Every transformation keeps the row's screen and its gold unless stated, and is marked in `aug`:
   base        all AndroidControl rows; `is_focused` set False (AndroidWorld never reports it); history recomputed with

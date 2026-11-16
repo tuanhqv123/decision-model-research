@@ -367,7 +367,7 @@ class AgentCore:
         # Self-play data (2026-11-11): keep, per step, exactly what the model was given and what it answered
         # (`state_in`), so an episode can be turned back into training rows. Off unless a config asks for it.
         self.record_state = bool(record_state)
-        # 2026-11-12 harness review (docs/research/2026-11-12-V4-WORKLOG-vi.md). All OFF unless a config asks:
+        # 2026-11-12 harness review (docs/research/2026-11-12-V4-WORKLOG.md). All OFF unless a config asks:
         # deferred_effect — a step's effect is decided against the NEXT observation (the training definition);
         # effect — "v4": focus flag and keyboard elements do not count (contract v4);
         # scroll_index — scroll inside a small scrollable element containing the chosen element (pickers);

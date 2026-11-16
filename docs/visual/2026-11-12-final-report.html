@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>d1-mobile: errors, analysis, fixes and targets</title>
+<style>
+:root { --bg:#fbfaf7; --fg:#1d1d1b; --muted:#6b6a65; --line:#e3e0d8; --accent:#2f5d8a; --good:#2e7d4f; --bad:#a63d32; --warn:#9a6a12; --card:#ffffff; }
+@media (prefers-color-scheme: dark) { :root { --bg:#16171a; --fg:#e7e5df; --muted:#9a988f; --line:#2c2e33; --accent:#7fb0e0; --good:#6cc08f; --bad:#e38377; --warn:#e0b360; --card:#1d1f23; } }
+* { box-sizing:border-box }
+body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width:980px; margin:0 auto; padding:28px 16px 80px; }
+h1 { font-size:26px; margin:0 0 4px } h2 { font-size:20px; margin:36px 0 10px; padding-top:12px; border-top:1px solid var(--line) }
+h3 { font-size:16px; margin:18px 0 6px }
+.sub { color:var(--muted); margin:0 0 18px }
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:14px 0 }
+.kpi { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px }
+.kpi b { display:block; font-size:24px } .kpi span { color:var(--muted); font-size:13px }
+table { width:100%; border-collapse:collapse; margin:8px 0 14px; background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; font-size:14px }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top }
+th { background:color-mix(in srgb, var(--accent) 10%, var(--card)); font-weight:600 }
+tr:last-child td { border-bottom:none }
+.tag { display:inline-block; padding:1px 7px; border-radius:6px; font-size:12px; font-weight:600 }
+.ok { color:var(--good); background:color-mix(in srgb, var(--good) 14%, transparent) }
+.no { color:var(--bad); background:color-mix(in srgb, var(--bad) 14%, transparent) }
+.wip { color:var(--warn); background:color-mix(in srgb, var(--warn) 16%, transparent) }
+.note { background:var(--card); border-left:4px solid var(--accent); padding:10px 14px; border-radius:6px; margin:10px 0 }
+code { font-size:13px; background:color-mix(in srgb, var(--fg) 8%, transparent); padding:1px 5px; border-radius:4px }
+.bar { height:10px; background:var(--accent); border-radius:5px; display:inline-block; vertical-align:middle }
+.wrap { overflow-x:auto }
+</style>
+</head>
+<body><main>
+
+<h1>d1-mobile: errors, analysis, what the fixes rest on, targets</h1>
+<p class="sub">Summary dated 2026-11-12. Every number is recomputed from files in the repo, with its denominator. Detailed sources are listed at the bottom of the page.</p>
+
+<h2>1. What the model is</h2>
+<p>d1-mobile is a fine-tune of <b>d1-2B</b> (LiquidAI). It is a <b>decision model</b>: at each step it reads the input in <b>one pass</b> and <b>generates no tokens</b>.</p>
+<p>The input of each step consists of:</p>
+<ul>
+<li>the screen image, 720 px wide;</li>
+<li>the goal;</li>
+<li>the history of previous steps, noting whether the screen changed or not;</li>
+<li>the list of elements on the screen, taken from the accessibility tree.</li>
+</ul>
+<p>The output of each step is:</p>
+<ul>
+<li>one action: click, type, long press, swipe, wait, back, go to the home screen, open app, done, answer;</li>
+<li>the element that the action targets;</li>
+<li>the text to type, copied from the text part of the input.</li>
+</ul>
+<p>Constraints: only one model, no planner, no external model, trained only on AndroidControl data. No learning from AndroidWorld apps or rollouts, because that would be learning the exam in advance.</p>
+<p>The main benchmark is <b>AndroidWorld</b>: 116 tasks, official protocol, seed 30.</p>
+
+<h2>2. Measured status (best model so far: v4 + harness V12)</h2>
+<div class="kpis">
+<div class="kpi"><b>25 / 115 = 21.7%</b><span>AndroidWorld: 24 fully successful tasks + 2 half-credit tasks. 1 task excluded because of an environment error, since fixed (section 5).</span></div>
+<div class="kpi"><b>61.7%</b><span>AC-High: correct per step (5,213/8,444)</span></div>
+<div class="kpi"><b>22.3%</b><span>AC-High: number of tasks with <i>every</i> step correct (344/1,543)</span></div>
+<div class="kpi"><b>89.3% · 60.4%</b><span>AC-Low: correct per step · correct per whole task (932/1,543)</span></div>
+</div>
+<div class="note"><b>Why is the AC-High score high while AndroidWorld is low?</b>
+<ul>
+<li>AC-High scores <b>per step</b>, and at each step the model is handed the history and the screen <b>of the human demonstrator</b> (teacher forcing). No step checks whether the goal has been reached.</li>
+<li>If counted per whole task, AC-High is only <b>22.3%</b>, on par with AndroidWorld (21.7%).</li>
+<li>The longer the task, the lower it drops: 1 step 59%, 6 steps or more only 9.4%.</li>
+</ul></div>
+
+<h3>AndroidWorld by official difficulty (<code>task_metadata.json</code>)</h3>
+<table><tr><th>Difficulty</th><th>Tasks</th><th>Successes</th><th>SR</th><th>Avg steps</th><th>Avg on success</th><th>Avg optimal steps</th></tr>
+<tr><td>easy</td><td>61</td><td>21</td><td>34.4% <span class="bar" style="width:69px"></span></td><td>8.5</td><td>5.5</td><td>5.0</td></tr>
+<tr><td>medium</td><td>36</td><td>3</td><td>8.3% <span class="bar" style="width:17px"></span></td><td>13.0</td><td>6.7</td><td>9.0</td></tr>
+<tr><td>hard</td><td>18</td><td>1.0</td><td>5.6% <span class="bar" style="width:11px"></span></td><td>19.3</td><td>–</td><td>18.5</td></tr></table>
+
+<h2>3. Error analysis: what it rests on</h2>
+<p><b>Reading traces, not guessing.</b> Four independent agents read the traces and screenshots of <b>all 91 failed tasks</b>, one group per agent. For each task, the agent recorded:</p>
+<ul>
+<li>the first wrong step;</li>
+<li>what the model did, and what it should have done;</li>
+<li>evidence: element label, history, image;</li>
+<li>the AndroidWorld checker logic, read from the upstream code.</li>
+</ul>
+<p>In addition there are:</p>
+<ul>
+<li>an analysis of the model's confidence;</li>
+<li>an experiment replacing the image with a gray image;</li>
+<li>a re-reading of the data files and of the other papers against the real files.</li>
+</ul>
+<div class="wrap"><table>
+<tr><th>Group (number of failed tasks)</th><th>Main cause, with evidence</th></tr>
+<tr><td>Information questions (21)</td><td>Sees the answer but does not answer (4). Only 6/21 tasks have an answer command. Wrong format (1). Goes to the wrong place (4). Needs date/time/colour reasoning (4). Must count across several screens (2). Answers that the answer mechanism cannot represent (6).</td></tr>
+<tr><td>Easy (27)</td><td>Needs a long press but the model gives the long-press probability only ~0.0005 (5). Verify tasks already correct but the model toggles them the other way (3). Declares done early (4). Picks the wrong element (4). Element is off screen (3). Typing text always clears the field's content (2). Clipboard dropped by the element filter (2). Environment error / missing app knowledge (4).</td></tr>
+<tr><td>Medium/hard (34)</td><td>Wrong way of operating the app, for example tapping instead of long pressing (7). Must compute dates/times (6). Finishes item 1 then stops (4). Markor not set up on one emulator (3). Form field hidden by the keyboard (3). Finding duplicates (3). Note content too long (2). VLC (2). Isolated errors (4).</td></tr>
+<tr><td>Needs the image (9)</td><td>Gets lost even though it does not need to read the image (2). Web pages with a maze or drawing (2). Must type text that exists only in the image (4). Must do a multiplication (1).</td></tr>
+</table></div>
+<p><b>Three standout numbers.</b></p>
+<ul>
+<li><b>Stopping at the wrong time.</b> On the AC test no "done" step is correct, yet the model asks to stop on 1,171/8,444 steps. On AndroidWorld there are 49 tasks that declare done before being done.</li>
+<li><b>The image matters.</b> Replacing the image with a gray image drops the number of correct steps from 519 to 337/827.</li>
+<li><b>Limit of the text-typing mechanism.</b> The d1 code shows that questions of the text/number/date kind can only copy from the text part of the input, and cannot read text in the image.</li>
+</ul>
+
+<h2>4. What is fixed, and on what evidence</h2>
+<h3>Training data (final version: 35,414 + 1,736 rows, 1 epoch)</h3>
+<div class="wrap"><table>
+<tr><th>Fix</th><th>Evidence that led to the fix</th><th></th></tr>
+<tr><td>Keep all 4,191/4,191 "last step → done" pairs</td><td>The v5 deduplication step cut half of the pairs, leaving only 1,918. 460/1,171 wrong stop requests fall exactly on the last step.</td><td><span class="tag ok">done</span></td></tr>
+<tr><td>Chain 2 tasks into one sequence: on the screen where A is done, with the goal "A then B", it must not stop</td><td>The model finishes item 1 then stops. This is also the "goal prefix" idea of the AndroidGen paper.</td><td><span class="tag ok">done</span></td></tr>
+<tr><td>Long press and the step right after it, repeated ×4 (444 rows)</td><td>5 easy tasks and 7 medium/hard tasks need a long press. AndroidControl has only 56 long-press rows.</td><td><span class="tag ok">done</span></td></tr>
+<tr><td>154 rows "if the state is already correct, report done"</td><td>The Verify tasks start in the already-correct state, but the model toggles it the other way.</td><td><span class="tag ok">done</span></td></tr>
+<tr><td>Add 350 tasks with answers; drop questions that use id labels</td><td>Only 6/21 information-question tasks have an answer command. A trial run found questions of the form "value of [id: …]".</td><td><span class="tag ok">done</span></td></tr>
+<tr><td>Data teaching going back: reduced from 3,468 to 600 pairs</td><td>Checkpoint 250 of final run 1 went back wrongly 44/798 (v4 is 16/798). This is the second time this data has done harm.</td><td><span class="tag ok">done</span></td></tr>
+<tr><td>Contract v6: an element without a label also shows the text on the same row (<code>[id: switch widget] · Airplane mode</code>)</td><td>The task TurnOffWifiAndTurnOnBluetooth turns Wi-Fi on again. The menu button of each song in Retro has no label.</td><td><span class="tag ok">done</span></td></tr>
+</table></div>
+<h3>Harness and environment (no retraining needed)</h3>
+<div class="wrap"><table>
+<tr><th>Fix</th><th>Evidence</th><th></th></tr>
+<tr><td>Markor on aw-emu3 stuck at the intro screen → run the official setup when detected</td><td>6/6 Markor tasks on aw-emu3 open on the intro screen; the other machines go straight to the file list.</td><td><span class="tag ok">fixed</span></td></tr>
+<tr><td>OsmAnd: table <code>map_markers</code></td><td>The OsmAndMarker task had a setup error in 3/4 runs. Cause: the <code>sqlite3</code> command ran as root and left a 0-byte file owned by root, which OsmAnd could not open. All 6 machines were checked.</td><td><span class="tag ok">fixed</span></td></tr>
+<tr><td>SIM / SMS (IPv6 network)</td><td>Three SMS tasks used to fail because there was no SIM. Now all three succeed.</td><td><span class="tag ok">fixed</span></td></tr>
+<tr><td>Server start script forces the v4 element rule</td><td>If not fixed, the <code>[id: …]</code> labels would vanish in a real run.</td><td><span class="tag ok">fixed</span></td></tr>
+<tr><td>V13: format of numeric answers</td><td>Re-scoring offline adds 1 task (NotesMeetingAttendeeCount).</td><td><span class="tag ok">done</span></td></tr>
+<tr><td>Hide the keyboard after typing</td><td>Form field hidden by the keyboard (3 tasks).</td><td><span class="tag wip">try later</span></td></tr>
+<tr><td>VLC stuck on "Loading" the library</td><td>Happens identically on every emulator.</td><td><span class="tag wip">unclear</span></td></tr>
+</table></div>
+
+<h2>5. What the constraints block (about 36/91 tasks)</h2>
+<ul>
+<li><b>Computing dates/times</b> ("next Thursday", "+1 hour"), <b>summing, converting units</b>: a single-pass model has no computation step, and AndroidControl data does not teach this.</li>
+<li><b>Finding duplicates across several screens</b>: the model does not remember the content of earlier screens.</li>
+<li><b>Typing text that exists only in the image</b> (invoices, expense photos): d1's typing mechanism only copies from the input text part. Using OCR would add an external model.</li>
+<li><b>Colours or icons</b> that carry meaning (priority, type of activity): AndroidControl has no labels for them.</li>
+<li><b>Clipboard suggestion on the keyboard</b>: the id in AndroidControl is hidden, so there is no data to learn from.</li>
+</ul>
+
+<h2>6. Targets and how to check</h2>
+<div class="kpis">
+<div class="kpi"><b>~28–31 / 115</b><span>Estimated AndroidWorld for final (24–27%). Reasonable range 22–32. This is not a promise.</span></div>
+<div class="kpi"><b>&lt; 1,171</b><span>The number of wrong stop requests on the AC test must fall clearly</span></div>
+<div class="kpi"><b>≥ 344 / 1,543</b><span>AC-High: the number of tasks fully correct must not drop</span></div>
+<div class="kpi"><b>≤ v4 + 0.02</b><span>P(back | the answer is not back): early-stop threshold at checkpoint 250</span></div>
+</div>
+<p><b>Order of checks (set before results exist; if not passed, keep v4 + V13):</b></p>
+<ol>
+<li>Early check at checkpoint 250 on validation.</li>
+<li>Gate 1: AC-High, AC-Low, validation.</li>
+<li>13 pre-selected AndroidWorld tasks.</li>
+<li>All 116 tasks on the 6 fixed emulators. Report by difficulty, by C1–C4, by number of steps, and compare task by task against v4 + V12.</li>
+</ol>
+<p><b>To go beyond the level of about 30%</b>, the answering part and the never-seen apps must be handled. That needs data from outside AndroidControl, and the constraint would have to be discussed again.</p>
+
+<h2>7. What was learned from other papers</h2>
+<table><tr><th>Paper</th><th>Main point, checked against the real files</th></tr>
+<tr><td>AndroidControl-Curated / Magma-R1</td><td>Only the test set is released. The "SR" figure is per step. In the task-improved file, the history also contains the current step's instruction (8,377/8,377 rows). Lesson: quality over quantity, balance by action type.</td></tr>
+<tr><td>AMEX</td><td>Has only per-step scores. The back action is only 0.35%, contrary to the paper's claim. The benefit lies in the screen-understanding data, not in the action sequences.</td></tr>
+<tr><td>AndroidGen</td><td>The agent generates text and calls the model several times per step. Training data is collected inside AndroidWorld itself, and the retrieval store also comes from scored runs. The "goal prefix" idea is already in the final version.</td></tr>
+<tr><td>MobileRL</td><td>Reports by level C1–C4, pass@k and win rate by number of steps. We follow the same format (script <code>aw_report.py</code>). Pass@k is not applicable because our model chooses deterministically.</td></tr>
+<tr><td>Unsloth decision model</td><td>The same kind of state/questions/gold data. The lesson "must train enough epochs": final moved from 0.4 epoch to 1 epoch.</td></tr>
+</table>
+
+<h2>8. Running now</h2>
+<p>The final version (contract v6): 2,322 steps, about 3.5 hours. The early check at checkpoint 250 is running. Gate 1 and AC-Low will run by themselves when training finishes.</p>
+
+<h2>Sources (in the repo)</h2>
+<ul>
+<li><code>docs/research/2026-11-12-FINAL-PLAN.md</code>: plan, sections 1–9</li>
+<li><code>docs/research/2026-11-12-ACHIGH-vs-AW-FINAL.md</code>: AC-High versus AW</li>
+<li><code>benchmarks/results/2026-11-12-failanalysis/*.tsv</code>: each failed task</li>
+<li><code>benchmarks/results/2026-11-12-maskenv/difficulty_report.md</code>, <code>compare_A_AG.out</code></li>
+<li><code>benchmarks/results/2026-11-12-imgablate/</code>: the gray-image experiment</li>
+<li><code>docs/research/2026-11-12-PAPER-FIGURES-PLAN.md</code>: plan of figures and tables for the paper</li>
+</ul>
+</main></body></html>

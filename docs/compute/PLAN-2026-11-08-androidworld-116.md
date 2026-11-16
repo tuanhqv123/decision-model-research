@@ -1,74 +1,74 @@
-# PLAN — AndroidWorld 116-task standard run (chưa chạy, chờ user confirm)
+# PLAN — AndroidWorld 116-task standard run (not yet run, awaiting user confirmation)
 
-*Viết 2026-11-08 sau khi user yêu cầu "mode chuẩn rồi chạy". Đây là plan để confirm, KHÔNG phải báo cáo kết quả.*
+*Written 2026-11-08 after the user asked for "standard mode, then run". This is a plan to confirm, NOT a results report.*
 
-## Trạng thái hiện tại (đã kiểm bằng lệnh)
+## Current state (checked by command)
 
-| Thứ | Trạng thái | Ghi chú |
+| Item | State | Notes |
 |---|---|---|
 | Emulator `aw-emu` | **up 6h, health OK** | Gate A 32 passed / 0 failed |
-| Suite | **116 task** | `suite/task_list` trả về đúng 116 |
-| Emulator thực thi `navigate_home`/`keyboard_enter`/`double_tap`/`swipe` | **✅ tất cả success** | tôi đã gửi thử từng cái |
-| Checkpoint `ckpt-E2-final` | có trên host A | `~/acv2/ckpt/ckpt-E2-final` |
-| Model server (port 8700) | **FAILED, chưa chạy** | `ModuleNotFoundError: train_d1` — tôi launch thiếu path |
-| VRAM trống | **21.9 GB** | prod chỉ chiếm 2.1 GB (`[user]`) |
-| Container network | **`bridge`** | ⚠️ xem mục Rủi ro #1 |
+| Suite | **116 tasks** | `suite/task_list` returns exactly 116 |
+| Emulator executes `navigate_home`/`keyboard_enter`/`double_tap`/`swipe` | **✅ all succeed** | I sent each one as a test |
+| Checkpoint `ckpt-E2-final` | present on host A | `~/acv2/ckpt/ckpt-E2-final` |
+| Model server (port 8700) | **FAILED, not running** | `ModuleNotFoundError: train_d1` — I launched it with a missing path |
+| Free VRAM | **21.9 GB** | prod uses only 2.1 GB (`[user]`) |
+| Container network | **`bridge`** | ⚠️ see Risk #1 |
 
-## Việc tôi ĐÃ làm (cần biết)
+## What I ALREADY did (you need to know)
 
-1. Copy `serving/` + `benchmarks/train/ac_common.py` lên `~/d1-api` (84 KB) — vô hại.
-2. **Launch model server → thất bại** (`ModuleNotFoundError: train_d1`). Không có process nào đang chạy.
-3. Copy `~/awh` (harness test) lên từ trước — vô hại.
-4. Dọn 11.4 GB tarball trong `/tmp` (lượt trước).
+1. Copied `serving/` + `benchmarks/train/ac_common.py` to `~/d1-api` (84 KB) — harmless.
+2. **Launched the model server → failed** (`ModuleNotFoundError: train_d1`). No process is running.
+3. Copied `~/awh` (the test harness) over earlier — harmless.
+4. Cleaned up an 11.4 GB tarball in `/tmp` (previous turn).
 
-**Chưa chạy task nào.** Chưa có số AndroidWorld mới. Con số 1/8 vẫn là con số duy nhất hiện có.
+**No task has been run.** There is no new AndroidWorld number. 1/8 is still the only number we have.
 
-## Rủi ro #1 — container dùng network `bridge`, không phải `host`
+## Risk #1 — the container uses the `bridge` network, not `host`
 
-Trước đây (2026-11-06) tôi ghi trong notes là `--network host` vì container→host bị firewall. Hiện tại container là `bridge`, nên **model server ở 127.0.0.1:8700 trên host sẽ KHÔNG truy cập được từ trong container**.
+Earlier (2026-11-06) I noted `--network host` in the notes because container→host traffic was firewalled. The container is now `bridge`, so **the model server at 127.0.0.1:8700 on the host will NOT be reachable from inside the container**.
 
-Ba cách xử lý:
-- **(a)** Chạy harness **trên host** (env in-process cần `android_world` + `adb` thấy emulator). Nhưng adb trên host **không thấy** emulator trong container (khác network namespace) — đã thử hôm nay, `emulator-5554 offline`.
-- **(b)** Chạy harness **trong container**, model client trỏ tới `host.docker.internal:8700` (cần `--add-host` hoặc dùng IP gateway).
-- **(c)** Restart container với `--network host` (như lần 2026-11-06), rồi model server ở `127.0.0.1:8700` truy cập được.
+Three ways to handle it:
+- **(a)** Run the harness **on the host** (the in-process env needs `android_world` + `adb` to see the emulator). But adb on the host **does not see** the emulator in the container (different network namespace) — tried today, `emulator-5554 offline`.
+- **(b)** Run the harness **inside the container**, with the model client pointing at `host.docker.internal:8700` (needs `--add-host` or the gateway IP).
+- **(c)** Restart the container with `--network host` (as on 2026-11-06), after which the model server at `127.0.0.1:8700` is reachable.
 
-Tôi nghiêng **(c)** vì nó đã chứng minh chạy được, nhưng restart container mất ~5 phút boot + lifespan.
+I lean towards **(c)** because it has already been shown to work, but restarting the container costs ~5 minutes of boot + lifespan.
 
-## Kế hoạch chạy chuẩn (chờ bạn duyệt)
+## Standard run plan (awaiting your approval)
 
-### Bước 1 — Sửa model server (10 phút)
-- `PYTHONPATH` phải gồm cả `benchmarks/train` (có `train_d1.py`) và `serving/`
-- Launch lại, smoke 1 request, xác nhận `/health` = 200 và một quyết định thật trả về
-- **Gate: nếu smoke fail → dừng, không đụng tới task**
+### Step 1 — Fix the model server (10 minutes)
+- `PYTHONPATH` must include both `benchmarks/train` (which has `train_d1.py`) and `serving/`
+- Relaunch, smoke 1 request, confirm `/health` = 200 and that a real decision is returned
+- **Gate: if the smoke fails → stop, do not touch any task**
 
-### Bước 2 — Sửa đường container→model (10 phút)
-- Chọn (b) hoặc (c) ở trên; tôi sẽ báo bạn chọn cái nào sau khi đo
-- **Gate: một request model từ trong container phải trả 200**
+### Step 2 — Fix the container→model path (10 minutes)
+- Choose (b) or (c) above; I will tell you which one after measuring
+- **Gate: one model request from inside the container must return 200**
 
-### Bước 3 — Smoke 8 task (20 phút)
+### Step 3 — Smoke 8 tasks (20 minutes)
 - `run_bench.py --config configs/gate_e8_pure.yaml --limit 8`
-- **Gate: episode ghi đúng, không crash, timeout/invalid đếm được**
-- Nếu fail → dừng và báo, không chạy full
+- **Gate: episodes are recorded correctly, no crash, timeout/invalid are countable**
+- If it fails → stop and report, do not run the full suite
 
-### Bước 4 — Chạy chuẩn 116 task, điều kiện d1-2B (90 phút, background)
+### Step 4 — Standard run of 116 tasks, d1-2B condition (90 minutes, background)
 - `run_bench.py --config configs/main_116.yaml`
-- Pre-register trước: `docs/research/PRE-REG-2026-11-08-androidworld-116.md`
-- Ghi trước dự đoán để không đặt bar sau: **SR_all kỳ vọng 2–8%**
-- Resumable nên đứt thì chạy tiếp
+- Pre-register first: `docs/research/PRE-REG-2026-11-08-androidworld-116.md`
+- Write the prediction down first so the bar is not set afterwards: **SR_all expected 2–8%**
+- Resumable, so if it breaks we continue
 
-### Bước 5 — Control `wait` 116 task (30 phút)
-- Cùng 116 task, policy `wait`
-- **Kiểm tra harness**: nếu `wait` cũng >0 thì harness tự cho điểm → sai, phải dừng
+### Step 5 — `wait` control on 116 tasks (30 minutes)
+- Same 116 tasks, policy `wait`
+- **Harness check**: if `wait` also scores >0, the harness is scoring by itself → wrong, must stop
 
-### Bước 6 — Báo cáo
-- Bảng: `SR_all` + Wilson, `SR_reachable` + coverage, invalid/crash/timeout, latency p50
-- Sửa §5.7 paper: 8 task → 116 task
-- Nêu rõ 2 action controller (`keyboard_enter`, `navigate_home`) là scaffolding nếu tôi thêm
+### Step 6 — Report
+- Table: `SR_all` + Wilson, `SR_reachable` + coverage, invalid/crash/timeout, latency p50
+- Fix paper §5.7: 8 tasks → 116 tasks
+- State clearly that the 2 controller actions (`keyboard_enter`, `navigate_home`) are scaffolding if I add them
 
-## Điều tôi CẦN bạn quyết
+## What I NEED you to decide
 
-1. **Xác nhận chạy** — 116 task × 2 điều kiện ≈ **2 giờ máy**, + retry.
-2. **Có thêm 2 rule controller không?** (`type_text` → `keyboard_enter`; kẹt → `navigate_home`). Nếu có, phải khai báo `scaffolding` trong paper. Nếu không, SR sẽ thấp hơn nhưng "sạch".
-3. **Cách nối container→model**: (b) hay (c)?
+1. **Confirm the run** — 116 tasks × 2 conditions ≈ **2 machine-hours**, plus retries.
+2. **Add the 2 controller rules or not?** (`type_text` → `keyboard_enter`; stuck → `navigate_home`). If yes, they must be declared `scaffolding` in the paper. If no, SR will be lower but "clean".
+3. **How to connect container→model**: (b) or (c)?
 
-Tôi **không** làm gì thêm cho tới khi bạn xác nhận.
+I will **not** do anything more until you confirm.

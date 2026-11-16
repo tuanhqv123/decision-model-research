@@ -2,7 +2,7 @@
 """The consolidated final training mix (2026-11-12), built from the v5 curated rows (`compact_cur_v6`, stop pairs
 protected) and the base AndroidControl episodes of `compact_awlike_full_v5`. Every change is one finding of the
 2026-11-12 trace analysis of the 91 failed AndroidWorld tasks or of the ckpt_250 early warning
-(docs/research/2026-11-12-FINAL-PLAN-vi.md):
+(docs/research/2026-11-12-FINAL-PLAN.md):
 
   * cut_recovery      recovery rows 3,468 -> CAP pairs: ckpt_250 misused navigate_back 44/798 (v4: 16/798),
                       the second time recovery rows did this (pilot 1: ~10%);

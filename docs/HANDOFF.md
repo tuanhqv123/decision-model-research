@@ -348,8 +348,8 @@ Both `GPU_HOST_A` and `GPU_HOST_B` are **RTX 4090 boxes**, but **only `GPU_HOST_
 - **Caps:** run the container isolated with `--cpus` / `--memory` so prod services are not disturbed.
 
 ### Server environment (verified 2026-11-02)
-- `GPU_HOST_A`: python 3.10/3.11 (conda `[redacted]`), **docker 28.2.2 + compose 2.37.1**, KVM, 137GB free disk. **No `adb`/`emulator`/`/opt/android` yet** — needs the Android emulator + SDK installed (Docker image `android_world` provides it).
-- **prod services on `GPU_HOST_A`** (do not disturb): postgres ×3, grafana, prometheus, loki, ocr-tunnel, cf-tunnel, [service], celery `gpu-4090` workers, [redacted], streamlit :4200.
+- `GPU_HOST_A`: python 3.10/3.11 (conda [service]), **docker 28.2.2 + compose 2.37.1**, KVM, 137GB free disk. **No `adb`/`emulator`/`/opt/android` yet** — needs the Android emulator + SDK installed (Docker image `android_world` provides it).
+- **prod services on `GPU_HOST_A`** (do not disturb): postgres ×3, grafana, prometheus, loki, ocr-tunnel, cf-tunnel, [service], celery `gpu-4090` workers, [service], streamlit :4200.
 - **⚠️ LIVE PROD ISSUE:** the container `display-tracking-[service]` on `GPU_HOST_A` is **`Restarting (1)` / crash-looping**. Documented restore one-liner lives in `docs/compute/STOPPED_CONTAINERS.md` (was previously stopped/started manually to free the 4090). **Do NOT touch without user OK.**
 
 ### [cloud-gpu] (verified, credit held)

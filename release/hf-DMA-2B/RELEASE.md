@@ -12,6 +12,8 @@
 * Demo Space https://huggingface.co/spaces/tuanhqv123/DMA-2B-demo (updated 2026-11-16 08:15 UTC; copied into
   `hf-DMA-2B-demo-static/`). It replays AndroidControl test episodes 27, 84 and 104 with the final model's recorded
   decisions.
+* `release/hf-DMA-2B-demo-gradio/` was never deployed (see below) and still describes the 2026-11-13 model and its
+  AndroidWorld numbers. It is kept as a record only.
 
 ## 2026-11-13: first release (superseded)
 

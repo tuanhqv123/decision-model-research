@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the contract-v5 training data (2026-11-12, one consolidated retrain). No emulator, no external model.
 
-Evidence (docs/research/2026-11-12-V4-WORKLOG-vi.md, benchmarks/results/2026-11-12-confidence/):
+Evidence (docs/research/2026-11-12-V4-WORKLOG.md, benchmarks/results/2026-11-12-confidence/):
   * premature `status` is the largest AW failure (49/95): in AndroidControl the gold is `status` on 21% of rows right
     after a click and 37% after a wait, and the status share reaches 29% by step 7-8 (episodes are short). Chained
     two-goal episodes (v4) cut P(stop | second task undone) from 0.92 to 0.01 -> far more chains (longer episodes).

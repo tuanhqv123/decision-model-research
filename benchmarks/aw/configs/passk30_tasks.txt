@@ -1,4 +1,4 @@
-# pass@k gate (2026-11-12): 30 tasks, seed 1001, argmax self-play never reached the goal; see docs/research/2026-11-12-PLAN-passk-gate-vi.md 1.1
+# pass@k gate (2026-11-12): 30 tasks, seed 1001, argmax self-play never reached the goal; see docs/research/2026-11-12-PLAN-passk-gate.md 1.1
 CameraTakeVideo
 ClockTimerEntry
 MarkorDeleteNewestNote

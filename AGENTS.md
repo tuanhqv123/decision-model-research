@@ -91,7 +91,7 @@ Topic list (each maps to a file under `notes/`):
 
 ### Program log (keep this in sync — every background run/result goes here)
 - **2026-11-12 (late): AC-HIGH IS A PER-STEP, TEACHER-FORCED NUMBER; PER GOAL IT EQUALS ANDROIDWORLD.**
-  Note: `docs/research/2026-11-12-ACHIGH-vs-AW-FINAL-vi.md`. An independent read-only agent re-derived every number below from the files.
+  Note: `docs/research/2026-11-12-ACHIGH-vs-AW-FINAL.md`. An independent read-only agent re-derived every number below from the files.
   - **What AC-High measures.** v4 on the AndroidControl test set (InfiGUI scorer) gets **61.7% per step (5,213/8,444)**, but only **344/1,543 = 22.3% of episodes have every step right**.
     - This is with human history at every step: `eval_d1.py:42,48-49,220-225`.
     - The scorer never checks whether the goal was reached.
@@ -107,7 +107,7 @@ Topic list (each maps to a file under `notes/`):
     - Cause: v5's curation (dedupe + click cap) had cut the episode stop pair — last action + `status` row. Both rows survived in only **1,918 of 4,191** episodes.
     - Of the 1,171 wrong `terminate` predictions on the AC test, 460 fall on an episode's last real step.
   - **Fix: `curate_v5.is_stop_pair`**, pinned by a test. The pairs are now kept in 4,191/4,191 episodes (`compact_cur_v6`).
-  - **Run `final` is training** on that data. Plan: `docs/research/2026-11-12-FINAL-PLAN-vi.md`.
+  - **Run `final` is training** on that data. Plan: `docs/research/2026-11-12-FINAL-PLAN.md`.
     - Early warning at ckpt_250 on validation.
     - v4 validation reference: step 520/827, episodes all right 14/137, false status 64/690, back misuse 16/798.
   - **AndroidControl-Curated (2510.18488), read from its release:**
@@ -116,7 +116,7 @@ Topic list (each maps to a file under `notes/`):
     - In `task-improved.json`, history contains the current step's instruction in 8,377/8,377 rows, and the eval script feeds history into the prompt.
     - Its "SR" is a per-step AC-style number. Not used as training data: test only, different history format.
 - **2026-11-11 — WHY R1 IS AT 12–15%, AND THE FIX BEING TRAINED (v2a).** Diagnosis (`docs/research/2026-11-11-DIAGNOSIS-why-low.md`,
-  summary in Vietnamese `docs/research/2026-11-11-SUMMARY-vi.md`): 25 IR tasks need `answer` (absent); the app name was copied
+  summary in Vietnamese `docs/research/2026-11-11-SUMMARY.md`): 25 IR tasks need `answer` (absent); the app name was copied
   from the goal, so 29–36% of R1's `open_app` names cannot be launched and 24–25 task-completion tasks never start; the model
   predicts pixels, not elements (30–37% of clicks hit non-interactive elements); premature `status` (103/171 wrong val dones are
   one step before the end). **v2a** (contract: element chosen from the AW element list, app chosen from the emulator's 33
@@ -649,7 +649,7 @@ Topic list (each maps to a file under `notes/`):
   **Infra:** `android_world:latest` built with the three runbook patches (image `rc=0`), `aw-emu` up with the
   24 GB cap on host port 5051; cold boot took **215 s** under host load 21.8; `boot_completed=1`; the
   FastAPI lifespan (`emulator_setup`, ~17 APKs) is the slow part, not the boot. Second 4090 has **no torch**
-  (so the model server goes on the KVM host, `D1_MEM_FRAC`-capped, using the `[redacted]` env's
+  (so the model server goes on the KVM host, `D1_MEM_FRAC`-capped, using a shared env's
   torch 2.6.0+cu124 — the conda base env's torch 2.12.1+cu130 **cannot see the GPU**, driver 12.8).
   **Readouts plumbing unblocked:** `serving/d1_api.py` now accepts `return_readouts` and the harness
   `elements` spelling; `run_d12b_acv2.py` gained `--save-readouts` (the stage-2 blocker).

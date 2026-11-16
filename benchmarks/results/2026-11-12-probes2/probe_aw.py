@@ -1,4 +1,4 @@
-"""Behavioural probes, rebuilt after the 2026-11-12 review (decision 15 in docs/research/2026-11-12-V4-WORKLOG-vi.md).
+"""Behavioural probes, rebuilt after the 2026-11-12 review (decision 15 in docs/research/2026-11-12-V4-WORKLOG.md).
 States: the seed-30 AndroidWorld run of v3 under harness V8 (aw116_v3h_s0*, no action masking), `state_in` + screenshot.
 The SAME states are sent to every checkpoint, so v3 and v4 are compared on identical inputs. Nothing runs on a device.
 Each probe edits ONE thing and records P(option) and the top-1 action, per episode (bootstrap is by episode).

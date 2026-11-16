@@ -260,7 +260,8 @@ accept alternative valid actions and 86 labels are fixed. Its Easy split corresp
 split to AndroidControl-High; Curated-Box is the Hard split with the box metric but the original labels. We match every
 Curated row to its AndroidControl test step through the episode and step in its image path, reuse the predictions of
 \cref{sec:ac}, re-run \ours{} only on the 527 rewritten tasks, and score with the authors' rules, which we
-re-implemented (the released code states no license). \Cref{tab:curated} lists the step success rates; the other rows
+re-implemented (the released code states no license); a row-by-row comparison with the authors' released
+scoring functions has not been run yet. \Cref{tab:curated} lists the step success rates; the other rows
 are reported by \citet{accurated2025}. \ours{} has the highest value in all
 three columns. The inputs differ: the reported models read the screenshot and a written history of the previous step
 instructions, while \ours{} also reads the accessibility element list and its own previous actions with their effects.

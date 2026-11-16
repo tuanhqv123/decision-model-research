@@ -36,7 +36,7 @@ Cases where this fix cannot apply:
 - Wins: SystemWifiTurnOn, SystemWifiTurnOnVerify, TurnOnWifiAndOpenApp, RecipeDeleteMultipleRecipesWithConstraint. Loss: OpenAppTaskEval.
 - Declared-done failures rose 49 → 56.
 
-**Run plan** (`docs/research/2026-11-12-PLAN-FIX-vi.md` §4, revised 14:05): arm A = v4 + harness V11 (paired with v4/V8: harness fixes); arm B = merge 0.3 + V11 (paired with A: model). Masking deferred.
+**Run plan** (`docs/research/2026-11-12-PLAN-FIX.md` §4, revised 14:05): arm A = v4 + harness V11 (paired with v4/V8: harness fixes); arm B = merge 0.3 + V11 (paired with A: model). Masking deferred.
 
 ## 3. Representation: needs a retrain to change
 
