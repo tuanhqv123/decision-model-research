@@ -1,0 +1,297 @@
+{
+ "task": "Create a new note in Markor named shopping with the text: milk and eggs",
+ "steps": [
+  {
+   "step": 0,
+   "action": "open",
+   "parameters": {
+    "text": "net.gsantner.markor"
+   },
+   "desc": "open_app markor (p=1.000) | local goal: Open the Markor app",
+   "thought": null
+  },
+  {
+   "step": 1,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     985,
+     2245
+    ]
+   },
+   "desc": "click NEXT (p=0.995) | local goal: Click on the NEXT button to proceed to the main view",
+   "thought": null
+  },
+  {
+   "step": 2,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     985,
+     2245
+    ]
+   },
+   "desc": "click NEXT (p=0.472) | local goal: Click on the NEXT button to proceed to the main view",
+   "thought": null
+  },
+  {
+   "step": 3,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     985,
+     2245
+    ]
+   },
+   "desc": "click NEXT (p=0.493) | local goal: Click on the NEXT button to proceed to the main view",
+   "thought": null
+  },
+  {
+   "step": 4,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     985,
+     2245
+    ]
+   },
+   "desc": "click NEXT (p=0.514) | local goal: Click on the NEXT button to proceed to the main view",
+   "thought": null
+  },
+  {
+   "step": 5,
+   "action": "wait",
+   "parameters": {
+    "time": 2.0
+   },
+   "desc": "wait (p=0.767) | local goal: Click on the NEXT button to proceed to the main view",
+   "thought": null
+  },
+  {
+   "step": 6,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     985,
+     2242
+    ]
+   },
+   "desc": "click DONE (p=0.979) | local goal: Click on the DONE button to dismiss the QuickNote dialog",
+   "thought": null
+  },
+  {
+   "step": 7,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     894,
+     1309
+    ]
+   },
+   "desc": "click OK (p=0.995) | local goal: Click on the OK button to grant storage permission",
+   "thought": null
+  },
+  {
+   "step": 8,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     965,
+     1054
+    ]
+   },
+   "desc": "click [Switch] (p=0.989) | local goal: Click on the toggle switch to enable 'Allow access to manage all files', then press Back to return to Markor",
+   "thought": null
+  },
+  {
+   "step": 9,
+   "action": "press_back",
+   "parameters": {},
+   "desc": "navigate_back (p=0.920) | local goal: Click on the toggle switch to enable 'Allow access to manage all files', then press Back to return to Markor",
+   "thought": null
+  },
+  {
+   "step": 10,
+   "action": "wait",
+   "parameters": {
+    "time": 2.0
+   },
+   "desc": "wait (p=0.797) | local goal: Click on the toggle switch to enable 'Allow access to manage all files', then press Back to return to Markor",
+   "thought": null
+  },
+  {
+   "step": 11,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     964,
+     2074
+    ]
+   },
+   "desc": "click Create a new file or folder (p=0.977) | local goal: Click on the 'Create a new file or folder' button",
+   "thought": null
+  },
+  {
+   "step": 12,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     374,
+     552
+    ]
+   },
+   "desc": "click my_note (p=0.937) | local goal: Clear the text in the name field, then type \"shopping\"",
+   "thought": null
+  },
+  {
+   "step": 13,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     374,
+     552
+    ]
+   },
+   "desc": "click my_note (p=0.794) | local goal: None",
+   "thought": null
+  },
+  {
+   "step": 14,
+   "action": "long_press",
+   "parameters": {
+    "coordinate": [
+     374,
+     552
+    ]
+   },
+   "desc": "long_press my_note (p=0.695) | local goal: Long-press on the 'my_note' text field to select the text, then type \"shopping\"",
+   "thought": null
+  },
+  {
+   "step": 15,
+   "action": "type",
+   "parameters": {
+    "text": "shopping"
+   },
+   "desc": "type \"shopping\" into my_note (p=0.424) | local goal: Long-press on the 'my_note' text field to select the text, then type \"shopping\"",
+   "thought": null
+  },
+  {
+   "step": 16,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     922,
+     1112
+    ]
+   },
+   "desc": "click OK (p=1.000) | local goal: Click on the OK button to create the file",
+   "thought": null
+  },
+  {
+   "step": 17,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     540,
+     836
+    ]
+   },
+   "desc": "click [EditText] (p=0.660) | local goal: Click on the text field, then type \"milk and eggs\"",
+   "thought": null
+  },
+  {
+   "step": 18,
+   "action": "type",
+   "parameters": {
+    "text": "milk and eggs"
+   },
+   "desc": "type \"milk and eggs\" into [EditText] (p=0.767) | local goal: Click on the text field, then type \"milk and eggs\"",
+   "thought": null
+  },
+  {
+   "step": 19,
+   "action": "click",
+   "parameters": {
+    "coordinate": [
+     818,
+     201
+    ]
+   },
+   "desc": "click Save (p=0.998) | local goal: Click on the Save button to save the note",
+   "thought": null
+  },
+  {
+   "step": 20,
+   "action": "wait",
+   "parameters": {
+    "time": 2.0
+   },
+   "desc": "wait (p=0.677) | local goal: None",
+   "thought": null
+  },
+  {
+   "step": 21,
+   "action": "press_back",
+   "parameters": {},
+   "desc": "navigate_back (p=0.805) | local goal: Press Back to save and exit the note",
+   "thought": null
+  },
+  {
+   "step": 22,
+   "action": "press_back",
+   "parameters": {},
+   "desc": "navigate_back (p=0.752) | local goal: Press Back to save and exit the note",
+   "thought": null
+  },
+  {
+   "step": 23,
+   "action": "finished",
+   "parameters": {},
+   "desc": "LLM: task finished",
+   "thought": "The note 'shopping.md' has been created and saved with the text 'milk and eggs'. The task is complete."
+  }
+ ],
+ "llm_calls": 13,
+ "planner_log": [
+  "Local goal \"Open the Markor app\": DONE; actions: open_app markor \u2192 screen changed",
+  "Local goal \"Click on the NEXT button to proceed to the main view\": DONE; actions: click \"NEXT\" \u2192 screen changed; click \"NEXT\" \u2192 screen changed; click \"NEXT\" \u2192 screen changed; click \"NEXT\" \u2192 screen changed; wait \u2192 no change",
+  "Local goal \"Click on the DONE button to dismiss the QuickNote dialog\": DONE; actions: click \"DONE\" \u2192 screen changed",
+  "Local goal \"Click on the OK button to grant storage permission\": DONE; actions: click \"OK\" \u2192 screen changed",
+  "Local goal \"Click on the toggle switch to enable 'Allow access to manage all files', then press Back to return to Markor\": DONE; actions: click [Switch] \u2192 screen changed; navigate_back \u2192 screen changed; wait \u2192 no change",
+  "Local goal \"Click on the 'Create a new file or folder' button\": DONE; actions: click \"Create a new file or folder\" \u2192 screen changed",
+  "Local goal \"Clear the text in the name field, then type \"shopping\"\": BLOCKED (the screen did not change); actions: click \"my_note\" \u2192 no change; click \"my_note\" \u2192 no change",
+  "Local goal \"Long-press on the 'my_note' text field to select the text, then type \"shopping\"\": DONE; actions: long_press \"my_note\" \u2192 no change; type_text \"shopping\" into \"my_note\" \u2192 screen changed",
+  "Local goal \"Click on the OK button to create the file\": DONE; actions: click \"OK\" \u2192 screen changed",
+  "Local goal \"Click on the text field, then type \"milk and eggs\"\": DONE; actions: click [EditText] \u2192 no change; type_text \"milk and eggs\" into [EditText] \u2192 screen changed",
+  "Local goal \"Click on the Save button to save the note\": BLOCKED (the screen did not change); actions: click \"Save\" \u2192 no change; wait \u2192 no change",
+  "Local goal \"Press Back to save and exit the note\": DONE; actions: navigate_back \u2192 screen changed; navigate_back \u2192 screen changed"
+ ],
+ "dma_history": [
+  "open_app markor \u2192 screen changed",
+  "click \"NEXT\" \u2192 screen changed",
+  "click \"NEXT\" \u2192 screen changed",
+  "click \"NEXT\" \u2192 screen changed",
+  "click \"NEXT\" \u2192 screen changed",
+  "wait \u2192 no change",
+  "click \"DONE\" \u2192 screen changed",
+  "click \"OK\" \u2192 screen changed",
+  "click [Switch] \u2192 screen changed",
+  "navigate_back \u2192 screen changed",
+  "wait \u2192 no change",
+  "click \"Create a new file or folder\" \u2192 screen changed",
+  "click \"my_note\" \u2192 no change",
+  "click \"my_note\" \u2192 no change",
+  "long_press \"my_note\" \u2192 no change",
+  "type_text \"shopping\" into \"my_note\" \u2192 screen changed",
+  "click \"OK\" \u2192 screen changed",
+  "click [EditText] \u2192 no change",
+  "type_text \"milk and eggs\" into [EditText] \u2192 screen changed",
+  "click \"Save\" \u2192 no change",
+  "wait \u2192 no change",
+  "navigate_back \u2192 screen changed",
+  "navigate_back \u2192 screen changed"
+ ],
+ "answer": null,
+ "seconds": 281.8
+}
