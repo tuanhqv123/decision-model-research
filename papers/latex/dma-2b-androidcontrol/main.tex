@@ -52,8 +52,8 @@ and returns a probability distribution over typed answers in a single forward pa
 We fine-tune the 2B decision model \base{} on the full AndroidControl training split and call the result
 \ours{}. Scored with the InfiGUI-R1 evaluation code in AndroidControl's own action space, \ours{} reaches a step
 success rate of 90.5\% on AndroidControl-Low and 74.2\% on AndroidControl-High, against
-\BASELOW\% and \BASEHIGH\% for the untrained base model. On AndroidControl-High this is within 0.3 points of
-the best reported model of up to 9B parameters and above all others of that size, without generating a single
+\BASELOW\% and \BASEHIGH\% for the untrained base model. On AndroidControl-High this is the highest step success
+reported for a 2B model and above several generative agents of 7B to 8B parameters, without generating a single
 output token. The probability of the selected action ranks the model's own errors (AUROC \OURSAUROC{} on
 AndroidControl-High), and a threshold chosen on held-out episodes keeps the error rate of the accepted steps
 below 20\% while acting on \OURSCOVTWENTY\% of them.
@@ -187,11 +187,12 @@ untrained base model and against the results reported for other models.
 \section{Results}
 \label{sec:results}
 
-\begin{table}[t]
+\begin{table}[!t]
 \centering
 \caption{Step success rate (\%) on the AndroidControl test set (8{,}444 steps). Rows of other models are the
-values reported in the InfiGUI-R1, GUI-R1 and MobileRL papers (\cref{sec:ac}); prompts, action spaces and
-scorers differ between sources, so the comparison is approximate. Text: the model generates text. Bold: best.}
+values reported in the papers listed in \cref{sec:ac}; prompts, action spaces and scorers differ between
+sources, so the comparison is approximate. Text: the model generates text. $^{\dagger}$500 sampled steps.
+``--'': not reported. Bold: best.}
 \label{tab:ac}
 \small
 \setlength{\tabcolsep}{4.5pt}
@@ -230,16 +231,24 @@ Model & Type & Grounding & SR & ESR & Type & Grounding & SR & ESR \\
 test, $p < 10^{-\PAIREDEXP}$ in both settings). The ``done'' option does not explain this gap: the base model
 answers ``done'' on at most \BASEDONEHIGH{} of the 8{,}444 steps, while its step success is more than 30 points lower.
 
-\Cref{tab:ac} places \ours{} among published models; the values are those reported by InfiGUI-R1
+\Cref{tab:ac} places \ours{} among published models. The values are those reported by InfiGUI-R1
 \citep{infiguir1} (GPT-4o \citep{gpt4o}, OS-Atlas-4B \citep{osatlas}, Aguvis \citep{aguvis}, UI-TARS-2B
-\citep{uitars2025}, InfiGUI-R1-3B), by GUI-R1 under its shared zero-shot prompt \citep{guir1} (Qwen2.5-VL
-\citep{qwen25vl}, UI-R1-3B \citep{uir1}, GUI-R1), and by MobileRL \citep{mobilerl2025} (UI-TARS-7B and 72B,
-UI-Genie \citep{uigenie}, MobileRL). On AndroidControl-High, \ours{} (74.2\%) is above UI-TARS-2B (68.9\%),
-InfiGUI-R1-3B (71.1\%), UI-TARS-7B (72.5\%), MobileRL-7B (71.3\%) and MobileRL-9B (73.9\%); only UI-Genie-7B
-(74.5\%), UI-TARS-72B (74.7\%) and UI-Genie-72B (77.0\%) are higher, by 0.3 to 2.8 points. On AndroidControl-Low, \ours{} (90.5\%) is above UI-TARS-2B (89.3\%), level with
-UI-TARS-7B (90.8\%), and below InfiGUI-R1-3B (92.1\%), MobileRL (91.4\% and 94.3\%) and UI-Genie (94.3\% and
-94.8\%). Every other model in the table generates text, and several generate a reasoning trace before each
-action; \ours{} answers every step in one forward pass.
+\citep{uitars2025}, InfiGUI-R1-3B), by GUI-R1 under its shared zero-shot prompt \citep{guir1} (Qwen2.5-VL-3B and
+7B, UI-R1-3B \citep{uir1}, GUI-R1), by MobileRL \citep{mobilerl2025} (UI-TARS-7B and 72B, UI-Genie \citep{uigenie},
+MobileRL), and by each model's own paper for Qwen2.5-VL-72B \citep{qwen25vl}, MAI-UI \citep{maiui2025}, OS-Atlas-7B
+\citep{osatlas}, AgentCPM-GUI \citep{agentcpmgui2025}, GUI-Owl \citep{mobileagentv3}, UI-Venus-Navi
+\citep{uivenus2025}, GUI-SAGE \citep{guisage2026} and OmegaUse \citep{omegause2026}. Aguvis is scored on 500
+sampled steps rather than the full test split.
+
+On AndroidControl-High, \ours{} (74.2\%) is the best reported 2B model (UI-TARS-2B 68.9\%, MAI-UI-2B 67.3\%) and is
+above several larger generative agents, including AgentCPM-GUI-8B (69.2\%), MAI-UI-8B (69.1\%), OS-Atlas-7B
+(71.2\%), UI-TARS-7B (72.5\%), GUI-Owl-7B (72.8\%) and MobileRL-9B (73.9\%). Four models of 3B to 7B are higher:
+UI-Genie-7B (74.5\%), GUI-SAGE-3B (75.4\%), UI-Venus-Navi-7B (76.1\%) and GUI-SAGE-7B (76.8\%); the best reported value
+is 79.1\% (OmegaUse, a 30B mixture-of-experts model). On AndroidControl-Low, \ours{} (90.5\%) is above UI-TARS-2B
+(89.3\%) and AgentCPM-GUI-8B (90.2\%), level with UI-TARS-7B (90.8\%), and 0.9 to 4.3 points below MobileRL,
+InfiGUI-R1-3B, UI-Venus-Navi, GUI-SAGE and UI-Genie. Every other model in
+the table generates text, and several generate a reasoning trace before each action; \ours{} answers every step in
+one forward pass.
 
 \paragraph{Latency.} One decision is one forward pass of the 1.92B model. Served over HTTP on a shared 24\,GB GPU,
 the same architecture takes 135\,ms per decision at the median and 181\,ms at the 95th percentile (1{,}335
@@ -362,8 +371,9 @@ conformal analysis assumes that calibration and test steps are exchangeable.
 
 \section{Conclusion}
 A 2B decision model that answers typed questions in one forward pass, with no generated tokens, reaches 90.5\% and
-74.2\% step success on AndroidControl-Low and High, up from \BASELOW\% and \BASEHIGH\% for its base model, and on
-High is within three points of generative agents of 7B to 72B parameters. Its action probability ranks its own errors well
+74.2\% step success on AndroidControl-Low and High, up from \BASELOW\% and \BASEHIGH\% for its base model. On High
+it is the best reported 2B model and above several generative agents of 7B to 8B parameters, and 4.9 points below the
+best reported model of any size. Its action probability ranks its own errors well
 enough to act on \OURSCOVTWENTY\% of the steps at an error rate below 20\%. The largest remaining errors are the
 choice of the target element and the decision between acting and waiting on a screen that is still loading.
 
