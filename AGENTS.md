@@ -90,6 +90,51 @@ Topic list (each maps to a file under `notes/`):
   - **Caveat to surface honestly:** calibration ↔ risk-gating tradeoff; multimodal adds calibration not accuracy on this benchmark.
 
 ### Program log (keep this in sync — every background run/result goes here)
+- **2026-11-16 — FINAL MODEL ON ANDROIDCONTROL; THE MOBILE AGENT; LATENCY RE-MEASURED.**
+  The deliverables of this phase are the AndroidControl paper (`papers/latex/dma-2b-androidcontrol/`), the released
+  model, and the agent in `integrations/mobile-use/`. GOAL.md and "Current phase" above still describe the
+  AC-v2 / AndroidWorld programme and were not rewritten.
+  - **Model.** DMA-2B = run exec2, seed 0, step 7,000 (`docs/research/RUNCARD-exec2_s0.md`). Hugging Face weights
+    sha256 `284229c8…f209`, identical to the checkpoint (re-hashed today); provenance in `release/hf-DMA-2B/RELEASE.md`.
+  - **AndroidControl** (AC's own action space, no terminate; `benchmarks/results/2026-11-16-ac-noterm/paper_numbers.json`):
+    - Low: 90.50% (7,642/8,444).
+    - High: 74.21% (6,266/8,444); 473/1,543 = 30.65% of episodes have every step right.
+    - Base d1-2B (terminate allowed): 59.79% / 40.16%.
+    - Paired on High: only ours right 3,167 steps, only base right 292.
+  - **AndroidControl-Curated** (`curated_summary.json`):
+    - Easy: 89.72% (7,516/8,377).
+    - Hard, box: 73.60% (6,208/8,435).
+    - Hard, improved tasks: 77.02% (6,452/8,377).
+    - **The scorer is our re-implementation and is NOT yet differential-tested** against the authors' code.
+      `benchmarks/train/diff_curated_official.py` does it; running it was refused by the tool permission check and
+      waits for the operator.
+  - **Latency** (`benchmarks/results/2026-11-16-latency/`):
+    - Released model, 500 AC-High steps, batch 1, over HTTP: 255 ms median and 305 ms p95 for the forward pass;
+      266 / 315 ms for the whole request.
+    - Same steps on the same RTX 4090 with no other job: 123 ms median, 144 ms p95 (133 / 155 ms for the request).
+    - With another job keeping the GPU at least 50% busy (98% of requests): the 255 / 305 ms above.
+    - The old 135 ms figure (an older checkpoint) is withdrawn from the paper, the card and the presentation.
+  - **Agent harness defects found by running it, each fixed with a test:**
+    1. `contact_add` had no setup, so after its first run the check passed whatever the agent did. Its results
+       in the 2026-11-16 runs 2–4 are invalid.
+    2. The notification shade is invisible to DMA-2B (system UI is filtered out, as in training).
+    3. "Press Back" sent through DMA-2B became a click on Undo.
+    4. Scroll directions were inverted between the LLM's wording and AC's.
+    5. Typing appended to a field when it should replace it, and after the first fix it replaced when it should
+       add a line (`note_append`).
+  - **Agent result** (`integrations/mobile-use/benchmark/dma_scenarios/results/final/`): 20 tasks × 3 repeats on the
+    emulator, each checked over ADB.
+    - Held-out (8 tasks): 24/24, Wilson 95% CI 86.2–100%.
+    - Tuned (12 tasks): 36/36.
+    - Strict (the agent also declared the task done): 60/60.
+    - Per run: 6.7 steps, 41 s, 7.1 LLM calls; DMA-2B 143 ms per decision.
+    - Two earlier partial runs on older code were 12/13 and 17/20. Their failures and fixes are listed in
+      `integrations/mobile-use/docs/dma_agent.md` §4.
+  - **Open:**
+    - training seeds 1–2: no GPU has the memory;
+    - the Curated differential test;
+    - a physical-phone run;
+    - the next training direction (operator's choice).
 - **2026-11-12 (late): AC-HIGH IS A PER-STEP, TEACHER-FORCED NUMBER; PER GOAL IT EQUALS ANDROIDWORLD.**
   Note: `docs/research/2026-11-12-ACHIGH-vs-AW-FINAL.md`. An independent read-only agent re-derived every number below from the files.
   - **What AC-High measures.** v4 on the AndroidControl test set (InfiGUI scorer) gets **61.7% per step (5,213/8,444)**, but only **344/1,543 = 22.3% of episodes have every step right**.
@@ -732,6 +777,7 @@ any new phase.** If a proposed action matches the "how it happened" column, stop
 | M16 | **Answered questions about a training run from memory.** Said the running model "learns whole trajectories"; its data keeps every step of only 0.6% of episodes (4,985 episodes contribute one step). | The facts of a run were scattered across curation scripts, logs and notes; nothing computed them in one place. | **Every training run has a run card generated from its data files before launch** (`benchmarks/train/run_card.py` → `docs/research/RUNCARD-<run>.md`). Questions about a run are answered from its card, not from memory. |
 
 | M17 | **Stopped two training runs on an early-warning rule whose premise was never tested.** The rule compared a ckpt_250 (10% of training, peak LR) against a fully trained v4; final launches 1 and 2 were killed on it. | v3's own checkpoint trend was on disk the whole time: back misuse 34 at ckpt_450 → 18 at the end, false status 49–52 mid-run → 31 at the end. Early checkpoints of a continued fine-tune dip and recover; the rule fired on all three launches. | **Before a stopping rule is pre-registered, check on a past run that the early metric predicts the final one.** Compare like with like (final vs final). Mid-run checkpoints are a trend to watch, not a verdict. |
+| M18 | **A benchmark task without a setup inherited the success of an earlier run.** `contact_add` (mobile-agent suite) created a contact and never removed it, so from its second run on the check passed whatever the agent did. | The setup check (`check_setups.py`) had only ever run on a fresh device, where the contact did not exist yet. | **Every task's setup must make it incomplete starting from the state a previous SUCCESSFUL run leaves behind.** Run the setup check after a full suite, not only on a clean device. |
 
 **The three meta-rules behind all of them:**
 

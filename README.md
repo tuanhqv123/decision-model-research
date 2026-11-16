@@ -25,7 +25,8 @@ AndroidControl's own action space (which has no "done" action); the base model a
   the best reported value is 79.1. The full comparison, with sources, is Table 1 of the paper. Other models' numbers
   come from their papers, with different prompts and scorers, so the comparison is approximate.
 On **AndroidControl-Curated** (arXiv 2510.18488: the same test steps, box-based grounding, rewritten tasks and extra
-valid actions), scored with the authors' rules (`benchmarks/train/score_curated.py`):
+valid actions), scored with the authors' rules as we re-implemented them (`benchmarks/train/score_curated.py`; a
+row-by-row check against the authors' released scoring code has not been run yet):
 
 | Model | Easy | Hard (Box) | Hard |
 |---|---|---|---|
@@ -39,7 +40,33 @@ accessibility element list and its own previous actions.
 
 - Confidence: on AndroidControl-High, a threshold on the action probability chosen on held-out episodes acts on 80%
   of the steps with an error rate of 19% (target 20%).
+- Latency: one decision is one forward pass. On 500 AndroidControl-High steps over HTTP it took 123 ms at the median
+  (144 ms at the 95th percentile) on an otherwise idle RTX 4090, and 255 ms while another job kept the GPU busy.
 - One training seed; the paper lists the limits.
+
+## Using DMA-2B as a phone agent
+
+[`integrations/mobile-use/`](integrations/mobile-use/) is a copy of
+[MobileUse](https://github.com/MadeAgents/mobile-use) (MIT) with **DMAgent**:
+- An LLM plans in ReAct style, with a reflection check before it finishes.
+- DMA-2B chooses each action.
+- Screen reading uses the accessibility tree, with OCR when the tree cannot be read.
+- Pop-ups, errors and the notification shade are handled automatically.
+- Sensitive or low-confidence actions wait for a person.
+- A web dashboard shows the live screen and the timeline, and takes approvals.
+
+Start it with [`docs/dma_quickstart.md`](integrations/mobile-use/docs/dma_quickstart.md). Architecture and results are in
+[`docs/dma_agent.md`](integrations/mobile-use/docs/dma_agent.md).
+
+On an Android 13 emulator, 20 tasks × 3 repeats, each checked on the device over ADB (settings, notes, contacts and
+questions):
+
+| Tasks | Completed | 95% CI |
+|---|---|---|
+| Held-out (8, never used to change the agent) | 24/24 | 86.2–100% |
+| Tuned (12) | 36/36 | 90.4–100% |
+
+A run took 6.7 steps and 41 s on average. The tasks are short, and no physical phone has been tested yet.
 
 ## Reproduce
 
@@ -77,8 +104,10 @@ Result summaries: `benchmarks/results/2026-11-16-ac-noterm/`.
 benchmarks/train/   data builders, trainer, evaluation and scorers (with tests)
 benchmarks/results/ result summaries
 serving/            HTTP API for the model (one decision per request)
+integrations/mobile-use/  MobileUse with DMAgent (LLM planner + DMA-2B), dashboard, scenario suite, tests
 papers/latex/       the paper (LaTeX, figures, tables)
 docs/, notes/       research notes and decision records
+docs/presentations/ a short talk on the model (HTML slides)
 ```
 
 ## License

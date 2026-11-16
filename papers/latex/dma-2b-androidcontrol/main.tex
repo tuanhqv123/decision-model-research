@@ -291,12 +291,12 @@ Magma-R1 & 3B & 88.0 & 69.1 & 75.3 \\
 \end{table}
 
 \paragraph{Latency.} One decision is one forward pass of the 1.92B model and generates no tokens. We served the
-released model over HTTP on one RTX 4090 (24\,GB) that another job kept busy: the GPU was at least 50\% utilised
-in the sample taken just before 98\% of the requests. Over 500 AndroidControl-High test steps sent one at a time (median 55 elements per
-screen), the forward pass took 255\,ms at the median and 305\,ms at the 95th percentile. The whole request, timed by
-the client on the same host, took 266\,ms and 315\,ms. The time barely depends on the length of the element list:
-245\,ms below 50 elements and 266\,ms at 150 or more. We could not obtain an idle GPU, so these are upper bounds for
-this card.
+released model over HTTP on one RTX 4090 (24\,GB) and sent 500 AndroidControl-High test steps one at a time (median 55
+elements per screen). With the GPU otherwise idle, the forward pass took 123\,ms at the median and 144\,ms at the 95th
+percentile, and the whole request, timed by the client on the same host, 133\,ms and 155\,ms. The time barely depends
+on the length of the element list: 119\,ms below 50 elements and 129\,ms at 150 or more. When another job kept the same
+GPU at least 50\% busy (98\% of requests), the forward pass took 255\,ms at the median and 305\,ms at the 95th
+percentile.
 
 %% ==================================================================
 \section{Confidence as a Control Signal}
