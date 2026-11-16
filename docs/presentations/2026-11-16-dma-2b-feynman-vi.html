@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DMA-2B thuyết trình</title>
+<style>
+  :root { --bg:#f7f6f2; --card:#ffffff; --ink:#1f2328; --muted:#5b6470; --accent:#2f5fa8; --accent2:#c0582f;
+          --ok:#2e7d4f; --line:#e3e0d8; --soft:#eef3fb; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink);
+              font-family: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif; }
+  .deck { height:100%; display:flex; align-items:center; justify-content:center; padding:16px; }
+  .slide { display:none; width:min(1100px,100%); min-height:min(640px,92vh); background:var(--card);
+           border:1px solid var(--line); border-radius:18px; padding:44px 56px; box-shadow:0 10px 30px rgba(0,0,0,.06);
+           position:relative; overflow:auto; }
+  .slide.on { display:block; }
+  h1 { font-size:42px; margin:0 0 12px; letter-spacing:-.5px; }
+  h2 { font-size:30px; margin:0 0 18px; color:var(--accent); }
+  h3 { font-size:19px; margin:18px 0 6px; }
+  p, li { font-size:19px; line-height:1.55; }
+  .muted { color:var(--muted); }
+  .kicker { text-transform:uppercase; letter-spacing:2px; font-size:13px; color:var(--accent2); font-weight:700; }
+  .big { font-size:64px; font-weight:800; color:var(--accent); line-height:1; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .box { background:var(--soft); border-radius:12px; padding:16px 18px; }
+  .box.warm { background:#fbefe8; }
+  .box.green { background:#e8f4ec; }
+  .box h3 { margin-top:0; }
+  table { border-collapse:collapse; width:100%; font-size:17px; }
+  th, td { padding:7px 10px; border-bottom:1px solid var(--line); text-align:left; }
+  td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.ours td { background:var(--soft); font-weight:700; }
+  .analogy { border-left:5px solid var(--accent2); padding:8px 16px; background:#fdf8f4; border-radius:6px;
+             font-style:italic; }
+  .nav { position:fixed; bottom:14px; right:20px; font-size:14px; color:var(--muted); }
+  .nav button { border:1px solid var(--line); background:#fff; border-radius:8px; padding:6px 12px; cursor:pointer;
+                font-size:14px; margin-left:6px; }
+  .num { position:absolute; top:18px; right:24px; color:var(--muted); font-size:14px; }
+  svg text { font-family: inherit; }
+  @media (max-width:760px) { .slide { padding:26px 20px; } .grid2, .grid3 { grid-template-columns:1fr; }
+    h1 { font-size:30px; } h2 { font-size:24px; } p, li { font-size:17px; } .big { font-size:46px; } }
+  @media print { .slide { display:block; page-break-after:always; box-shadow:none; } .nav { display:none; } }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<section class="slide on">
+  <div class="kicker">Thuyết trình · 16/11/2026</div>
+  <h1>DMA-2B: một model 2B chọn thao tác trên điện thoại chỉ trong một lần nhìn</h1>
+  <p class="muted">Tại sao chọn cách này, trước và sau khi train, rút ra được gì, còn thiếu gì, và giới hạn ở đâu.</p>
+  <div class="grid3" style="margin-top:34px">
+    <div class="box"><div class="big">90,5</div><p>AC-Low: % bước đúng (base: 59,8)</p></div>
+    <div class="box"><div class="big">74,2</div><p>AC-High: % bước đúng (base: 40,2)</p></div>
+    <div class="box"><div class="big">0</div><p>token sinh ra cho mỗi quyết định</p></div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>1. Vấn đề, nói cho đơn giản</h2>
+  <p>Một "agent điện thoại" nhìn màn hình rồi quyết định bước tiếp theo: bấm vào đâu, cuộn hay gõ chữ.</p>
+  <p>Cách phổ biến hiện nay: một mô hình ngôn ngữ lớn <b>viết ra</b> hành động bằng chữ, thường kèm một đoạn suy nghĩ,
+     rồi phần mềm đọc lại đoạn chữ đó. Cách này có ba cái giá:</p>
+  <ul>
+    <li><b>Chậm:</b> viết từng chữ một, suy nghĩ càng dài càng lâu.</li>
+    <li><b>Dễ hỏng:</b> viết sai định dạng là phần mềm không hiểu.</li>
+    <li><b>Không biết mình không chắc:</b> không có con số nào cho biết nên làm, nên hỏi lại, hay nên dừng.</li>
+  </ul>
+  <p class="analogy">Giống nhân viên nhận order bằng cách viết tay một đoạn văn, trong khi chỉ cần đánh dấu vào phiếu có sẵn
+     các lựa chọn, và ghi thêm "chắc 90%".</p>
+</section>
+
+<section class="slide">
+  <h2>2. Tại sao chọn decision model d1-2B</h2>
+  <div class="grid2">
+    <div>
+      <p><b>Decision model</b> không viết chữ. Nó đọc màn hình một lần rồi trả lời các câu hỏi có sẵn đáp án:
+         hành động nào? phần tử nào? cuộn hướng nào? mở app nào? Mỗi đáp án đi kèm một xác suất.</p>
+      <p>Tại sao chọn <b>d1-2B</b> của Liquid AI:</p>
+      <ul>
+        <li><b>Đúng kiểu:</b> một lượt, không sinh token, có xác suất sẵn.</li>
+        <li><b>Nhỏ:</b> 1,92 tỷ tham số, mỗi quyết định khoảng 135 ms trên một GPU dùng chung.</li>
+        <li><b>Mở:</b> có trọng số để fine-tune.</li>
+        <li><b>Nhìn cả ảnh lẫn danh sách phần tử</b> trên màn hình, nên chọn đúng nút thay vì đoán toạ độ.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Câu hỏi nghiên cứu</h3>
+      <p>Một model <b>không viết chữ</b>, chỉ "đánh dấu lựa chọn", có chọn thao tác điện thoại tốt ngang các model
+         viết chữ to hơn nhiều lần không?</p>
+      <p>Và xác suất nó đưa ra có <b>dùng được</b> để quyết định lúc nào nên tự làm, lúc nào nên hỏi người không?</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>3. Bài kiểm tra: AndroidControl</h2>
+  <p>Google ghi lại người thật làm việc trên app Android. Tập test có 1.543 lượt làm, 8.444 bước. Ở mỗi bước,
+     model xem màn hình cùng những gì người đã làm trước đó, rồi phải đoán đúng thao tác tiếp theo của người.</p>
+  <div class="grid2">
+    <div class="box"><h3>AC-Low: có câu lệnh từng bước</h3>
+      <p>"Bấm vào ô vuông cạnh thư mục Flowers". Kiểm tra khả năng <b>làm theo</b> lệnh.</p></div>
+    <div class="box warm"><h3>AC-High: chỉ có mục tiêu</h3>
+      <p>"Đổi tên thư mục Flowers thành Flora". Kiểm tra khả năng <b>tự nghĩ ra</b> bước tiếp theo. Khó hơn nhiều.</p></div>
+  </div>
+  <p>Một bước chỉ tính là đúng khi đúng cả loại thao tác lẫn mọi chi tiết (đúng nút, đúng hướng, đúng chữ).</p>
+</section>
+
+<section class="slide">
+  <h2>4. Trước và sau khi train</h2>
+  <table>
+    <tr><th></th><th class="n">AC-Low</th><th class="n">AC-High</th><th class="n">Lượt đúng hết mọi bước (High)</th></tr>
+    <tr><td>d1-2B gốc (chưa train)</td><td class="n">59,8</td><td class="n">40,2</td><td class="n">9,4%</td></tr>
+    <tr class="ours"><td>DMA-2B (đã train)</td><td class="n">90,5</td><td class="n">74,2</td><td class="n">30,6%</td></tr>
+  </table>
+  <h3>Đã làm gì</h3>
+  <ul>
+    <li>Dùng <b>toàn bộ</b> tập train của AndroidControl: 13.594 lượt, 88.308 bước, bỏ hết dữ liệu test.</li>
+    <li>Mỗi bước được cho xem ở các dạng khác nhau: có lúc chỉ mục tiêu, có lúc kèm 1–4 câu lệnh.</li>
+    <li>Train một lượt hết dữ liệu (khoảng 16 giờ trên một RTX 4090).</li>
+  </ul>
+  <p class="analogy">Giống một người mới vào nghề được xem 88 nghìn lần người giỏi bấm điện thoại, mỗi lần có hoặc không
+     có lời dặn kèm theo.</p>
+</section>
+
+<section class="slide">
+  <h2>5. So với các model khác (AC-High, % bước đúng)</h2>
+  <svg viewBox="0 0 980 430" width="100%" role="img" aria-label="So sánh AC-High">
+    <g font-size="15">
+      <!-- scale: 0..80 -> 0..560px ; x0=300 -->
+      <g fill="#9aa5b1">
+        <rect x="300" y="10"  width="469.0" height="24"/><text x="290" y="28" text-anchor="end" fill="#1f2328">UI-TARS-2B (2B)</text><text x="775" y="28" fill="#1f2328">68,9</text>
+        <rect x="300" y="42"  width="458.1" height="24"/><text x="290" y="60" text-anchor="end" fill="#1f2328">MAI-UI-2B (2B)</text><text x="764" y="60" fill="#1f2328">67,3</text>
+        <rect x="300" y="74"  width="470.4" height="24"/><text x="290" y="92" text-anchor="end" fill="#1f2328">AgentCPM-GUI (8B)</text><text x="776" y="92" fill="#1f2328">69,2</text>
+        <rect x="300" y="106" width="483.9" height="24"/><text x="290" y="124" text-anchor="end" fill="#1f2328">InfiGUI-R1 (3B)</text><text x="790" y="124" fill="#1f2328">71,1</text>
+        <rect x="300" y="138" width="493.5" height="24"/><text x="290" y="156" text-anchor="end" fill="#1f2328">UI-TARS-7B (7B)</text><text x="799" y="156" fill="#1f2328">72,5</text>
+        <rect x="300" y="170" width="503.4" height="24"/><text x="290" y="188" text-anchor="end" fill="#1f2328">MobileRL-9B (9B)</text><text x="809" y="188" fill="#1f2328">73,9</text>
+      </g>
+      <rect x="300" y="202" width="505.4" height="24" fill="#2f5fa8"/><text x="290" y="220" text-anchor="end" font-weight="700" fill="#2f5fa8">DMA-2B (2B, không viết chữ)</text><text x="811" y="220" font-weight="700" fill="#2f5fa8">74,2</text>
+      <g fill="#c9b8a8">
+        <rect x="300" y="234" width="507.5" height="24"/><text x="290" y="252" text-anchor="end" fill="#1f2328">UI-Genie-7B (7B)</text><text x="813" y="252" fill="#1f2328">74,5</text>
+        <rect x="300" y="266" width="513.6" height="24"/><text x="290" y="284" text-anchor="end" fill="#1f2328">GUI-SAGE-3B (3B)</text><text x="819" y="284" fill="#1f2328">75,4</text>
+        <rect x="300" y="298" width="518.4" height="24"/><text x="290" y="316" text-anchor="end" fill="#1f2328">UI-Venus-Navi-7B (7B)</text><text x="824" y="316" fill="#1f2328">76,1</text>
+        <rect x="300" y="330" width="523.2" height="24"/><text x="290" y="348" text-anchor="end" fill="#1f2328">GUI-SAGE-7B (7B)</text><text x="829" y="348" fill="#1f2328">76,8</text>
+        <rect x="300" y="362" width="538.9" height="24"/><text x="290" y="380" text-anchor="end" fill="#1f2328">OmegaUse (30B)</text><text x="845" y="380" fill="#1f2328">79,1</text>
+      </g>
+      <text x="300" y="418" fill="#5b6470" font-size="13">Số của model khác lấy từ bài báo của họ; cách chấm khác nhau nên chỉ so gần đúng.</text>
+    </g>
+  </svg>
+  <p><b>Đọc biểu đồ:</b> DMA-2B là model 2B tốt nhất từng được báo cáo, và hơn vài model 7–9B có viết chữ.
+     Bốn model 3–7B và các model rất lớn vẫn cao hơn.</p>
+</section>
+
+<section class="slide">
+  <h2>6. Xác suất có dùng được không?</h2>
+  <div class="grid2">
+    <div>
+      <p>Ý tưởng: chỉ để model <b>tự làm</b> khi nó đủ chắc; còn lại thì <b>hỏi người</b>.</p>
+      <p>Chọn ngưỡng trên một nửa số lượt rồi kiểm tra trên nửa còn lại, lặp 200 lần:</p>
+      <ul>
+        <li>Muốn sai không quá 20%: model tự làm <b>80%</b> số bước, sai <b>19%</b>.</li>
+        <li>Muốn sai không quá 15%: tự làm 50%, sai 13,7%.</li>
+        <li>Model gốc chưa train: gần như không tìm được ngưỡng nào đạt mức 20%.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Nhưng cần nói thật</h3>
+      <p>Model hơi <b>tự tin quá</b>: trung bình nói "chắc 88,7%" nhưng chỉ đúng 74,2%. Nên dùng xác suất để
+         <b>xếp hạng</b> độ chắc chắn và chọn ngưỡng trên dữ liệu thật, đừng đọc nó như một xác suất chính xác.</p>
+      <p class="analogy">Giống một tài xế biết đoạn nào mình hay lạc để hỏi đường, dù hơi tự tin quá mức.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>7. Những gì đã thử, và kết quả của từng cái</h2>
+  <table>
+    <tr><th>Đã thử</th><th>Kết quả</th><th>Vì sao</th></tr>
+    <tr><td>Dữ liệu nhỏ, chọn lọc (khoảng 40 nghìn dòng)</td><td>89,3 / 69,7</td><td>Ít dữ liệu đúng định dạng của bài test</td></tr>
+    <tr><td><b>Toàn bộ dữ liệu train (116 nghìn dòng)</b></td><td><b>90,5 / 74,2</b></td><td>Nhiều dữ liệu hơn, đúng dạng hơn</td></tr>
+    <tr><td>Cho model tự báo "xong" khi chấm</td><td>Low chỉ còn 86,8</td><td>Báo xong sớm đúng 1 bước ở 449 bước</td></tr>
+    <tr><td>Nhân 3 trọng số các bước "lặp lệnh"</td><td>Báo xong sai 720 → 449</td><td>Có giúp, nhưng chưa đủ</td></tr>
+    <tr><td>Train lâu hơn</td><td>Không giúp</td><td>Trên dữ liệu chưa thấy, đứng yên từ khoảng 4.000 bước</td></tr>
+    <tr><td>Trộn trọng số hai model</td><td>Không giúp</td><td>Chênh 5/690 bước, chỉ là nhiễu</td></tr>
+  </table>
+  <p class="muted">Mỗi lần thử đều được ghi trước tiêu chí đạt hay không đạt, rồi mới xem kết quả.</p>
+</section>
+
+<section class="slide">
+  <h2>8. Rút ra được gì</h2>
+  <div class="grid2">
+    <div class="box green"><h3>1. Dữ liệu đúng và đủ thắng mọi mẹo</h3>
+      <p>Bước nhảy lớn nhất đến từ việc dùng toàn bộ dữ liệu, không phải từ thủ thuật.</p></div>
+    <div class="box green"><h3>2. Chấm cùng một luật</h3>
+      <p>Cùng một model mà đổi cách chấm "có cho báo xong hay không" là lệch 3,7 điểm. Phải ghi rõ cách chấm.</p></div>
+    <div class="box warm"><h3>3. "Biết lúc dừng" là phần khó nhất</h3>
+      <p>Lỗi chính không phải do bấm sai, mà do nghĩ đã xong trong khi màn hình còn đang tải.</p></div>
+    <div class="box warm"><h3>4. Đúng từng bước chưa phải là xong việc</h3>
+      <p>Đúng 74% số bước nhưng chỉ 30,6% số lượt đúng hết mọi bước; lượt càng dài càng khó.</p></div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>9. Còn cần gì, và tại sao</h2>
+  <table>
+    <tr><th>Cần</th><th>Tại sao</th></tr>
+    <tr><td>Một lần train chỉ cho AC: mỗi bước dùng cả dạng Low lẫn High, bỏ dòng "xong"</td><td>Dữ liệu đúng định dạng là thứ đã giúp nhiều nhất; dữ liệu dạng High sẽ gấp khoảng 3,5 lần</td></tr>
+    <tr><td>Tín hiệu "màn hình đã đứng yên chưa"</td><td>Lỗi lớn nhất là nhầm màn hình đang tải với màn hình đã xong</td></tr>
+    <tr><td>Train nhiều seed</td><td>Mới có 1 seed, nên chưa biết khoảng dao động thật</td></tr>
+    <tr><td>Học tăng cường (RL) sau khi fine-tune</td><td>Bốn model 3–7B cao hơn mình đều dùng RL hoặc tự cải thiện</td></tr>
+  </table>
+</section>
+
+<section class="slide">
+  <h2>10. Giới hạn: nói thẳng</h2>
+  <ul>
+    <li><b>Một seed.</b> Chênh vài điểm so với model khác chưa đủ để xếp hạng.</li>
+    <li><b>Số của model khác lấy từ bài báo của họ:</b> khác prompt, khác bộ hành động, khác cách chấm, nên chỉ so gần đúng.</li>
+    <li><b>Hai cách chấm khác nhau:</b> DMA-2B chấm theo bộ hành động gốc của AC (không có "xong"); model gốc chấm có "xong".</li>
+    <li><b>Học bắt chước với lịch sử đúng:</b> model chưa bao giờ thấy lỗi của chính mình, và AC không đo việc hoàn thành cả nhiệm vụ.</li>
+    <li><b>Cần danh sách phần tử</b> của màn hình; chỉ có ảnh thì không chạy được.</li>
+    <li><b>Chỉ gõ được chữ có sẵn</b> trong mục tiêu hoặc câu lệnh.</li>
+    <li><b>Tự tin quá mức:</b> chắc 88,7% nhưng đúng 74,2%.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>Tóm lại trong một câu</h2>
+  <p style="font-size:26px; line-height:1.5">Một model 2B <b>không viết một chữ nào</b>, chỉ đánh dấu lựa chọn trong một lần
+     nhìn, đạt 90,5% / 74,2% bước đúng trên AndroidControl, ngang các model viết chữ lớn hơn nhiều lần, và
+     <b>biết khi nào mình không chắc</b> đủ để tự làm 80% số bước với tỉ lệ sai 19%.</p>
+  <p class="muted" style="margin-top:30px">Paper: papers/latex/dma-2b-androidcontrol/main.pdf ·
+     Model: huggingface.co/tuanhqv123/DMA-2B</p>
+</section>
+
+</div>
+<div class="nav"><span id="pos"></span><button onclick="go(-1)">◀</button><button onclick="go(1)">▶</button></div>
+<script>
+  const s = [...document.querySelectorAll('.slide')]; let i = 0;
+  s.forEach((el, k) => { const d = document.createElement('div'); d.className = 'num'; d.textContent = (k + 1) + ' / ' + s.length; el.appendChild(d); });
+  function show() { s.forEach((el, k) => el.classList.toggle('on', k === i)); document.getElementById('pos').textContent = (i + 1) + ' / ' + s.length; }
+  function go(d) { i = Math.max(0, Math.min(s.length - 1, i + d)); show(); }
+  document.addEventListener('keydown', e => { if (['ArrowRight', 'PageDown', ' '].includes(e.key)) go(1); if (['ArrowLeft', 'PageUp'].includes(e.key)) go(-1); });
+  show();
+</script>
+</body>
+</html>
