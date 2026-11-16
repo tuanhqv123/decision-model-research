@@ -141,3 +141,28 @@ def test_an_episode_split_across_the_input_is_refused():
     rows = episode(16)[:2] + episode(17) + episode(16)[2:]
     with pytest.raises(ValueError):
         X.build(rows, RULE)
+
+
+def test_dual_mode_shows_every_action_step_once_with_its_own_instruction_and_once_with_the_goal_only():
+    """AndroidControl-only data (2026-11-16 pre-registration): each action step twice, in the two test formats, and no
+    `status` row (AndroidControl has no termination action)."""
+    eps = episode(16) + episode(17)
+    out, stats = X.build(eps, RULE, seed=0, dual=True)
+    acts = [(r["ep"], r["step"]) for r in eps if r["action"]["action_type"] != "status"]
+    assert sorted((r["ep"], r["step"]) for r in out if r["aug"] == "dual_high") == sorted(acts)
+    assert sorted((r["ep"], r["step"]) for r in out if r["aug"] == "dual_low") == sorted(acts)
+    assert all(not r["show_instruction"] for r in out if r["aug"] == "dual_high")
+    low = {(r["ep"], r["step"]): r for r in out if r["aug"] == "dual_low"}
+    src = {(r["ep"], r["step"]): r for r in eps}
+    # the raw AndroidControl instruction, exactly as the AC-Low test shows it (eval_d1.instruction_for)
+    assert all(r["show_instruction"] and r["local_goal"] == src[k]["local_goal"] for k, r in low.items())
+    assert not any(r["action"]["action_type"] == "status" for r in out)
+    assert stats["rows"] == 2 * len(acts) and stats["status rows"] == 0
+    assert ac_common.instruction_included(low[(16, 1)]) and not ac_common.instruction_included(
+        [r for r in out if r["aug"] == "dual_high"][0])
+
+
+def test_dual_mode_rows_without_an_instruction_appear_only_in_the_goal_form():
+    eps = episode(16, instrs=(("Click on the more options icon", True), ("", True)))
+    out, _ = X.build(eps, RULE, seed=0, dual=True)
+    assert [(r["step"], r["aug"]) for r in out] == [(0, "dual_high"), (0, "dual_low"), (1, "dual_high")]

@@ -17,7 +17,7 @@ The contract stays v4 (same questions, same state renderer); a row says whether 
 (`show_instruction`, read by `ac_common.instruction_included`). No BLOCKED label: AndroidControl has no failed local
 goal; the harness reads BLOCKED from low confidence, an unchanged screen, or a step budget per local goal.
 
-    python3 build_exec_data.py CODE_DIR IN_V2.jsonl OUT.jsonl [--seed 0] [--p-goal 0.34] [--open-end]
+    python3 build_exec_data.py CODE_DIR IN_V2.jsonl OUT.jsonl [--seed 0] [--p-goal 0.34] [--open-end] [--dual]
     (evaluation: --p-goal 0 --open-end on the AndroidControl test rows, which have no final screen)
 IN_V2 = rows of build_ac_full_v2.py (complete episodes, the final `status` row included).
 """
@@ -102,7 +102,22 @@ def episode_rows(rows, mode, spans, stats=None):
     return out
 
 
-def iter_build(ac_rows, rule, stats, seed=0, p_goal=P_GOAL, open_end=False):
+def dual_rows(rows):
+    """AndroidControl-only data (pre-registration 2026-11-16): every action step twice, in the two test formats:
+    `dual_high` (goal only, as AndroidControl-High) and `dual_low` (goal + that step's own raw instruction, as
+    AndroidControl-Low shows it). No `status` row: AndroidControl has no termination action. A step without an
+    instruction appears only in the goal form."""
+    out = []
+    for r in rows:
+        if r["action"]["action_type"] == "status":
+            continue
+        out.append(dict(r, show_instruction=False, aug="dual_high"))
+        if _clean(r.get("local_goal")):
+            out.append(dict(r, show_instruction=True, aug="dual_low"))
+    return out
+
+
+def iter_build(ac_rows, rule, stats, seed=0, p_goal=P_GOAL, open_end=False, dual=False):
     """Rows of `ac_rows` (sorted by episode; each episode's rows adjacent), one episode at a time: a 3 GB input never
     has to fit in memory. `open_end`: evaluation files (the AndroidControl test rows end at the last action) are
     accepted without the final `status` row; training files must be complete."""
@@ -120,6 +135,14 @@ def iter_build(ac_rows, rule, stats, seed=0, p_goal=P_GOAL, open_end=False):
             continue
         for r, h in zip(rows, B.entries_v4(rows, rule)):
             r["history_v3"] = h
+        if dual:
+            stats["episodes dual"] += 1
+            for r in dual_rows(rows):
+                stats["rows"] += 1
+                stats["rows " + r["aug"]] += 1
+                stats["status rows"] += r["action"]["action_type"] == "status"
+                yield r
+            continue
         rng = random.Random("%s:%s" % (seed, ep))
         mode = choose_mode(rows, rng, p_goal)
         spans = draw_spans(len(units(rows)), rng) if mode == "span" else []
@@ -132,12 +155,12 @@ def iter_build(ac_rows, rule, stats, seed=0, p_goal=P_GOAL, open_end=False):
             yield r
 
 
-def build(ac_rows, rule, seed=0, p_goal=P_GOAL, open_end=False):
+def build(ac_rows, rule, seed=0, p_goal=P_GOAL, open_end=False, dual=False):
     stats = collections.Counter()
-    return list(iter_build(ac_rows, rule, stats, seed, p_goal, open_end)), stats
+    return list(iter_build(ac_rows, rule, stats, seed, p_goal, open_end, dual)), stats
 
 
-def main(code_dir, src, dst, seed=0, p_goal=P_GOAL, open_end=False):
+def main(code_dir, src, dst, seed=0, p_goal=P_GOAL, open_end=False, dual=False):
     global A
     sys.path.insert(0, code_dir)
     import ac_common as _A
@@ -145,7 +168,7 @@ def main(code_dir, src, dst, seed=0, p_goal=P_GOAL, open_end=False):
     stats = collections.Counter()
     with open(dst + ".tmp", "w") as fo:
         for r in iter_build((json.loads(l) for l in open(src)), A.CONTRACTS["v4"]["element_rule"], stats, seed, p_goal,
-                            open_end):
+                            open_end, dual):
             fo.write(json.dumps(r, separators=(",", ":")) + "\n")
     os.replace(dst + ".tmp", dst)
     print(json.dumps(dict(sorted(stats.items())), indent=1))
@@ -159,6 +182,7 @@ if __name__ == "__main__":
             i = args.index(flag)
             opts[flag] = args[i + 1]
             del args[i:i + 2]
-    open_end = "--open-end" in args
-    args = [a for a in args if a != "--open-end"]
-    main(*args[:3], seed=int(opts.get("--seed", 0)), p_goal=float(opts.get("--p-goal", P_GOAL)), open_end=open_end)
+    open_end, dual = "--open-end" in args, "--dual" in args
+    args = [a for a in args if a not in ("--open-end", "--dual")]
+    main(*args[:3], seed=int(opts.get("--seed", 0)), p_goal=float(opts.get("--p-goal", P_GOAL)), open_end=open_end,
+         dual=dual)
