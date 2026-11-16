@@ -36,3 +36,22 @@
 - Task 2: if the authors' code disagrees with ours, the Curated numbers in the paper change. Report the result either way.
 - Task 5: held-out success may come in lower than 12/12. Report it as measured.
 - Task 10 uses about 24 GPU-hours. If no two GPUs are free, the seeds run one after the other.
+
+## Status (2026-11-16, end of day)
+
+| # | Status |
+|---|---|
+| 1 | Done: 123 ms median on an idle RTX 4090, 255 ms on a shared one (paper, card, presentation, README) |
+| 2 | Blocked: running the authors' scorer was refused by the tool permission check. `benchmarks/train/diff_curated_official.py` is ready for the operator to run |
+| 3 | Done (tests) |
+| 4 | Done: dnd_on 26 → 6 steps, note_create finishes by itself; typing, keyboard and shade fixes |
+| 5 | Done: 20 tasks × 3, held-out 24/24 (95% CI 86.2–100%), tuned 36/36 |
+| 6 | Done in code and on the emulator; a physical phone needs the operator |
+| 7 | Done: about 2 frames/s, click-to-tap, Back/Home |
+| 8 | Done for every client step from a fresh GitHub download; the API step was checked by equivalence (same code and files), not by a fresh start |
+| 9 | Done: agent docs, presentation and 26 research notes in English (numbers checked digit by digit) |
+| 10 | Running: seeds 1 and 2 on the training host (`run_seeds_exec2.sh`), each followed by AC-Low/High evaluation (`ev_seed.sh`) |
+| 11 | Done |
+| 12 | Done: emulator stopped, API, relay and tunnels stopped, LLM key files deleted |
+
+Also found and fixed on the way: private names in five previously published documents; the scanner's false positives.

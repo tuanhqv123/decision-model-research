@@ -131,7 +131,7 @@ Topic list (each maps to a file under `notes/`):
     - Two earlier partial runs on older code were 12/13 and 17/20. Their failures and fixes are listed in
       `integrations/mobile-use/docs/dma_agent.md` §4.
   - **Open:**
-    - training seeds 1–2: no GPU has the memory;
+    - training seeds 1–2: running since 2026-11-16 on the training host (`run_seeds_exec2.sh`, then `ev_seed.sh`);
     - the Curated differential test;
     - a physical-phone run;
     - the next training direction (operator's choice).
