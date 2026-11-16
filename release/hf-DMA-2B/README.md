@@ -100,6 +100,24 @@ are higher. On AC-Low it is level with UI-TARS-7B.
 | AC-Low, base / DMA-2B | 80.0 / 96.8 | 76.9 / 91.2 | 59.8 / 90.5 | 18.8 / 63.8 |
 | AC-High, base / DMA-2B | 63.6 / 87.0 | 63.1 / 80.4 | 40.2 / 74.2 | 9.4 / 30.6 |
 
+### AndroidControl-Curated
+
+[AndroidControl-Curated](https://arxiv.org/abs/2510.18488) re-scores the same test steps with box-based grounding and
+corrects the high-level split (527 rewritten tasks, 573 steps with alternative valid actions, 86 fixed labels). Scored
+with the authors' rules; DMA-2B was re-run only on the 527 rewritten tasks.
+
+| Model | Easy SR | Hard (Box) SR | Hard SR |
+|---|---|---|---|
+| GUI-R1-7B *(reported)* | 72.7 | 53.2 | 57.5 |
+| InfiGUI-R1-3B *(reported)* | 87.2 | 67.6 | 70.7 |
+| Qwen3-VL-30B *(reported)* | 70.5 | – | 70.0 |
+| Qwen3-VL-235B *(reported)* | 74.5 | 71.7 | 76.5 |
+| Magma-R1 *(reported)* | 88.0 | 69.1 | 75.3 |
+| **DMA-2B** | **89.7** | **73.6** | **77.0** |
+
+The reported models read the screenshot and a written history of the previous step instructions; DMA-2B also reads the
+accessibility element list and its own previous actions.
+
 ### Confidence (AC-High, c = p(chosen action))
 
 | | d1-2B (base) | DMA-2B |

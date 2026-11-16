@@ -1,0 +1,36 @@
+{
+ "easy_box_low": {
+  "rows": 8377,
+  "missing": 0,
+  "type": 7933,
+  "grounding_n": 5016,
+  "grounding": 4449,
+  "sr": 7516,
+  "type_pct": 94.7,
+  "sr_pct": 89.72,
+  "grounding_pct": 88.7
+ },
+ "hard_box_high": {
+  "rows": 8435,
+  "missing": 0,
+  "type": 7122,
+  "grounding_n": 5074,
+  "grounding": 3708,
+  "sr": 6208,
+  "type_pct": 84.43,
+  "sr_pct": 73.6,
+  "grounding_pct": 73.08
+ },
+ "hard_improved_high": {
+  "rows": 8377,
+  "missing": 0,
+  "type": 7319,
+  "grounding_n": 5016,
+  "grounding": 3792,
+  "sr": 6452,
+  "type_pct": 87.37,
+  "sr_pct": 77.02,
+  "grounding_pct": 75.6
+ },
+ "note": "AndroidControl-Curated (arXiv 2510.18488), scored with benchmarks/train/score_curated.py; Hard re-runs only the 527 rewritten tasks (eval-ours_currev_high_noterm)"
+}

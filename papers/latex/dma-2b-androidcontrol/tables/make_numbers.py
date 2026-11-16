@@ -46,6 +46,10 @@ def macros():
                 m[pre + "RISK" + name] = pct(x["risk_mean"])
                 m[pre + "VIOL" + name] = f"{100 * x['violation_rate']:.0f}"
             m[pre + name + "SPLITS"] = str(x["seeds"] - x["no_threshold"])
+    CUR = json.load(open(os.path.join(ROOT, "benchmarks/results/2026-11-16-ac-noterm/curated_summary.json")))
+    for name, f in (("CURLOW", "easy_box_low"), ("CURBOX", "hard_box_high"), ("CURHARD", "hard_improved_high")):
+        c = CUR[f]
+        m[name] = f"{c['sr_pct']:.1f}"
     pmax = max(P["low"]["p_two_sided"], P["high"]["p_two_sided"])
     m["PAIREDEXP"] = "100" if pmax == 0 else str(min(100, int(math.floor(-math.log10(pmax)))))
     return m

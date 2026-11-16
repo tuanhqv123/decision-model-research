@@ -24,6 +24,19 @@ AndroidControl's own action space (which has no "done" action); the base model a
   73.9). Four 3B–7B models are higher (UI-Genie-7B 74.5, GUI-SAGE-3B 75.4, UI-Venus-Navi-7B 76.1, GUI-SAGE-7B 76.8);
   the best reported value is 79.1. The full comparison, with sources, is Table 1 of the paper. Other models' numbers
   come from their papers, with different prompts and scorers, so the comparison is approximate.
+On **AndroidControl-Curated** (arXiv 2510.18488: the same test steps, box-based grounding, rewritten tasks and extra
+valid actions), scored with the authors' rules (`benchmarks/train/score_curated.py`):
+
+| Model | Easy | Hard (Box) | Hard |
+|---|---|---|---|
+| InfiGUI-R1-3B *(reported)* | 87.2 | 67.6 | 70.7 |
+| Qwen3-VL-235B *(reported)* | 74.5 | 71.7 | 76.5 |
+| Magma-R1 *(reported)* | 88.0 | 69.1 | 75.3 |
+| **DMA-2B** | **89.7** | **73.6** | **77.0** |
+
+The reported models read the screenshot and a written history of step instructions; DMA-2B also reads the
+accessibility element list and its own previous actions.
+
 - Confidence: on AndroidControl-High, a threshold on the action probability chosen on held-out episodes acts on 80%
   of the steps with an error rate of 19% (target 20%).
 - One training seed; the paper lists the limits.

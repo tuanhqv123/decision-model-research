@@ -54,7 +54,9 @@ We fine-tune the 2B decision model \base{} on the full AndroidControl training s
 success rate of 90.5\% on AndroidControl-Low and 74.2\% on AndroidControl-High, against
 \BASELOW\% and \BASEHIGH\% for the untrained base model. On AndroidControl-High this is the highest step success
 reported for a 2B model and above several generative agents of 7B to 8B parameters, without generating a single
-output token. The probability of the selected action ranks the model's own errors (AUROC \OURSAUROC{} on
+output token. On AndroidControl-Curated, a re-labelled version of the same test set, it reaches \CURLOW\% (Easy) and
+\CURHARD\% (Hard), above every model the benchmark's authors report. The probability of the selected action ranks
+the model's own errors (AUROC \OURSAUROC{} on
 AndroidControl-High), and a threshold chosen on held-out episodes keeps the error rate of the accepted steps
 below 20\% while acting on \OURSCOVTWENTY\% of them.
 \end{abstract}
@@ -249,6 +251,43 @@ is 79.1\% (OmegaUse, a 30B mixture-of-experts model). On AndroidControl-Low, \ou
 InfiGUI-R1-3B, UI-Venus-Navi, GUI-SAGE and UI-Genie. Every other model in
 the table generates text, and several generate a reasoning trace before each action; \ours{} answers every step in
 one forward pass.
+
+\subsection{AndroidControl-Curated}
+\label{sec:curated}
+AndroidControl-Curated \citep{accurated2025} re-scores the same test steps with box-based grounding (the centre of the
+prediction must fall inside the target element) and corrects the high-level split: 527 tasks are rewritten, 573 steps
+accept alternative valid actions and 86 labels are fixed. Its Easy split corresponds to AndroidControl-Low and its Hard
+split to AndroidControl-High; Curated-Box is the Hard split with the box metric but the original labels. We match every
+Curated row to its AndroidControl test step through the episode and step in its image path, reuse the predictions of
+\cref{sec:ac}, re-run \ours{} only on the 527 rewritten tasks, and score with the authors' rules, which we
+re-implemented (the released code states no license). \Cref{tab:curated} lists the step success rates; the other rows
+are reported by \citet{accurated2025}. \ours{} has the highest value in all
+three columns. The inputs differ: the reported models read the screenshot and a written history of the previous step
+instructions, while \ours{} also reads the accessibility element list and its own previous actions with their effects.
+
+\begin{table}[!t]
+\centering
+\caption{Step success rate (\%) on AndroidControl-Curated. Other rows as reported by the benchmark's authors.
+``--'': not reported.}
+\label{tab:curated}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}l r r r r@{}}
+\toprule
+Model & Size & Easy & Hard (Box) & Hard \\
+\midrule
+UI-R1-3B & 3B & 58.9 & -- & 43.6 \\
+GUI-R1-3B & 3B & 67.1 & 49.4 & 54.4 \\
+GUI-R1-7B & 7B & 72.7 & 53.2 & 57.5 \\
+InfiGUI-R1-3B & 3B & 87.2 & 67.6 & 70.7 \\
+Qwen3-VL-30B & 30B & 70.5 & -- & 70.0 \\
+Qwen3-VL-235B & 235B & 74.5 & 71.7 & 76.5 \\
+Magma-R1 & 3B & 88.0 & 69.1 & 75.3 \\
+\midrule
+\rowcolor{oursbg}\textbf{\ours{}} & 2B & \textbf{\CURLOW} & \textbf{\CURBOX} & \textbf{\CURHARD} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \paragraph{Latency.} One decision is one forward pass of the 1.92B model. Served over HTTP on a shared 24\,GB GPU,
 the same architecture takes 135\,ms per decision at the median and 181\,ms at the 95th percentile (1{,}335
