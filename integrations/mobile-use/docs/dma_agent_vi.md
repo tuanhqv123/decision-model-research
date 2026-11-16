@@ -62,6 +62,8 @@ Thao tác nhạy cảm luôn cần duyệt, bất kể xác suất: xoá, gửi,
 
 ## 4. Chạy
 
+Hướng dẫn đầy đủ từng bước: [`dma_quickstart_vi.md`](dma_quickstart_vi.md).
+
 ```bash
 # DMA-2B API trên máy có GPU: serving/d1_api.py (repo DMA-2B), kèm danh sách app đã cài (D1_APPS)
 python -m mobile_use.dma_dashboard --dma-url http://<dma-api>:8700 --llm-url-file llm_url.txt \

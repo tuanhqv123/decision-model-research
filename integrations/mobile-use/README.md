@@ -2,7 +2,8 @@
 > DMA-2B decision model, with UIAutomator / uiautomator2 / OCR screen reading, self-correction for pop-ups and errors,
 > safety gates with human-in-the-loop, a web dashboard (`python -m mobile_use.dma_dashboard`) and a 12-task scenario
 > suite checked over ADB (`benchmark/dma_scenarios/`, 12/12 on the last run). Documentation (Vietnamese):
-> [`docs/dma_agent_vi.md`](docs/dma_agent_vi.md). Tests: `tests/test_dma_agent.py`.
+> [`docs/dma_agent_vi.md`](docs/dma_agent_vi.md); how to start it: [`docs/dma_quickstart_vi.md`](docs/dma_quickstart_vi.md).
+> Tests: `tests/test_dma_agent.py`.
 
 # MobileUse: Open-Source GUI Agent for Android Automation📱
 
