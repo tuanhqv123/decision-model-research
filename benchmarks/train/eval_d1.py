@@ -90,7 +90,7 @@ def load_rows(path, shots, data, val=False, limit=0, val_set="validation"):
 
 @torch.no_grad()
 def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=DEFAULT_CONTRACT, element_rule=None,
-             app_vocab=None, exclude_actions=(), drop_actions=(), with_instruction=False):
+             app_vocab=None, exclude_actions=(), drop_actions=(), with_instruction=False, status_threshold=None):
     """Serve every row through model.system_one_batch and score it. Returns (records, summary).
 
     Element contract (v2): every row must carry `elements` (the R2 validation file); the state and questions are
@@ -104,7 +104,9 @@ def run_eval(model, rows, track, memory, batch=8, save_readouts=False, contract=
         element_rule = element_rule or CONTRACTS[contract]["element_rule"]
         return _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image,
                                   app_vocab or [], exclude_actions=exclude_actions, drop_actions=drop_actions,
-                                  with_instruction=with_instruction)
+                                  with_instruction=with_instruction, status_threshold=status_threshold)
+    if status_threshold is not None:
+        raise ValueError("--status-threshold is implemented for element contracts only")
     out, t_start = [], time.time()
     for b0 in range(0, len(rows), batch):
         chunk = rows[b0:b0 + batch]
@@ -212,8 +214,20 @@ def instruction_for(rec, with_instruction):
     return rec.get("local_goal") if with_instruction else None
 
 
+def pick_action(probs, choice, exclude_actions=(), status_threshold=None):
+    """The action taken from one pass: an excluded option is never taken (a benchmark without that action), and
+    `status` ("terminate") is kept only when its probability reaches `status_threshold` (the executor's "local goal
+    done" rule, 2026-11-14); otherwise the best remaining option of the same pass. Returns (option, its probability)."""
+    banned = set(exclude_actions)
+    if status_threshold is not None and probs.get("terminate", 0.0) < status_threshold:
+        banned.add("terminate")
+    if choice in banned:
+        choice = max((k for k in probs if k not in banned), key=lambda k: probs[k])
+    return choice, float(probs[choice])
+
+
 def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule, load_image, app_vocab=(),
-                       exclude_actions=(), drop_actions=(), with_instruction=False):
+                       exclude_actions=(), drop_actions=(), with_instruction=False, status_threshold=None):
     """`model=None`: oracle — the gold answers go down the same decoding path (the ceiling of the interface)."""
     app_choice = bool(CONTRACTS[contract].get("app_choice"))
     out, t_start = [], time.time()
@@ -250,10 +264,10 @@ def _run_eval_elements(model, rows, batch, save_readouts, contract, element_rule
             ans = rs["answers"]
             probs = ans["action"]["probabilities"]
             choice = ans["action"]["choice"]
-            conf = float(ans["action"].get("confidence") or max(probs.values()))
-            if choice in exclude_actions:  # a benchmark without that action: best remaining option of the same pass
-                choice = max((k for k in probs if k not in exclude_actions), key=lambda k: probs[k])
-                conf = float(probs[choice])
+            if choice in exclude_actions or (status_threshold is not None and choice == "terminate"):
+                choice, conf = pick_action(probs, choice, exclude_actions, status_threshold)
+            else:
+                conf = float(ans["action"].get("confidence") or max(probs.values()))
             at = FROM_OPTION[choice]
             value = decode_app_choice(ans.get("app_name"), apps) if (app_choice and at == "open_app") else _value(at, ans)
             el_id, e = chosen_element(ans, kept)
@@ -321,6 +335,9 @@ def main():
                     help="show each row's step instruction (AndroidControl-Low); contract v3i checkpoints only")
     ap.add_argument("--instruction-per-row", action="store_true",
                     help="show the step instruction where the row says so (`show_instruction`, build_exec_data rows)")
+    ap.add_argument("--status-threshold", type=float, default=None,
+                    help="report status only when p(status) >= this value, else the best other option of the same "
+                         "pass (executor rule; choose the value on validation, never on test)")
     ap.add_argument("--oracle", action="store_true",
                     help="no model: the gold answers down the same decoding path (ceiling of the interface)")
     a = ap.parse_args()
@@ -350,8 +367,10 @@ def main():
         raise SystemExit(f"contract {contract!r} chooses the app from a list; {vocab_path} is missing")
     out, summ = run_eval(model, rows, a.track, memory, a.batch, a.save_readouts, contract=contract,
                          element_rule=rule, app_vocab=app_vocab, exclude_actions=tuple(a.exclude_actions),
-                         drop_actions=tuple(a.drop_actions), with_instruction="row" if a.instruction_per_row else a.instruction)
+                         drop_actions=tuple(a.drop_actions), with_instruction="row" if a.instruction_per_row else a.instruction,
+                         status_threshold=a.status_threshold)
     summ["tag"] = a.tag
+    summ["status_threshold"] = a.status_threshold
     summ["contract"] = contract
     os.makedirs(a.out, exist_ok=True)
     path = f"{a.out}/eval-{a.tag}-{a.track}{'-val' if a.val else ''}.jsonl"

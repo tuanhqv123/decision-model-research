@@ -5,7 +5,7 @@ Stdlib only (json, csv, os, math, statistics, random, argparse). No numpy, no to
 Runs in well under 3 minutes on an M-series Mac.
 
   python3 benchmarks/train/audit_labels.py \
-      --data backup-2026-10-29/GPU_HOST_C/acwork/acdata \
+      --data backup-2026-10-29/gpu_host_c/acwork/acdata \
       --out  docs/research/a4-audit
 
 Emits:

@@ -1,0 +1,24 @@
+{
+ "track": "VA",
+ "n": 827,
+ "step_acc": 0.7267,
+ "type_acc": 0.8186,
+ "grounding": 0.8426,
+ "per_type": {
+  "click": "350/420",
+  "long_press": "1/1",
+  "navigate_back": "29/29",
+  "open_app": "45/45",
+  "scroll": "83/86",
+  "status": "0/137",
+  "type_text": "45/53",
+  "wait": "48/56"
+ },
+ "ece_action": 0.1325,
+ "always_status": 0.1657,
+ "eval_sec": 277,
+ "contract": "v4",
+ "element_rule": "all_reading_noime",
+ "tag": "S2_vallow_nt",
+ "status_threshold": null
+}

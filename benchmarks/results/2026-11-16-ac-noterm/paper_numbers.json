@@ -1,0 +1,184 @@
+{
+ "scoring": {
+  "ours": "AndroidControl action space (terminate excluded)",
+  "base": "recorded base evaluation, terminate allowed"
+ },
+ "standard": {
+  "ours_low": {
+   "steps": 8444,
+   "type": 96.85,
+   "grounding": 91.23,
+   "grounding_n": 4926,
+   "sr": 90.5,
+   "correct": 7642,
+   "episode_sr": 63.84,
+   "episodes_all_right": 985,
+   "episodes": 1543,
+   "predicted_terminate": 0
+  },
+  "ours_high": {
+   "steps": 8444,
+   "type": 87.01,
+   "grounding": 80.38,
+   "grounding_n": 4623,
+   "sr": 74.21,
+   "correct": 6266,
+   "episode_sr": 30.65,
+   "episodes_all_right": 473,
+   "episodes": 1543,
+   "predicted_terminate": 0
+  },
+  "base_low": {
+   "steps": 8444,
+   "type": 79.97,
+   "grounding": 76.9,
+   "grounding_n": 4290,
+   "sr": 59.79,
+   "correct": 5049,
+   "episode_sr": 18.79,
+   "episodes_all_right": 290,
+   "episodes": 1543,
+   "predicted_terminate": 231
+  },
+  "base_high": {
+   "steps": 8444,
+   "type": 63.61,
+   "grounding": 63.07,
+   "grounding_n": 3523,
+   "sr": 40.16,
+   "correct": 3391,
+   "episode_sr": 9.4,
+   "episodes_all_right": 145,
+   "episodes": 1543,
+   "predicted_terminate": 340
+  }
+ },
+ "paired_ours_vs_base": {
+  "low": {
+   "only_first": 2706,
+   "only_second": 113,
+   "p_two_sided": 0.0
+  },
+  "high": {
+   "only_first": 3167,
+   "only_second": 292,
+   "p_two_sided": 0.0
+  }
+ },
+ "confidence_ac_high": {
+  "base": {
+   "p_act": {
+    "n": 8444,
+    "accuracy": 0.4015869256276646,
+    "auroc": 0.7210224524785139,
+    "ece": 0.2258560365940313,
+    "mean_conf": 0.6274429622216946,
+    "aurc": 0.4197252063333716,
+    "risk_at_cov": {
+     "0.25": 0.3188062529606821,
+     "0.5": 0.4422074846044529,
+     "0.75": 0.5318174640770568,
+     "1.0": 0.5984130743723354
+    }
+   },
+   "product": {
+    "n": 8444,
+    "accuracy": 0.4015869256276646,
+    "auroc": 0.670719392429046,
+    "ece": 0.11446901827036451,
+    "mean_conf": 0.47118199729512183,
+    "aurc": 0.4395290497443593,
+    "risk_at_cov": {
+     "0.25": 0.3533870203694931,
+     "0.5": 0.4917100900047371,
+     "0.75": 0.5536080846360334,
+     "1.0": 0.5984130743723354
+    }
+   },
+   "type_p_act": {
+    "auroc": 0.6683587413647056,
+    "ece": 0.058899975011842555
+   },
+   "conformal_episode_split_p_act": {
+    "0.1": {
+     "seeds": 200,
+     "no_threshold": 200,
+     "coverage_mean": null,
+     "risk_mean": null,
+     "violation_rate": null
+    },
+    "0.15": {
+     "seeds": 200,
+     "no_threshold": 198,
+     "coverage_mean": 0.010506358524086639,
+     "risk_mean": 0.21334681496461072,
+     "violation_rate": 1.0
+    },
+    "0.2": {
+     "seeds": 200,
+     "no_threshold": 187,
+     "coverage_mean": 0.025069184859540697,
+     "risk_mean": 0.19519007066230268,
+     "violation_rate": 0.3076923076923077
+    }
+   }
+  },
+  "ours": {
+   "p_act": {
+    "n": 8444,
+    "accuracy": 0.742065371861677,
+    "auroc": 0.7307211628222567,
+    "ece": 0.14546604583123618,
+    "mean_conf": 0.8872770615945769,
+    "aurc": 0.13451503649765606,
+    "risk_at_cov": {
+     "0.25": 0.09426811937470392,
+     "0.5": 0.13571766935101848,
+     "0.75": 0.1752723827569872,
+     "1.0": 0.257934628138323
+    }
+   },
+   "product": {
+    "n": 8444,
+    "accuracy": 0.742065371861677,
+    "auroc": 0.7488598517455552,
+    "ece": 0.068182346926079,
+    "mean_conf": 0.7623251805772443,
+    "aurc": 0.12696108655523003,
+    "risk_at_cov": {
+     "0.25": 0.0720037896731407,
+     "0.5": 0.1148744670772146,
+     "0.75": 0.1774830254223907,
+     "1.0": 0.257934628138323
+    }
+   },
+   "type_p_act": {
+    "auroc": 0.8182590603398977,
+    "ece": 0.019029160179137514
+   },
+   "conformal_episode_split_p_act": {
+    "0.1": {
+     "seeds": 200,
+     "no_threshold": 6,
+     "coverage_mean": 0.10012468956933304,
+     "risk_mean": 0.03829902631593327,
+     "violation_rate": 0.05154639175257732
+    },
+    "0.15": {
+     "seeds": 200,
+     "no_threshold": 0,
+     "coverage_mean": 0.49655551984934204,
+     "risk_mean": 0.13688057072319482,
+     "violation_rate": 0.14
+    },
+    "0.2": {
+     "seeds": 200,
+     "no_threshold": 0,
+     "coverage_mean": 0.8046653168399049,
+     "risk_mean": 0.18965355203855153,
+     "violation_rate": 0.19
+    }
+   }
+  }
+ }
+}

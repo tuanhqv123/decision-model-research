@@ -4,7 +4,7 @@
    row with the same checkpoint (action, click point). Batch effects in bf16 can move a probability in the 3rd decimal;
    the action and the point must agree.
 2. LATENCY: single-request wall time p50/p95 (model-only and end to end), sequential requests.
-Needs an SSH tunnel:  ssh -N -f -L 8700:127.0.0.1:8700 GPU_HOST_B
+Needs an SSH tunnel:  ssh -N -f -L 8700:127.0.0.1:8700 <gpu-host>
 Usage: python test_client.py <eval_jsonl> [N=12] [--latency 30]
 """
 import base64
