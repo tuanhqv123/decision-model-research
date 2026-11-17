@@ -84,14 +84,28 @@ button { cursor: pointer; }
 .user { display: flex; justify-content: flex-end; margin: 0 0 16px; }
 .user div { max-width: 78%; background: var(--raised); border-radius: 16px; padding: 10px 14px; font-size: 15px; line-height: 22px; white-space: pre-wrap; }
 
-/* agent trajectory: a label column and a content column, one left edge for every row */
+/* the agent's turn: the process in a dim block that folds, then the response in full ink */
+.trace { margin: 0 0 4px; }
+.trace-head { border: 0; background: none; padding: 4px 8px; margin-left: -8px; border-radius: 6px; color: var(--muted);
+  font-size: 13px; display: inline-flex; align-items: center; gap: 8px; }
+.trace-head:hover { background: var(--raised); color: var(--text); }
+.trace-head svg { transition: transform .15s; transform: rotate(-90deg); }
+.trace.open .trace-head svg { transform: none; }
+.trace-body { margin: 4px 0 0; padding: 4px 0 4px 14px; border-left: 2px solid var(--rule); font-size: 13px; line-height: 19px; color: var(--muted); }
+.trace-body .row { grid-template-columns: 74px minmax(0, 1fr) auto; padding: 4px 0; }
+.trace-body .goal { color: var(--text); font-weight: 500; }
+.trace-body .thought { border-left: 0; padding-left: 0; margin-left: 0; font-size: 13px; }
+.trace-body .step { margin-top: 6px; }
+.sub2 { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .trace-head svg { transition: none; } }
+/* trajectory rows: a label column and a content column, one left edge for every row */
 .row { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; gap: 12px; padding: 6px 0; align-items: baseline; }
 .row .k { color: var(--muted); font-size: 12px; }
 .row .t { color: var(--muted); font-size: 12px; }
 .row.dma .k { color: var(--accent); font-weight: 500; }
 .row.bad .k { color: var(--negative); font-weight: 500; }
 .row.warn .k { color: var(--warning); font-weight: 500; }
-.thought { color: var(--muted); border-left: 2px solid var(--border); padding-left: 12px; white-space: pre-wrap;
+.thought { color: var(--muted); border-left: 2px solid var(--border); padding-left: 12px; margin-left: -14px; white-space: pre-wrap;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .thought.open { display: block; }
 .more { border: 0; background: none; padding: 0; color: var(--accent); font-size: 12px; margin-top: 2px; }
@@ -106,23 +120,31 @@ button { cursor: pointer; }
 .track i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--accent); }
 .track i.low { background: #a86f0c; }
 .track b { position: absolute; top: -3px; width: 1px; height: 10px; background: var(--text); }
-.ask { margin: 8px 0 8px 100px; border: 1px solid var(--border); border-radius: var(--radius-card); padding: 16px; }
+.ask { margin: 12px 0 8px; border: 1px solid var(--border); border-radius: var(--radius-card); padding: 16px; }
 .ask h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
 .ask p { margin: 0 0 12px; color: var(--muted); }
 .ask .actions { display: flex; gap: 8px; align-items: center; }
 .ask input { flex: 1; min-width: 0; height: 32px; border: 1px solid var(--control); border-radius: var(--radius-control); padding: 0 10px; }
-.result { margin: 12px 0 24px 100px; padding-top: 12px; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; color: var(--muted); }
+.result { margin: 4px 0 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; color: var(--muted); font-size: 12px; }
 .result b { color: var(--text); font-weight: 500; }
-.answer { margin: 8px 0 0 100px; font-size: 15px; line-height: 22px; }
+.answer { margin: 12px 0 0; font-size: 15px; line-height: 24px; }
+.answer p { margin: 0 0 10px; }
+.answer ol, .answer ul { margin: 0 0 10px; padding-left: 22px; }
+.answer li { margin: 0 0 8px; padding-left: 2px; }
+.answer strong { font-weight: 600; }
+.answer li ul { margin: 6px 0 0; padding-left: 18px; color: var(--text); }
+.answer li ul li { margin: 0 0 4px; }
+.answer code { font-family: var(--mono); font-size: 13px; background: var(--raised); padding: 1px 4px; border-radius: 4px; }
+.more { margin-left: 0; }
 
 /* empty state */
 .intro { padding: 8px 0 0; }
-.intro h2 { font-size: 22px; line-height: 28px; font-weight: 600; margin: 0 0 8px; }
+.intro h2 { font-size: 22px; line-height: 28px; font-weight: 600; margin: 0 0 12px; }
 .intro p { color: var(--muted); margin: 0 0 20px; max-width: 620px; }
 .intro .grp { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-.tries { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-.tries button { border: 0; background: none; padding: 6px 8px; margin-left: -8px; border-radius: 8px; text-align: left; }
-.tries button:hover { background: var(--raised); }
+.tries { display: flex; flex-wrap: wrap; gap: 8px; }
+.tries button { border: 1px solid var(--border); background: var(--surface); padding: 7px 14px; border-radius: 999px; text-align: left; color: var(--text); }
+.tries button:hover { background: var(--raised); border-color: var(--control); }
 
 /* composer: a bordered box at the foot of the chat */
 #composer { padding: 8px 24px 20px; }
@@ -168,7 +190,57 @@ button { cursor: pointer; }
   .row .t { display: none; }
   .ask, .result, .answer { margin-left: 0; }
 }
-@media (prefers-reduced-motion: reduce) { #log { scroll-behavior: auto; } }
+/* modern chat pass: centred column, plain response, steps as a quiet timeline */
+.col { max-width: 760px; }
+.box, .note { max-width: 760px; }
+.user { margin: 8px 0 20px; }
+.user div { border-radius: 20px; padding: 10px 16px; font-size: 15px; line-height: 24px; max-width: 80%; }
+.trace-head { font-size: 13px; }
+.trace-body { border-left: 0; padding: 6px 0 2px; margin: 0; font-size: 13px; line-height: 20px; color: var(--muted); }
+.st { position: relative; display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 12px; padding: 0 0 14px; }
+.st:not(:last-child)::before { content: ""; position: absolute; left: 7.5px; top: 22px; bottom: 2px; width: 1px; background: var(--border); }
+.st .ic { margin-top: 2px; color: var(--faint); }
+.st.ok .ic { color: var(--positive); } .st.warn .ic { color: var(--warning); } .st.bad .ic { color: var(--negative); }
+.st-t { color: var(--text); font-size: 14px; line-height: 20px; }
+.st.warn .st-t, .st.bad .st-t { color: var(--muted); }
+.st .t { font-size: 12px; color: var(--muted); line-height: 20px; }
+.st-th { margin-top: 2px; cursor: pointer; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; }
+.st-th:hover { color: var(--text); }
+.st-th.open { display: block; }
+.it { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; margin-top: 6px; color: var(--text); }
+.who { font-size: 12px; font-weight: 500; color: var(--accent); }
+.who.you { color: var(--muted); }
+.answer { margin: 8px 0 0; font-size: 16px; line-height: 26px; }
+.answer p { margin: 0 0 12px; }
+.result { margin: 2px 0 28px; gap: 4px 12px; }
+.result .icon-btn { margin-left: -6px; }
+@media (max-width: 900px) { .result .icon-btn { margin-left: 0; } }
+.icon-btn { width: 28px; height: 28px; border: 0; border-radius: 6px; background: none; color: var(--muted); display: inline-grid; place-items: center; }
+.icon-btn:hover { background: var(--raised); color: var(--text); }
+.icon-btn.done { color: var(--positive); }
+.box { border-radius: 24px; padding: 12px 12px 12px 18px; }
+.box textarea { font-size: 16px; line-height: 24px; }
+.intro { padding: 12vh 0 0; }
+.intro h2 { font-size: 24px; line-height: 30px; margin: 0 0 16px; }
+.ask { border-radius: 12px; }
+.dot.pulse { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+/* DESIGN.md pass (Ollama: pill controls, one black primary, hairlines, no shadow; Claude: 16/1.55 body,
+   radius hierarchy 8 controls-in-lists / 12 content / pills for actions and inputs; Cursor: actions as a timeline) */
+.btn { border-radius: 999px; padding: 0 14px; border-color: var(--border); }
+.btn:hover { border-color: var(--control); }
+#newTask { border-radius: 999px; }
+.box { border-radius: 28px; border-color: var(--border); }
+.box:focus-within { border-color: var(--control); }
+.ask { border-radius: 12px; border-color: var(--border); }
+.ask input { border-radius: 999px; padding: 0 14px; border-color: var(--border); }
+.answer { line-height: 1.6; }
+.answer li { margin: 0 0 10px; }
+.user div { border-radius: 22px; }
+#runs button { border-radius: 8px; }
+.pill { height: 20px; }
+#screen { border-radius: 14px; }
+@media (prefers-reduced-motion: reduce) { #log { scroll-behavior: auto; } .dot.pulse { animation: none; } }
 </style>
 </head>
 <body>
@@ -204,7 +276,6 @@ button { cursor: pointer; }
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 12V2M2.5 6.5 7 2l4.5 4.5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
         </button>
       </div>
-      <div class="note" id="composerNote"></div>
     </form>
   </section>
 
@@ -236,7 +307,38 @@ const EXAMPLES = ["Turn off Wi-Fi", "Turn on airplane mode",
 const OUTCOME = o => !o ? ["Running", ""] : o === "finished" ? ["Finished", "ok"] : o === "answered" ? ["Answered", "ok"]
   : o.startsWith("stopped") ? ["Stopped", "warn"] : o.startsWith("error") ? ["Error", "bad"] : [o, ""];
 
-let S = null, view = "live", viewRun = null, open = new Set(), lastKey = "", lastLen = -1;
+let S = null, view = "live", viewRun = null, open = new Set(), lastKey = "", lastLen = -1, traceOpen = null;
+
+/* ---------- markdown for the agent's answer: bold, italics, code, lists, paragraphs ---------- */
+function inline(t) {
+  return t.replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+          .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
+}
+function md(text) {
+  let t = String(text || "").trim();
+  if (!t.includes("\n")) {            // a list written on one line: "... 1. **A** ... 2. **B** ..."
+    for (let n = 1; n < 30; n++) {
+      const at = t.indexOf(" " + n + ". ", n === 1 ? 0 : t.indexOf("\n" + (n - 1) + ". "));
+      if (at < 0 || (n === 1 && t.indexOf(" 2. ", at) < 0)) break;
+      t = t.slice(0, at) + "\n" + t.slice(at + 1);
+    }
+  }
+  // blocks: paragraphs, bullet lists, and numbered items that keep the lines after them (a subtitle, a bullet)
+  const out = []; let ol = null, ul = null;
+  const close = () => { if (ul) { (ol ? ol.items[ol.items.length - 1] : out).push(ul); ul = null; } };
+  for (const raw of esc(t).split(/\n+/)) {
+    const line = raw.trim(); if (!line) continue;
+    const num = line.match(/^(\d+)\.\s+(.*)$/), bul = line.match(/^[-*•]\s+(.*)$/);
+    if (num) { close(); if (!ol) { ol = {start: +num[1], items: []}; out.push(ol); } ol.items.push([inline(num[2])]); }
+    else if (bul) { if (!ul) ul = {ul: []}; ul.ul.push(inline(bul[1])); }
+    else { close(); if (ol && ol.items.length && !/[.!?:]$/.test(line) || (ol && /^\(/.test(line))) ol.items[ol.items.length - 1].push(`<span class="sub2">${inline(line)}</span>`);
+           else { ol = null; out.push("<p>" + inline(line) + "</p>"); } }
+  }
+  close();
+  const part = x => typeof x === "string" ? x : x.ul ? `<ul>${x.ul.map(i => "<li>" + i + "</li>").join("")}</ul>` : "";
+  return out.map(x => typeof x === "string" ? x : x.ul ? part(x)
+    : `<ol start="${x.start}">${x.items.map(it => "<li>" + it.map((y, k) => k === 0 ? y : (typeof y === "string" ? "<br>" + y : part(y))).join("") + "</li>").join("")}</ol>`).join("");
+}
 
 /* ---------- rendering the trajectory ---------- */
 function confBar(p, thr) {
@@ -265,58 +367,98 @@ function askPanel(p) {
     <div class="actions"><button class="btn primary" onclick="answer(true)">Allow</button><button class="btn" onclick="answer(false)">Don't allow</button>
     <input id="reply" placeholder="Note for the planner (optional)" aria-label="Note for the planner"></div></div>`;
 }
-function render(events, summary, pending, info) {
-  const thr = info && info.confidence;
-  let h = "";
+function finalText(events, summary) {
+  if (summary.answer) return md(summary.answer);
+  const o = summary.outcome || "";
+  if (o === "finished") {
+    const r = [...events].reverse().find(e => e.type === "reflection" && e.complete);
+    return r && r.thought ? `<p>${esc(r.thought)}</p>` : "<p>Done.</p>";
+  }
+  const why = [...events].reverse().find(e => e.type === "stop" || e.type === "error");
+  if (o.startsWith("stopped")) return `<p>Stopped${why && why.reason ? ": " + esc(why.reason) : ""}.</p>`;
+  return `<p>${esc(o)}</p>`;
+}
+const ICON = {
+  goal: '<circle cx="8" cy="8" r="5.75"/><circle cx="8" cy="8" r="1.75" fill="currentColor" stroke="none"/>',
+  move: '<path d="M8 2.75v10.5M4.25 9.5 8 13.25l3.75-3.75"/>',
+  back: '<path d="M9.75 3.75 5.5 8l4.25 4.25"/>',
+  home: '<path d="M2.75 7.25 8 3l5.25 4.25V13H2.75z"/>',
+  check: '<circle cx="8" cy="8" r="5.75"/><path d="m5.5 8.1 1.75 1.75L10.75 6.4"/>',
+  warn: '<path d="M8 2.75 13.5 12.5h-11z"/><path d="M8 6.5v2.75"/><circle cx="8" cy="11" r=".6" fill="currentColor"/>',
+  ask: '<path d="M2.75 3.75h10.5v7H7l-3 2.5v-2.5H2.75z"/>',
+  stop: '<circle cx="8" cy="8" r="5.75"/><path d="m6 6 4 4m0-4-4 4"/>',
+};
+const ico = k => `<svg class="ic" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>`;
+function steps(events, thr, summary) {
+  const G = []; let cur = null, thought = null;
+  const add = g => { G.push(Object.assign({items: []}, g)); cur = G[G.length - 1]; return cur; };
+  const item = html => (cur || add({ic: "goal", title: ""})).items.push(html);
   events.forEach((e, i) => {
     switch (e.type) {
-      case "start": h += `<div class="user"><div>${esc(e.task)}</div></div>`; break;
-      case "plan": {
-        h += `<div class="step"></div>` + thoughtRow(e.thought, "p" + i);
-        if (e.next === "local_goal") h += row("Local goal", `<span class="goal">${esc(e.instruction)}</span>`, e.t);
-        else if (e.next === "scroll") h += row("Planner", `Scroll ${esc(e.direction)}`, e.t);
-        else if (e.next === "back" || e.next === "home") h += row("Planner", e.next === "back" ? "Press Back" : "Go home", e.t);
-        else if (e.next === "finish") h += row("Planner", "The task looks done; checking the screen", e.t);
-        else if (e.next === "answer") h += row("Planner", "Answer: " + esc(e.text), e.t);
-        else if (e.next === "ask_user") h += row("Planner", "Ask you: " + esc(e.question), e.t);
-        break; }
+      case "plan":
+        thought = e.thought ? {txt: e.thought, id: "p" + i} : null;
+        if (e.next === "local_goal") { add({ic: "goal", title: esc(e.instruction), thought, t: e.t}); thought = null; }
+        else if (e.next === "ask_user") { add({ic: "ask", title: "Asked you: " + esc(e.question), thought, t: e.t}); thought = null; }
+        break;
       case "action": {
-        const planner = e.probability == null;
         const name = e.action.replace(" (planner)", "");
-        const body = `<span class="act"><span>${esc(planner ? (HARNESS[name] || name) : name)}</span>${confBar(e.probability, thr)}
-          <span class="sub">${e.changed ? "screen changed" : "no change"}</span></span>`;
-        h += row(planner ? "Harness" : "DMA-2B", body, e.t, planner ? "" : "dma"); break; }
-      case "goal_done": h += row("Done", `<span class="sub">Local goal done after ${e.actions.length} action${e.actions.length === 1 ? "" : "s"}</span>`, e.t); break;
-      case "blocked": h += row("Blocked", esc(e.reason) + (e.local_goal ? ` <span class="sub">· ${esc(e.local_goal)}</span>` : ""), e.t, "bad"); break;
-      case "recovery": h += row("Recovery", esc(e.reason), e.t, "warn"); break;
-      case "unreadable_screen": h += row("Waiting", "The screen could not be read", e.t, "warn"); break;
-      case "approval_answer": h += row("You", e.approved ? "Allowed" : "Did not allow", e.t); break;
-      case "question": h += row("You", e.answer ? esc(e.answer) : '<span class="sub">No answer</span>', e.t); break;
+        if (e.probability == null) {
+          const k = name === "navigate_back" ? "back" : name === "navigate_home" ? "home" : "move";
+          add({ic: k, title: esc(HARNESS[name] || name) + (e.changed ? "" : ' <span class="sub">· nothing moved</span>'), thought, t: e.t}); thought = null;
+        } else item(`<div class="it"><span class="who">DMA-2B</span><span>${esc(name)}</span>${confBar(e.probability, thr)}${e.changed ? "" : '<span class="sub">no change</span>'}</div>`);
+        break; }
+      case "approval_answer": item(`<div class="it"><span class="who you">You</span><span>${e.approved ? "allowed it" : "did not allow it"}</span></div>`); break;
+      case "question": item(`<div class="it"><span class="who you">You</span><span>${e.answer ? esc(e.answer) : '<span class="sub">no answer</span>'}</span></div>`); break;
+      case "blocked": add({ic: "warn", title: "Blocked: " + esc(e.reason), t: e.t, cls: "warn"}); break;
+      case "recovery": add({ic: "warn", title: esc(e.reason), t: e.t, cls: "warn"}); break;
+      case "unreadable_screen": add({ic: "warn", title: "The screen could not be read; waiting", t: e.t, cls: "warn"}); break;
       case "reflection":
-        h += row("Check", e.complete ? "The screen shows the task is complete" : "Not complete yet" + (e.missing ? ": " + esc(e.missing) : ""), e.t, e.complete ? "" : "warn");
-        h += thoughtRow(e.thought, "r" + i, ""); break;
-      case "error": h += row("Error", esc(e.error), e.t, "bad"); break;
-      case "stop": h += row("Stopped", esc(e.reason), e.t, "warn"); break;
+        add({ic: e.complete ? "check" : "warn", title: e.complete ? "Checked the screen: done" : "Not done yet" + (e.missing ? ": " + esc(e.missing) : ""),
+             thought: (!e.complete || !summary) && e.thought ? {txt: e.thought, id: "r" + i} : null, t: e.t, cls: e.complete ? "ok" : "warn"}); break;
+      case "error": add({ic: "stop", title: esc(e.error), t: e.t, cls: "bad"}); break;
+      case "stop": add({ic: "stop", title: "Stopped: " + esc(e.reason), t: e.t, cls: "warn"}); break;
     }
   });
-  if (pending && view === "live") h += askPanel(pending);
+  return G.map(g => {
+    const th = g.thought ? `<div class="st-th ${open.has(g.thought.id) ? "open" : ""}" role="button" tabindex="0" title="Show the whole thought"
+      onclick="flip('${g.thought.id}')" onkeydown="if(event.key==='Enter')flip('${g.thought.id}')">${esc(g.thought.txt)}</div>` : "";
+    return `<div class="st ${g.cls || ""}">${ico(g.ic)}<div class="st-b"><div class="st-t">${g.title}</div>${th}${g.items.join("")}</div><span class="t num">${secs(g.t)}</span></div>`;
+  }).join("");
+}
+function render(events, summary, pending, info) {
+  const thr = info && info.confidence;
+  const start = events.find(e => e.type === "start");
+  let out = start ? `<div class="user"><div>${esc(start.task)}</div></div>` : "";
+  const last = events.length ? events[events.length - 1].t : 0;
+  const isOpen = traceOpen == null ? !summary : traceOpen;
+  const head = summary ? `Worked for ${dur(summary.seconds)}` : `Working · ${secs(last)}`;
+  const body = steps(events, thr, summary) || '<div class="st">' + ico("goal") + '<div class="st-b"><div class="st-t sub">Reading the screen</div></div><span></span></div>';
+  out += `<div class="trace ${isOpen ? "open" : ""}">
+    <button class="trace-head" onclick="flipTrace()" aria-expanded="${isOpen}">${summary ? "" : '<span class="dot run pulse"></span>'}<span>${head}</span>
+      <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg></button>
+    ${isOpen ? `<div class="trace-body">${body}</div>` : ""}</div>`;
+  if (pending && view === "live") out += askPanel(pending);
   if (summary) {
-    if (summary.answer) h += `<div class="answer">${esc(summary.answer)}</div>`;
     const [label, cls] = OUTCOME(summary.outcome);
-    h += `<div class="result num"><span class="pill ${cls}">${label}</span>
-      <span><b>${summary.steps}</b> steps</span><span>in <b>${dur(summary.seconds)}</b></span>
-      <span><b>${summary.llm_calls}</b> planner calls</span>
-      ${summary.model_ms_avg != null ? `<span>DMA-2B <b>${(summary.model_ms_avg / 1000).toFixed(summary.model_ms_avg < 1000 ? 2 : 1)} s</b> per decision</span>` : ""}
-      ${summary.approval_requests ? `<span><b>${summary.approval_requests}</b> asked you</span>` : ""}
-      ${summary.errors ? `<span><b>${summary.errors}</b> errors</span>` : ""}</div>`;
+    out += `<div class="answer" id="answer">${finalText(events, summary)}</div>
+      <div class="result num">
+        <button class="icon-btn" onclick="copyAnswer(this)" aria-label="Copy the response" title="Copy">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="5.25" y="5.25" width="8" height="8" rx="1.5"/><path d="M10.75 5.25V3.5a.75.75 0 0 0-.75-.75H3.5a.75.75 0 0 0-.75.75V10c0 .41.34.75.75.75h1.75"/></svg></button>
+        <span class="pill ${cls}">${label}</span><span>${summary.steps} steps</span><span>${dur(summary.seconds)}</span>
+        <span>${summary.llm_calls} planner calls</span>
+        ${summary.model_ms_avg != null ? `<span>${(summary.model_ms_avg / 1000).toFixed(summary.model_ms_avg < 1000 ? 2 : 1)} s per DMA-2B decision</span>` : ""}
+        ${summary.approval_requests ? `<span>asked you ${summary.approval_requests}×</span>` : ""}</div>`;
   }
-  return h;
+  return out;
+}
+async function copyAnswer(b) {
+  const t = $("answer") ? $("answer").innerText : "";
+  try { await navigator.clipboard.writeText(t); b.title = "Copied"; b.classList.add("done"); setTimeout(() => { b.title = "Copy"; b.classList.remove("done"); }, 1500); } catch (e) {}
 }
 function thrOf() { return S && S.info && S.info.confidence != null ? S.info.confidence : "the threshold"; }
 function intro(info) {
   return `<div class="intro"><h2>What should the phone do?</h2>
-    <p>The planner${info && info.llm_model ? " (" + esc(info.llm_model.split("/").pop()) + ")" : ""} splits your task into steps, and DMA-2B chooses each tap on the screen beside it. You are asked before anything sensitive, and whenever DMA-2B is less sure than ${info && info.confidence != null ? info.confidence : "its threshold"}.</p>
-    <div class="grp">Try one</div><div class="tries">${EXAMPLES.map(x => `<button type="button" onclick="useExample(this)">${esc(x)}</button>`).join("")}</div></div>`;
+    <div class="tries">${EXAMPLES.map(x => `<button type="button" onclick="useExample(this)">${esc(x)}</button>`).join("")}</div></div>`;
 }
 
 /* ---------- screen state ---------- */
@@ -328,7 +470,7 @@ function paint() {
   const events = live ? S.events : (run ? run.events : []);
   const summary = live ? (S.running ? null : S.summary) : (run ? run.summary : null);
   const hasTask = events.some(e => e.type === "start");
-  const key = JSON.stringify([view, events.length, events.length && events[events.length - 1].t, summary && summary.id, S.pending && S.pending.id, [...open]]);
+  const key = JSON.stringify([traceOpen, view, events.length, events.length && events[events.length - 1].t, summary && summary.id, S.pending && S.pending.id, [...open]]);
   if (key !== lastKey) {
     const log = $("log"), atEnd = log.scrollHeight - log.scrollTop - log.clientHeight < 80;
     const first = lastLen === -1, grew = events.length !== lastLen; lastLen = events.length;
@@ -343,8 +485,7 @@ function paint() {
   document.title = task ? task + " · DMAgent" : "DMAgent";
   const [label, cls] = live && S.running ? ["Running", ""] : summary ? OUTCOME(summary.outcome) : ["", ""];
   $("status").innerHTML = label ? `<span class="pill ${cls}">${S.pending && live ? "Waiting for you" : label}</span>` : "";
-  const nSteps = events.filter(e => e.type === "action").length;
-  $("figures").innerHTML = hasTask ? `<b>${nSteps}</b> actions in <b>${dur(events.length ? events[events.length - 1].t : 0)}</b>` : "";
+  $("figures").innerHTML = live && S.running ? `<span class="num">${dur(events.length ? events[events.length - 1].t : 0)}</span>` : "";
   // composer
   const busy = S.running;
   $("sendBtn").innerHTML = busy ? '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="1.5" fill="currentColor"/></svg>'
@@ -352,13 +493,13 @@ function paint() {
   $("sendBtn").setAttribute("aria-label", busy ? "Stop the task" : "Start task");
   $("task").disabled = busy;
   $("task").placeholder = busy ? "The agent is working on the phone" : "Give the phone a task";
-  $("composerNote").textContent = busy ? "Stop ends the run after the current action." : "";
+  $("sendBtn").title = busy ? "Stop after the current action" : "Start";
   // phone
   const obs = [...S.events].reverse().find(e => e.type === "observe");
   $("where").innerHTML = obs ? `<span class="id">${esc(obs.package || "")}</span> · ${obs.elements} elements` : esc(S.info && S.info.serial || "");
   $("screen").classList.toggle("tappable", !busy);
   $("kBack").disabled = $("kHome").disabled = busy;
-  $("hint").textContent = busy ? "The agent is in control" : "Click the screen to tap it";
+  $("hint").textContent = ""; $("screen").title = busy ? "" : "Click to tap the phone here";
   // sidebar
   const runs = S.runs.slice().reverse();
   $("runs").innerHTML = (busy ? `<li><button aria-current="${live}" onclick="showLive()"><span class="dot run"></span><span class="name">${esc(task || "Running")}</span><span class="dur">now</span></button></li>` : "")
@@ -384,7 +525,7 @@ async function send(ev) {
   if (S && S.running) { await post("/api/stop"); return; }
   const t = $("task").value.trim(); if (!t) { $("task").focus(); return; }
   const r = await (await post("/api/start", {task: t})).json();
-  if (r.ok) { $("task").value = ""; grow(); view = "live"; viewRun = null; open.clear(); lastKey = ""; lastLen = -1; }
+  if (r.ok) { $("task").value = ""; grow(); view = "live"; viewRun = null; open.clear(); lastKey = ""; lastLen = -1; traceOpen = null; }
   setTimeout(async () => { S = await (await fetch("/api/state")).json(); paint(); }, 300);
 }
 async function answer(ok) {
@@ -398,11 +539,13 @@ async function tap(ev) {
 }
 async function key(k) { if (S && !S.running) await post("/api/key", {key: k}); }
 async function showRun(id) {
-  viewRun = await (await fetch("/api/runs/" + id)).json(); view = "run"; open.clear(); lastKey = ""; lastLen = -1; paint(); toggleSide(false);
+  viewRun = await (await fetch("/api/runs/" + id)).json(); view = "run"; open.clear(); lastKey = ""; lastLen = -1; traceOpen = null; paint(); toggleSide(false);
 }
-function showLive() { view = "live"; viewRun = null; lastKey = ""; lastLen = -1; paint(); toggleSide(false); }
-function newTask() { view = S && S.running ? "live" : "new"; viewRun = null; lastKey = ""; lastLen = -1; paint(); toggleSide(false); $("task").focus(); }
+function showLive() { view = "live"; viewRun = null; lastKey = ""; lastLen = -1; traceOpen = null; paint(); toggleSide(false); }
+function newTask() { view = S && S.running ? "live" : "new"; viewRun = null; lastKey = ""; lastLen = -1; traceOpen = null; paint(); toggleSide(false); $("task").focus(); }
 function useExample(b) { $("task").value = b.textContent; grow(); $("task").focus(); }
+function flipTrace() { const cur = traceOpen == null ? !(curSummary()) : traceOpen; traceOpen = !cur; lastKey = ""; paint(); }
+function curSummary() { return view === "live" ? (S.running ? null : S.summary) : (viewRun ? viewRun.summary : null); }
 function flip(id) { open.has(id) ? open.delete(id) : open.add(id); lastKey = ""; paint(); }
 function toggleSide(on) { $("side").classList.toggle("open", on); }
 function togglePhone(on) { $("phone").classList.toggle("open", on); }
