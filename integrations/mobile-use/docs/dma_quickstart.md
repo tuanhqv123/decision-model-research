@@ -4,12 +4,15 @@ When it runs, a browser page shows a chat on the left and the phone on the right
 - **the chat**: you type a task at the bottom (e.g. "Turn off Wi-Fi", or "Create a new note in Markor named groceries
   with the text: bread and butter") and press Enter. The agent's work appears under it as it happens: each planner
   thought and local goal, each DMA-2B action with its probability drawn against the ask threshold, pop-up recoveries
-  and the reflection check before it finishes, then a result line (outcome, steps, time, planner calls);
+  and the reflection check before it finishes, then a result line (outcome, steps, time, planner calls). Click a
+  DMA-2B action to open its decision card: the screen DMA-2B read with the chosen element boxed and its confidence,
+  the question it was given (the local goal), its answer (the element, the text to type, the scroll direction or the
+  app) and the probability of each action against the ask threshold;
 - **questions inline**: when the agent needs a person (a sensitive action, an action DMA-2B is unsure of, or a
   question), the chat shows Allow / Don't allow, or a box for your answer, with an optional note for the planner;
 - **the phone**, streamed live (about 2 frames per second), with the agent's last tap circled;
 - **earlier tasks** in the left column (click one to read its whole run again), and the setup at its foot: the device,
-  where DMA-2B runs (GPU or CPU), the planner model and the ask threshold.
+  where DMA-2B runs (GPU or CPU), the planner model and the ask threshold. Click it to open **Settings**.
 
 While no task runs, clicking the screen taps the phone at that point, and the **Back** and **Home** buttons press
 those keys. During a task, manual control is off.
@@ -96,23 +99,40 @@ echo "<api-key>" > llm_key.txt
 Any OpenAI-compatible chat-completions endpoint works. Set the model name with `--llm-model`; the default is
 `Qwen/Qwen3.5-27B`.
 
-## Step 6: start the dashboard
+## Step 6: start the dashboard and set the endpoints
 
 ```bash
-export DMA_API_TOKEN=tok      # the API's D1_API_TOKEN ("tok" if unset)
-python -m mobile_use.dma_dashboard \
-  --dma-url http://<gpu-machine>:8700 --llm-url-file llm_url.txt --llm-key-file llm_key.txt \
-  --apps-json app_list.json --serial emulator-5554 --port 7870
+python -m mobile_use.dma_dashboard --apps-json app_list.json --port 7870
 ```
 
-Open **http://localhost:7870**, type a task, and press **Start**.
+Open **http://localhost:7870**. The first time, **Settings** opens by itself. Fill in the three endpoints and press
+**Test**, which reaches each one, then **Save**:
 
-Options:
-- `--confidence 0.79` is the probability below which the person is asked. `0` turns these questions off; sensitive
-  actions are always gated.
-- `--max-steps 40` is the step budget per task.
-- `--ocr` labels elements that have no label from the OCR text on them. OCR is always used when the screen cannot be
-  read at all.
+| Group | Field | Example |
+|---|---|---|
+| Phone | ADB device | `emulator-5554`, or `host:5555` for an emulator on another machine (connected with `adb connect`) |
+| DMA-2B | API URL, token | `http://<gpu-machine>:8700`, the API's `D1_API_TOKEN` (`tok` if unset) |
+| Planner | chat URL, API key, model | `https://<llm-endpoint>/v1/chat/completions`, its key, `Qwen/Qwen3.5-27B` |
+| Agent | ask below, step budget | `0.79` (`0` turns these questions off; sensitive actions are always asked), `40` |
+
+The settings are saved to `~/.dmagent.json` (change it with `--settings`). The file is readable by its owner only,
+because it holds the keys; the page never receives a key back. They are loaded at the next start. Settings cannot
+change while a task runs.
+
+The endpoints can also be given at start, which suits a container. Values saved from the page take precedence.
+
+```bash
+DEVICE=emulator-5554 DMA_URL=http://<gpu-machine>:8700 DMA_API_TOKEN=tok \
+LLM_URL=https://<llm-endpoint>/v1/chat/completions LLM_KEY=<key> LLM_MODEL=Qwen/Qwen3.5-27B \
+python -m mobile_use.dma_dashboard --apps-json app_list.json --port 7870
+```
+
+The older flags (`--dma-url`, `--llm-url-file`, `--llm-key-file`, `--llm-model`, `--serial`) still work. `--ocr`
+labels elements that have no label from the OCR text on them. OCR is always used when the screen cannot be read at
+all.
+
+The app list (step 2) belongs to the phone. If you point the dashboard at another phone, build its list again. The
+DMA-2B API must use the same list (its `D1_APPS` file).
 
 ## Without the dashboard
 

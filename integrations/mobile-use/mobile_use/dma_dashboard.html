@@ -170,6 +170,7 @@ button { cursor: pointer; }
 .keys { display: flex; align-items: center; gap: 8px; }
 .keys .hint { margin-left: auto; color: var(--muted); font-size: 12px; }
 #closePhone { display: none; }
+.nophone { margin: 24px auto 0; max-width: 240px; text-align: center; color: var(--muted); font-size: 13px; }
 
 /* ---------- tablet and phone ---------- */
 @media (max-width: 1100px) { :root { --phone-pane: 340px; } }
@@ -241,6 +242,58 @@ button { cursor: pointer; }
 .pill { height: 20px; }
 #screen { border-radius: 14px; }
 @media (prefers-reduced-motion: reduce) { #log { scroll-behavior: auto; } .dot.pulse { animation: none; } }
+/* a DMA-2B decision as a typed answer (after the d1.2 answer cards): the screen it read with the chosen element
+   boxed, the question it was given, its answer, and every action option with its probability */
+.it.dec { cursor: pointer; border-radius: 6px; margin-left: -6px; padding: 2px 6px; width: fit-content; max-width: 100%; }
+.it.dec:hover { background: var(--raised); }
+.it.dec .chev { color: var(--faint); transition: transform .15s; transform: rotate(-90deg); }
+.it.dec[aria-expanded="true"] .chev { transform: none; }
+.dcard { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 16px; margin: 8px 0 4px; padding: 12px; max-width: 540px;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); }
+.shot { position: relative; width: 132px; height: 176px; overflow: hidden; border-radius: 8px; background: #000; }
+.shot img { position: absolute; left: 0; display: block; }
+.shot .bx { position: absolute; border: 1.5px solid var(--accent); border-radius: 3px; box-shadow: 0 0 0 1px rgba(255,255,255,.7); }
+.shot .bx em { position: absolute; left: -1.5px; bottom: 100%; margin-bottom: 2px; font: 500 10px/14px var(--font); font-style: normal;
+  color: #fff; background: var(--accent); padding: 0 4px; border-radius: 3px; white-space: nowrap; }
+.qa { min-width: 0; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 6px 12px; align-content: start; font-size: 13px; line-height: 19px; }
+.qa .qk { color: var(--muted); font-size: 12px; }
+.qa .qv { color: var(--accent); font-weight: 500; }
+.qa mark { background: rgba(27,108,128,.08); color: inherit; border: 1px solid rgba(27,108,128,.45); border-radius: 4px; padding: 0 4px; }
+.opts { grid-column: 1 / -1; display: grid; grid-template-columns: 64px minmax(0, 1fr) 40px; gap: 4px 12px; align-items: center; margin-top: 4px; }
+.opts span { font-size: 12px; color: var(--muted); }
+.opts span.on { color: var(--text); font-weight: 500; }
+.opts .bar { position: relative; height: 4px; border-radius: 2px; background: var(--active); }
+.opts .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--control); }
+.opts .bar i.on { background: var(--accent); }
+.opts .bar i.low { background: #a86f0c; }
+.opts .bar b { position: absolute; top: -3px; width: 1px; height: 10px; background: var(--text); }
+.opts .v { text-align: right; }
+.ask .dcard { margin: 0 0 12px; }
+@media (max-width: 520px) { .dcard { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .it.dec .chev { transition: none; } }
+/* settings: the three endpoints (phone, DMA-2B, planner), set and tested from the page */
+.setup { border: 0; background: none; width: 100%; text-align: left; border-radius: 8px; cursor: pointer; padding: 10px 8px 8px; }
+.setup:hover { background: var(--active); }
+.setup .edit { margin-top: 6px; color: var(--accent); font-weight: 500; }
+#settings { width: min(540px, calc(100vw - 32px)); max-height: calc(100vh - 32px); border: 1px solid var(--border); border-radius: 16px;
+  padding: 0; color: var(--text); background: var(--surface); }
+#settings::backdrop { background: rgba(19, 20, 22, .28); }
+#settings form { padding: 20px 24px 20px; display: grid; gap: 18px; }
+#settings h2 { margin: 0; font-size: 18px; font-weight: 600; }
+#settings .lead { margin: -12px 0 0; color: var(--muted); font-size: 13px; }
+#settings fieldset { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px 12px; align-items: center; }
+#settings legend { padding: 0; margin-bottom: 8px; font-weight: 600; font-size: 14px; display: flex; gap: 8px; align-items: baseline; }
+#settings legend .ok { color: var(--positive); font-weight: 500; font-size: 12px; }
+#settings legend .bad { color: var(--negative); font-weight: 500; font-size: 12px; }
+#settings label { color: var(--muted); font-size: 13px; }
+#settings input { height: 34px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; min-width: 0; background: var(--surface); }
+#settings input:focus { border-color: var(--control); outline: 0; }
+#settings .hint { grid-column: 2; margin-top: -4px; font-size: 12px; color: var(--muted); }
+#settings .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+#settings .foot { display: flex; align-items: center; gap: 8px; }
+#settings .foot .msg { margin-right: auto; font-size: 12px; color: var(--muted); }
+#settings .foot .msg.bad { color: var(--negative); }
+@media (max-width: 520px) { #settings fieldset { grid-template-columns: 1fr; } #settings .hint { grid-column: 1; } }
 </style>
 </head>
 <body>
@@ -255,7 +308,7 @@ button { cursor: pointer; }
     <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>New task</button>
   <div class="group">Tasks</div>
   <ul id="runs"></ul>
-  <div class="setup" id="setup"></div>
+  <button class="setup" id="setup" onclick="openSettings()" aria-label="Settings"></button>
 </nav>
 
 <header id="bar">
@@ -282,7 +335,8 @@ button { cursor: pointer; }
   <aside id="phone" aria-label="Phone">
     <div class="ph"><h2>Phone</h2><span id="where"></span>
       <button class="btn" id="closePhone" onclick="togglePhone(false)">Close</button></div>
-    <div class="screen"><img id="screen" src="/api/stream" alt="Live screen of the phone" onclick="tap(event)"></div>
+    <div class="screen"><img id="screen" src="/api/stream" alt="Live screen of the phone" onclick="tap(event)">
+      <p class="nophone" id="nophone" hidden>No phone yet. Set its ADB serial or host:port in <button class="more" type="button" onclick="openSettings()">Settings</button>.</p></div>
     <div class="keys">
       <button class="btn" id="kBack" onclick="key('back')">Back</button>
       <button class="btn" id="kHome" onclick="key('home')">Home</button>
@@ -290,6 +344,31 @@ button { cursor: pointer; }
     </div>
   </aside>
 </main>
+
+<dialog id="settings" aria-labelledby="setTitle">
+  <form onsubmit="saveSettings(event)">
+    <h2 id="setTitle">Settings</h2>
+    <p class="lead" id="setLead">Where the phone, DMA-2B and the planner run. Keys are stored on this server and never shown here.</p>
+    <fieldset><legend>Phone <span id="tDevice"></span></legend>
+      <label for="sDevice">ADB device</label><input id="sDevice" name="device" placeholder="emulator-5554" autocomplete="off">
+      <span class="hint">A serial from adb devices, or host:port for an emulator on another machine</span></fieldset>
+    <fieldset><legend>DMA-2B <span id="tDma"></span></legend>
+      <label for="sDmaUrl">API URL</label><input id="sDmaUrl" name="dma_url" placeholder="http://gpu-host:8700" autocomplete="off">
+      <label for="sDmaTok">Token</label><input id="sDmaTok" name="dma_token" type="password" autocomplete="new-password"></fieldset>
+    <fieldset><legend>Planner <span id="tLlm"></span></legend>
+      <label for="sLlmUrl">Chat URL</label><input id="sLlmUrl" name="llm_url" placeholder="https://…/v1/chat/completions" autocomplete="off">
+      <label for="sLlmKey">API key</label><input id="sLlmKey" name="llm_key" type="password" autocomplete="new-password">
+      <label for="sModel">Model</label><input id="sModel" name="llm_model" placeholder="Qwen/Qwen3.5-27B" autocomplete="off"></fieldset>
+    <fieldset><legend>Agent</legend>
+      <label for="sConf">Ask below</label><div class="row2"><input id="sConf" name="confidence" type="number" min="0" max="1" step="0.01" aria-label="Ask below this probability">
+      <input id="sSteps" name="max_steps" type="number" min="1" max="200" aria-label="Step budget" title="Step budget"></div>
+      <span class="hint">DMA-2B probability under which you are asked, and the step budget per task</span></fieldset>
+    <div class="foot"><span class="msg" id="setMsg"></span>
+      <button class="btn" type="button" onclick="closeSettings()">Close</button>
+      <button class="btn" type="button" id="testBtn" onclick="testSettings()">Test</button>
+      <button class="btn primary" type="submit" id="saveBtn">Save</button></div>
+  </form>
+</dialog>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -364,6 +443,7 @@ function askPanel(p) {
   const why = sens ? esc(p.reason) : `below the ask threshold of ${thrOf()}`;
   return `<div class="ask"><h3>${sens ? "Allow this action?" : "DMA-2B is not sure. Allow this tap?"}</h3>
     <p><span class="act"><span>${esc(p.action || "")}</span>${confBar(p.probability, S.info && S.info.confidence)}<span class="sub">${why}</span></span></p>
+    ${p.decision ? decCard(p.decision, S.info && S.info.confidence) : ""}
     <div class="actions"><button class="btn primary" onclick="answer(true)">Allow</button><button class="btn" onclick="answer(false)">Don't allow</button>
     <input id="reply" placeholder="Note for the planner (optional)" aria-label="Note for the planner"></div></div>`;
 }
@@ -389,8 +469,39 @@ const ICON = {
   stop: '<circle cx="8" cy="8" r="5.75"/><path d="m6 6 4 4m0-4-4 4"/>',
 };
 const ico = k => `<svg class="ic" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>`;
+const VERB = {click: "Tap", long_press: "Long press", type_text: "Type", scroll: "Scroll", open_app: "Open",
+  navigate_back: "Back", navigate_home: "Home", status: "Done", wait: "Wait"};
+/* the screen window: the element centred in a 132 x 176 crop, or the whole screen when there is no element */
+function shot(d) {
+  if (d.frame == null || !d.screen) return "";
+  const [W, H] = d.screen, box = d.element && d.element.box;
+  if (!box || box.some(v => v == null)) {
+    const h = 176, w = Math.round(h * W / H);
+    return `<div class="shot"><img src="/api/frames/${d.frame}.jpg" alt="" style="width:${w}px;height:${h}px;left:${Math.round((132 - w) / 2)}px;top:0"></div>`;
+  }
+  const k = 132 / W, ih = Math.round(H * k), cy = (box[1] + box[3]) / 2 * k;
+  const top = Math.round(Math.max(0, Math.min(ih - 176, cy - 88)));
+  const [x0, y0, x1, y1] = box.map(v => v * k), c = d.element.confidence;
+  return `<div class="shot"><img src="/api/frames/${d.frame}.jpg" alt="The screen DMA-2B read" style="width:132px;height:${ih}px;top:${-top}px">
+    <span class="bx" style="left:${x0.toFixed(1)}px;top:${(y0 - top).toFixed(1)}px;width:${(x1 - x0).toFixed(1)}px;height:${(y1 - y0).toFixed(1)}px">${c != null ? `<em>${(+c).toFixed(2)}</em>` : ""}</span></div>`;
+}
+function decAnswer(d) {
+  const v = VERB[d.action] || d.action;
+  if (d.answer == null || d.answer === "") return esc(v);
+  return `${esc(v)} <mark>${esc(d.answer)}</mark>`;
+}
+function decCard(d, thr) {
+  const opts = (d.options || []).filter(o => o[1] >= 0.001).slice(0, 4);
+  const bars = opts.map(([a, p]) => { const on = a === d.action, low = on && thr != null && p < thr;
+    return `<span class="${on ? "on" : ""}">${esc(VERB[a] || a)}</span><span class="bar"><i class="${on ? "on" : ""} ${low ? "low" : ""}" style="width:${Math.max(1, Math.round(p * 100))}%"></i>${on && thr != null ? `<b style="left:${Math.round(thr * 100)}%"></b>` : ""}</span><span class="v num">${p.toFixed(2)}</span>`; }).join("");
+  return `<div class="dcard">${shot(d)}<div class="qa">
+    <span class="qk">Question</span><span>${esc(d.question || "")}</span>
+    <span class="qk">Answer</span><span class="qv">${decAnswer(d)}</span>
+    ${bars ? `<div class="opts" title="DMA-2B probability of each action${thr != null ? "; the tick is the ask threshold" : ""}">${bars}</div>` : ""}</div></div>`;
+}
 function steps(events, thr, summary) {
   const G = []; let cur = null, thought = null;
+  let lastDec = -1; events.forEach((e, i) => { if (e.type === "action" && e.decision) lastDec = i; });
   const add = g => { G.push(Object.assign({items: []}, g)); cur = G[G.length - 1]; return cur; };
   const item = html => (cur || add({ic: "goal", title: ""})).items.push(html);
   events.forEach((e, i) => {
@@ -405,6 +516,11 @@ function steps(events, thr, summary) {
         if (e.probability == null) {
           const k = name === "navigate_back" ? "back" : name === "navigate_home" ? "home" : "move";
           add({ic: k, title: esc(HARNESS[name] || name) + (e.changed ? "" : ' <span class="sub">· nothing moved</span>'), thought, t: e.t}); thought = null;
+        } else if (e.decision) {
+          const id = "d" + i, on = open.has(id) !== (!summary && !S.pending && i === lastDec);   // the latest decision opens while running
+          item(`<div class="it dec" role="button" tabindex="0" aria-expanded="${on}" onclick="flip('${id}')" onkeydown="if(event.key==='Enter')flip('${id}')">
+            <span class="who">DMA-2B</span><span>${esc(name)}</span>${confBar(e.probability, thr)}${e.changed ? "" : '<span class="sub">no change</span>'}
+            <svg class="chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg></div>${on ? decCard(e.decision, thr) : ""}`);
         } else item(`<div class="it"><span class="who">DMA-2B</span><span>${esc(name)}</span>${confBar(e.probability, thr)}${e.changed ? "" : '<span class="sub">no change</span>'}</div>`);
         break; }
       case "approval_answer": item(`<div class="it"><span class="who you">You</span><span>${e.approved ? "allowed it" : "did not allow it"}</span></div>`); break;
@@ -491,13 +607,15 @@ function paint() {
   $("sendBtn").innerHTML = busy ? '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="1.5" fill="currentColor"/></svg>'
     : '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 12V2M2.5 6.5 7 2l4.5 4.5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>';
   $("sendBtn").setAttribute("aria-label", busy ? "Stop the task" : "Start task");
-  $("task").disabled = busy;
-  $("task").placeholder = busy ? "The agent is working on the phone" : "Give the phone a task";
+  const unset = S.configured === false;
+  $("task").disabled = busy || unset; $("sendBtn").disabled = unset && !busy;
+  $("task").placeholder = busy ? "The agent is working on the phone" : unset ? "Set up the endpoints in Settings first" : "Give the phone a task";
   $("sendBtn").title = busy ? "Stop after the current action" : "Start";
   // phone
   const obs = [...S.events].reverse().find(e => e.type === "observe");
   $("where").innerHTML = obs ? `<span class="id">${esc(obs.package || "")}</span> · ${obs.elements} elements` : esc(S.info && S.info.serial || "");
   $("screen").classList.toggle("tappable", !busy);
+  $("screen").hidden = S.configured === false; $("nophone").hidden = S.configured !== false;
   $("kBack").disabled = $("kHome").disabled = busy;
   $("hint").textContent = ""; $("screen").title = busy ? "" : "Click to tap the phone here";
   // sidebar
@@ -511,10 +629,64 @@ function paint() {
   $("setup").innerHTML = [["Phone", `<span class="id">${esc(i.serial || "—")}</span>`],
     ["Executor", "DMA-2B" + (i.dma_device ? " · " + (i.dma_device === "cpu" ? "CPU" : "GPU") : "")],
     ["Planner", esc((i.llm_model || "—").split("/").pop())],
-    ["Ask below", i.confidence != null ? "p " + i.confidence : "—"]].map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("");
+    ["Ask below", i.confidence != null ? "p " + i.confidence : "—"]].map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("")
+    + `<div class="edit">${S.configured === false ? "Set up endpoints" : "Settings"}</div>`;
+}
+
+/* ---------- settings ---------- */
+let askedSetup = false;
+function formValues() {
+  const f = $("settings").querySelector("form"), out = {};
+  for (const el of f.querySelectorAll("input[name]")) {
+    const v = el.value.trim(); if (v === "") continue;
+    out[el.name] = el.type === "number" ? Number(v) : v;
+  }
+  return out;
+}
+async function openSettings() {
+  toggleSide(false);
+  const c = await (await fetch("/api/config")).json();
+  $("sDevice").value = c.device || ""; $("sDmaUrl").value = c.dma_url || ""; $("sLlmUrl").value = c.llm_url || "";
+  $("sModel").value = c.llm_model || ""; $("sConf").value = c.confidence ?? ""; $("sSteps").value = c.max_steps ?? "";
+  $("sDmaTok").value = ""; $("sLlmKey").value = "";
+  $("sDmaTok").placeholder = c.dma_token_set ? "Saved; leave empty to keep it" : "The API's D1_API_TOKEN";
+  $("sLlmKey").placeholder = c.llm_key_set ? "Saved; leave empty to keep it" : "Bearer key, if the endpoint needs one";
+  $("setLead").textContent = S && S.configured === false ? "Set where the phone, DMA-2B and the planner run to start a task. Keys stay on this server."
+    : "Where the phone, DMA-2B and the planner run. Keys are stored on this server and never shown here.";
+  ["tDevice", "tDma", "tLlm"].forEach(k => $(k).innerHTML = ""); setMsg("");
+  const busy = S && S.running; $("saveBtn").disabled = !!busy; if (busy) setMsg("Settings can change when the task ends");
+  if (!$("settings").open) $("settings").showModal();
+}
+function closeSettings() { $("settings").close(); }
+function setMsg(t, bad) { $("setMsg").textContent = t; $("setMsg").classList.toggle("bad", !!bad); }
+function mark(id, r, okText) {
+  $(id).innerHTML = !r ? "" : r.ok ? `<span class="ok">${esc(okText || "Reachable")}</span>` : `<span class="bad" title="${esc(r.error || "")}">${esc((r.error || "Not reachable").slice(0, 60))}</span>`;
+}
+async function testSettings() {
+  setMsg("Testing…"); $("testBtn").disabled = true;
+  try {
+    const r = await (await post("/api/config/test", formValues())).json();
+    mark("tDevice", r.device, r.device && r.device.model ? "Connected · " + r.device.model : "Connected");
+    mark("tDma", r.dma, r.dma && r.dma.device ? "Reachable · " + (r.dma.device === "cpu" ? "CPU" : "GPU") : "Reachable");
+    mark("tLlm", r.llm, "Reachable");
+    const bad = ["device", "dma", "llm"].filter(k => !(r[k] && r[k].ok)).length;
+    setMsg(bad ? "" : "All three answer");
+  } catch (e) { setMsg("The test did not finish", true); }
+  $("testBtn").disabled = false;
+}
+async function saveSettings(ev) {
+  ev.preventDefault(); setMsg("Saving…"); $("saveBtn").disabled = true;
+  try {
+    const r = await (await post("/api/config", formValues())).json();
+    if (r.ok) { setMsg("Saved"); S = await (await fetch("/api/state")).json(); paint(); setTimeout(closeSettings, 500);
+      const img = $("screen"); img.src = "/api/stream?" + Date.now(); }
+    else setMsg(r.error || "Not saved", true);
+  } catch (e) { setMsg("Not saved", true); }
+  $("saveBtn").disabled = false;
 }
 async function poll() {
-  try { S = await (await fetch("/api/state")).json(); paint(); } catch (e) { $("hint").textContent = "Lost the connection; retrying"; }
+  try { S = await (await fetch("/api/state")).json(); paint();
+        if (S.configured === false && !askedSetup) { askedSetup = true; openSettings(); } } catch (e) { $("hint").textContent = "Lost the connection; retrying"; }
   setTimeout(poll, S && S.running ? 1000 : 2500);
 }
 

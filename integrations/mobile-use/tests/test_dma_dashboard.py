@@ -97,3 +97,81 @@ def test_the_page_is_the_chat_console_with_the_phone_beside_it():
     _, c = client()
     html = c.get("/").text
     assert 'id="composer"' in html and 'id="phone"' in html and "/api/stream" in html
+
+
+def test_the_frame_a_decision_was_made_on_is_served_by_its_id():
+    agent, c = client()
+    agent.frames = {3: b"\xff\xd8jpeg"}
+    r = c.get("/api/frames/3.jpg")
+    assert r.status_code == 200 and r.content == b"\xff\xd8jpeg" and r.headers["content-type"] == "image/jpeg"
+    assert c.get("/api/frames/4.jpg").status_code == 404
+
+
+# ---------------------------------------------------------------- settings: endpoints set from the page
+import json  # noqa: E402
+import os  # noqa: E402
+
+FULL = {"device": "emulator-5554", "dma_url": "http://dma:8700", "dma_token": "secret-tok",
+        "llm_url": "http://llm/v1/chat/completions", "llm_key": "secret-key", "llm_model": "m1",
+        "confidence": 0.79, "max_steps": 40}
+
+
+def configured(tmp_path, settings=FULL, agent="default"):
+    made = []
+
+    def make_agent(s):
+        made.append(dict(s))
+        return FakeAgent()
+    first = FakeAgent() if agent == "default" else agent
+    app = build_app(first, QueueApprover(), settings=dict(settings), make_agent=make_agent,
+                    settings_file=str(tmp_path / "dmagent.json"),
+                    check=lambda s: {"device": {"ok": True}, "dma": {"ok": True, "device": "cpu"},
+                                     "llm": {"ok": False, "error": "401"}})
+    return first, made, TestClient(app)
+
+
+def test_the_page_reads_the_endpoints_but_never_the_keys(tmp_path):
+    _, _, c = configured(tmp_path)
+    cfg = c.get("/api/config").json()
+    assert cfg["dma_url"] == "http://dma:8700" and cfg["llm_model"] == "m1" and cfg["device"] == "emulator-5554"
+    assert cfg["dma_token_set"] is True and cfg["llm_key_set"] is True
+    assert "secret" not in json.dumps(cfg)
+
+
+def test_saving_new_endpoints_rebuilds_the_agent_keeps_unsent_keys_and_writes_a_private_file(tmp_path):
+    old, made, c = configured(tmp_path)
+    r = c.post("/api/config", json={"llm_model": "m2", "device": "emulator-host:5555"}).json()
+    assert r["ok"] is True and made[-1]["llm_model"] == "m2" and made[-1]["llm_key"] == "secret-key"
+    assert c.post("/api/key", json={"key": "home"}).json()["ok"] and old.device.acts == []   # the new agent acts
+    f = tmp_path / "dmagent.json"
+    assert json.loads(f.read_text())["device"] == "emulator-host:5555" and oct(os.stat(f).st_mode & 0o777) == "0o600"
+    assert c.get("/api/state").json()["info"]["llm_model"] == "m2"
+
+
+def test_endpoints_cannot_change_while_a_task_runs(tmp_path):
+    agent, made, c = configured(tmp_path)
+    c.post("/api/start", json={"task": "t"})
+    r = c.post("/api/config", json={"llm_model": "m2"}).json()
+    agent.release.set()
+    assert r["ok"] is False and made == []
+
+
+def test_without_endpoints_the_page_asks_for_setup_and_no_task_starts(tmp_path):
+    _, _, c = configured(tmp_path, settings={"device": "emulator-5554"}, agent=None)
+    st = c.get("/api/state").json()
+    assert st["configured"] is False and set(st["missing"]) == {"dma_url", "llm_url", "llm_model"}
+    assert c.post("/api/start", json={"task": "t"}).json()["ok"] is False
+
+
+def test_saved_settings_are_loaded_at_the_next_start(tmp_path):
+    _, _, c = configured(tmp_path)
+    c.post("/api/config", json={"llm_model": "m3"})
+    from mobile_use.dma_dashboard import load_settings
+    s = load_settings(str(tmp_path / "dmagent.json"), {"llm_model": "from-flags", "dma_url": "x"})
+    assert s["llm_model"] == "m3" and s["llm_key"] == "secret-key"
+
+
+def test_each_endpoint_can_be_tested_from_the_page(tmp_path):
+    _, _, c = configured(tmp_path)
+    r = c.post("/api/config/test", json={}).json()
+    assert r["device"]["ok"] and r["dma"]["device"] == "cpu" and r["llm"] == {"ok": False, "error": "401"}

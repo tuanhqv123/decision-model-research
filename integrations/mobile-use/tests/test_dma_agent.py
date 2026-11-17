@@ -398,3 +398,31 @@ def test_the_planner_sees_every_element_with_its_bounds_none_filtered_out():
     assert "[0] FrameLayout '' @0,0,1080,2400" in out
     assert "[1] TextView 'Title' @10,10,200,60" in out
     assert "[201] TextView 'item 199'" in out          # no line limit
+
+
+def test_each_dma_decision_reaches_the_page_as_question_answer_options_box_and_frame():
+    dec = {"action": "click", "probabilities": {"status": 0.01, "click": 0.97, "scroll": 0.02},
+           "element": {"history_label": "Save", "confidence": 0.93, "aw_index": 1}, "element_point": [200, 300],
+           "screen": [1080, 2400]}
+    ap = AutoApprover(approve=True)
+    a = agent([SCREEN, [el("Saved", 1, 1)]], [GOAL, FINISH], [dec, DONE], [{"complete": True}], approver=ap,
+              policy=Policy(confidence_threshold=0.99))
+    run(a)
+    d = next(e for e in a.events if e["type"] == "action")["decision"]
+    assert d["question"] == "Click on Save" and d["action"] == "click" and d["answer"] == "Save"
+    assert d["options"] == [["click", 0.97], ["scroll", 0.02], ["status", 0.01]]
+    assert d["element"] == {"label": "Save", "confidence": 0.93, "box": [150, 280, 250, 320]}
+    assert d["screen"] == [1080, 2400]
+    assert a.frames[d["frame"]][:2] == b"\xff\xd8"                       # a JPEG of the screen DMA-2B saw
+    assert ap.requests[0]["decision"] == d                               # the ask shows the same card
+
+
+def test_a_typing_decision_answers_with_the_text_and_a_scroll_with_its_direction():
+    typing = {"action": "type_text", "probabilities": {"type_text": 0.9}, "text": "Milk",
+              "element": {"history_label": "Title", "aw_index": 0}, "element_point": [100, 100]}
+    scroll = {"action": "scroll", "probabilities": {"scroll": 0.8}, "direction": "down", "element": {}}
+    a = agent([SCREEN] * 3, [GOAL, FINISH], [typing, scroll, DONE], [{"complete": True}],
+              policy=Policy(ask_when_unsure=False))
+    run(a)
+    ds = [e["decision"] for e in a.events if e["type"] == "action"]
+    assert [(d["action"], d["answer"]) for d in ds] == [("type_text", "Milk"), ("scroll", "down")]

@@ -11,6 +11,7 @@ One `step()` = at most one device action, in this order:
   7. act over ADB, compare the screen before and after, write the history line, detect BLOCKED / stuck
 Every stage emits an event (`self.events`, `on_event`) that the dashboard shows live.
 """
+import io
 import json
 import logging
 import time
@@ -18,7 +19,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional
 
 from mobile_use.agents.base import Agent
 from mobile_use.agents.dma.device_ext import Device
-from mobile_use.agents.dma.executor import (Executor, element_label, quoted_text, text_to_type, history_line, probability, screen_changed,
+from mobile_use.agents.dma.executor import (Executor, decision_card, element_label, quoted_text, text_to_type, history_line, probability, screen_changed,
                                             to_device_action)
 from mobile_use.agents.dma.planner import Planner
 from mobile_use.agents.dma.recovery import StuckDetector, centre, detect_popup, shade_open
@@ -49,6 +50,7 @@ class DMAgent(Agent):
         self.policy = policy or Policy(max_steps=self.max_steps)
         self.approver = approver or AutoApprover(approve=True)
         self.on_event = on_event
+        self.frames: Dict[int, bytes] = {}   # JPEGs of the screens DMA-2B decided on, kept across tasks
         self.max_goal_steps = max_goal_steps
 
     # ------------------------------------------------------------------ mobile-use agent interface
@@ -148,6 +150,8 @@ class DMAgent(Agent):
                 self._goal_done()
                 continue
             kind, params, desc = to_device_action(dec)
+            card = decision_card(dec, self.local_goal, els, list(image.size))
+            card["frame"] = self._frame(image)
             if kind == "type":
                 idx = (dec.get("element") or {}).get("aw_index")
                 fld = els[idx] if isinstance(idx, int) and 0 <= idx < len(els) else None
@@ -163,7 +167,8 @@ class DMAgent(Agent):
             if gate:
                 self.counts["approval_requests"] += 1
                 req = {"kind": gate["kind"], "reason": gate["reason"], "action": desc, "probability": round(p, 3),
-                       "local_goal": self.local_goal, "point": params.get("x") and [params["x"], params["y"]]}
+                       "local_goal": self.local_goal, "point": params.get("x") and [params["x"], params["y"]],
+                       "decision": card}
                 self._emit("approval_request", **req)
                 resp = self.approver.ask(req)
                 self._emit("approval_answer", approved=resp["approved"], by=resp.get("by"))
@@ -182,7 +187,7 @@ class DMAgent(Agent):
             self.goal_actions.append(line)
             self.goal_steps += 1
             self._emit("action", action=desc, probability=round(p, 3), local_goal=self.local_goal, changed=changed,
-                       point=[params["x"], params["y"]] if "x" in params else None)
+                       point=[params["x"], params["y"]] if "x" in params else None, decision=card)
             stuck = self.stuck.update(changed)
             if self.goal_steps >= self.max_goal_steps or stuck:
                 reason = "the screen did not change" if stuck else "%d actions without DONE" % self.goal_steps
@@ -275,6 +280,18 @@ class DMAgent(Agent):
         self.trajectory.append(step)
         self.episode_data.num_steps = len(self.trajectory)
         return step
+
+    def _frame(self, image) -> int:
+        """Keep a small JPEG of the screen a decision was made on; the page fetches it by id."""
+        img = image.convert("RGB")
+        img.thumbnail((360, 800))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=72)
+        n = max(self.frames, default=-1) + 1
+        self.frames[n] = buf.getvalue()
+        for old in [k for k in self.frames if k <= n - 2000]:
+            del self.frames[old]
+        return n
 
     def _emit(self, _event: str, **data):
         ev = {"t": round(time.time() - self.policy.started, 2), "type": _event, **data}

@@ -50,6 +50,27 @@ def element_label(dec: Dict[str, Any]) -> Optional[str]:
     return el.get("history_label") or el.get("label")
 
 
+def decision_card(dec: Dict[str, Any], question: Optional[str], els: List[Dict[str, Any]],
+                  screen: Optional[List[int]] = None) -> Dict[str, Any]:
+    """What the page shows for one DMA-2B decision, in the form of a typed answer: the question (the local goal), the
+    answer (the element's label, the typed text, the scroll direction or the app), every action option with its
+    probability, and the chosen element with its confidence and box in screen pixels."""
+    act = dec["action"]
+    answer = {"type_text": dec.get("text"), "scroll": dec.get("direction"),
+              "open_app": dec.get("app_name")}.get(act) if act in ("type_text", "scroll", "open_app") \
+        else (element_label(dec) if act in ("click", "long_press") else None)
+    opts = sorted(((k, round(float(v), 3)) for k, v in (dec.get("probabilities") or {}).items()), key=lambda kv: -kv[1])
+    card = {"question": question, "action": act, "answer": answer, "options": [list(o) for o in opts],
+            "screen": list(dec.get("screen") or screen or []) or None}
+    el = dec.get("element") or {}
+    idx = el.get("aw_index")
+    if act in ("click", "long_press", "type_text") and isinstance(idx, int) and 0 <= idx < len(els):
+        b = els[idx].get("bbox_pixels") or {}
+        card["element"] = {"label": element_label(dec), "confidence": el.get("confidence"),
+                           "box": [b.get("x_min"), b.get("y_min"), b.get("x_max"), b.get("y_max")]}
+    return card
+
+
 def to_device_action(dec: Dict[str, Any]) -> Tuple[str, Dict[str, Any], str]:
     """(Device.act kind, parameters, short description) for one decision (not `status`)."""
     act, label = dec["action"], element_label(dec)

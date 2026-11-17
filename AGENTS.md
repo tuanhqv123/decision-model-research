@@ -149,6 +149,13 @@ Topic list (each maps to a file under `notes/`):
     text), so "Turn off Wi-Fi" wandered for 14 minutes. It now receives the whole UI tree with bounds and on/off state;
     the same task finished in 5 steps. The 60/60 agent result predates this change; the suite is re-run when a GPU is
     free.
+  - **Decision cards and endpoint settings in the agent dashboard, 2026-11-17.** Each DMA-2B action opens a card in the
+    form of the d1.2 answer cards (released by Liquid AI on 2026-11-16, API only, sizes not published): the screen it
+    read with the chosen element boxed and its confidence, the question (the local goal), the answer, and each action's
+    probability against the ask threshold. The same card appears when the person is asked. The phone (ADB serial or
+    host:port), the DMA-2B API and the planner LLM are now set and tested from the page or from environment
+    variables, saved to a file readable by its owner only; keys never reach the page. DMA-2B has no number-with-range
+    readout, so the page shows none.
 - **2026-11-12 (late): AC-HIGH IS A PER-STEP, TEACHER-FORCED NUMBER; PER GOAL IT EQUALS ANDROIDWORLD.**
   Note: `docs/research/2026-11-12-ACHIGH-vs-AW-FINAL.md`. An independent read-only agent re-derived every number below from the files.
   - **What AC-High measures.** v4 on the AndroidControl test set (InfiGUI scorer) gets **61.7% per step (5,213/8,444)**, but only **344/1,543 = 22.3% of episodes have every step right**.
