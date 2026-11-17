@@ -158,6 +158,12 @@ Topic list (each maps to a file under `notes/`):
     trainer pauses at the end of an optimizer step and resumes with the same data order, schedule, optimizer state
     and random streams (`resume_state.py`; tested to give identical weights on a toy loop, and paused/resumed on the
     GPU). Each seed is evaluated on AC-Low/High after it ends.
+    **First attempt failed the same day, cause found:** seed 1 ran out of GPU memory three times at step 189 on one
+    record (912 screen elements, 19,535 state tokens; the median is ~700 and the next longest 8,937). It is the same
+    record that stopped seed 0 at step 7,192, so the released step-7,000 model never trained on it. The trainer now
+    skips states over `--max-state-tokens 10000`, which removes exactly this record; the queue was relaunched with it.
+    Also fixed: `gpu_share.stop()` signalled a wrapping shell whose command line names the trainer (the test now
+    checks the shell survives).
   - **Decision cards and endpoint settings in the agent dashboard, 2026-11-17.** Each DMA-2B action opens a card in the
     form of the d1.2 answer cards (released by Liquid AI on 2026-11-16, API only, sizes not published): the screen it
     read with the chosen element boxed and its confidence, the question (the local goal), the answer, and each action's

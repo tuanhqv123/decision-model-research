@@ -98,3 +98,5 @@ def test_a_train_job_is_paused_by_signalling_the_trainer_itself_not_the_shell_ar
     assert p.stdout.readline().strip() == "ready"
     gs.stop(p, {"name": "t", "kind": "train"}, lambda m: None, grace_s=20)
     assert saved.read_text() == "saved"                 # the trainer got the pause and saved its state
+    assert "after" in p.stdout.read()                   # and the shell, whose command line names the trainer too,
+                                                        # was left alone to finish

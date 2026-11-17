@@ -123,8 +123,10 @@ class Log:
 def stop(p: subprocess.Popen, job: dict, log: Log, grace_s: float):
     if job["kind"] == "train":
         # the trainer itself, not the shell around it: a shell killed by SIGUSR1 would leave the trainer running
+        # A shell whose command line names train_d1.py matches too; only the deepest match is the trainer.
         table = procs()
-        trainers = [q for q in tree(p.pid, table) if "train_d1.py" in table.get(q, (0, ""))[1]] or [p.pid]
+        named = {q for q in tree(p.pid, table) if "train_d1.py" in table.get(q, (0, ""))[1]}
+        trainers = [q for q in named if not (tree(q, table) - {q}) & named] or [p.pid]
         for q in trainers:
             os.kill(q, signal.SIGUSR1)        # finish the step, save the state, exit 75
     else:

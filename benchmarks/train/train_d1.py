@@ -173,6 +173,11 @@ def make_sample(rec, data, track, memory, rng):
     return state, qs, gold, img
 
 
+def too_long(state, tok, limit):
+    """True when the state has more than `limit` tokens (`--max-state-tokens`; 0 = no limit)."""
+    return bool(limit) and len(tok(state)["input_ids"]) > limit
+
+
 def make_sample_elements(rec, data, track, spec):
     """Contract v2 (R2): state, questions and gold from the row's AndroidWorld element list (`rec["elements"]`,
     compact_*_v2.jsonl), through `ac_common.element_inputs` / `build_questions` — the functions `d1_api` calls
@@ -507,6 +512,9 @@ def main():
     ap.add_argument("--no-memory", action="store_true")
     ap.add_argument("--mem-frac", type=float, default=0.0, help="cap this process's share of GPU memory")
     ap.add_argument("--save-every", type=int, default=500)
+    ap.add_argument("--max-state-tokens", type=int, default=0,
+                    help="skip a sample whose state is longer (0 = keep all). One AndroidControl record has 19,535 "
+                         "state tokens (the next 8,937) and runs a shared 24 GB GPU out of memory")
     ap.add_argument("--resume-dir", default="", help="pause/resume (resume_state.py): on SIGTERM/SIGUSR1 finish the "
                     "optimizer step, write the whole training state here and exit 75; at start, continue from it")
     ap.add_argument("--keep-ckpts", action="store_true",
@@ -627,6 +635,12 @@ def main():
                     cursor, epoch = 0, epoch + 1
                 samples = [make_sample(recs[k], a.data, a.track, memory, rng) for k in order[cursor:cursor + a.micro]]
                 cursor += a.micro
+            long = [j for j, s_ in enumerate(samples) if too_long(s_[0], eng.tokenizer, a.max_state_tokens)]
+            if long:
+                print(f"[skip] step {step + 1}: {len(long)} sample(s) over {a.max_state_tokens} state tokens", flush=True)
+                samples = [s_ for j, s_ in enumerate(samples) if j not in long]
+                if not samples:
+                    continue
             loss, stats = forward(model, eng, M, samples, backward_scale=1.0 / a.accum)
             stats["loss"] = [float(loss.detach())]
             for k, v in stats.items():
