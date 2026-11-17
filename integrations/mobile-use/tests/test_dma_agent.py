@@ -357,3 +357,12 @@ def test_the_quoted_text_of_the_instruction_wins_when_the_copied_span_overruns_i
 def test_a_full_new_body_that_starts_with_the_old_one_is_typed_as_given():
     from mobile_use.agents.dma.executor import text_to_type
     assert text_to_type(field("buy stamps", 1400), "buy stamps\ncall mom") == "buy stamps\ncall mom"
+
+
+def test_the_api_token_comes_from_the_environment_with_the_quickstart_default(monkeypatch):
+    from mobile_use.agents.dma.executor import Executor
+    monkeypatch.setenv("DMA_API_TOKEN", "secret")
+    assert Executor("http://x").token == "secret"
+    monkeypatch.delenv("DMA_API_TOKEN")
+    assert Executor("http://x").token == "tok"
+    assert Executor("http://x", token="given").token == "given"

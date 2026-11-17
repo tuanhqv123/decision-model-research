@@ -6,6 +6,7 @@ the element list, and returns the decision with its probability. `to_device_acti
 """
 import base64
 import io
+import os
 import re
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -16,7 +17,9 @@ from mobile_use.agents.dma import ac_common as v
 
 
 class Executor:
-    def __init__(self, url: str, token: str = "tok", timeout: float = 60.0, post=None):
+    def __init__(self, url: str, token: Optional[str] = None, timeout: float = 60.0, post=None):
+        # the API's D1_API_TOKEN; "tok" is the quickstart's value
+        token = token if token is not None else os.environ.get("DMA_API_TOKEN", "tok")
         self.url, self.token, self.timeout = url.rstrip("/"), token, timeout
         self._post = post        # tests inject a fake
         self.ms: List[float] = []

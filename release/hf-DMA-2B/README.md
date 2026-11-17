@@ -136,7 +136,7 @@ for an act / ask threshold chosen on held-out data, not as a calibrated estimate
 ## How to use
 
 ```bash
-pip install "transformers>=5" torch pillow
+pip install "transformers>=5" torch torchvision pillow
 git clone https://huggingface.co/tuanhqv123/DMA-2B && cd DMA-2B
 python example.py --inputs-only   # builds the state and questions, no GPU
 python example.py                 # one forward pass on an AndroidControl test step

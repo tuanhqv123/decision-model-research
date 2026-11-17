@@ -138,6 +138,11 @@ Topic list (each maps to a file under `notes/`):
   - **Closed 2026-11-17:** the Curated differential test (0 mismatches, above); the next training direction (run
     acdual, chosen by the operator); private names removed from the published git history (both branches scan
     clean; GitHub still holds the old commits under the merged pull request #27 until GitHub Support removes them).
+  - **Agent demo for review, 2026-11-17, with no GPU free** (the training queue holds the 4090; the 5090s are
+    others'): DMA-2B served on CPU (`D1_DEVICE=cpu`, float32). Same decision as the GPU on the released example
+    (click element 13, p 0.9995 vs 0.9994); about 11 s per decision instead of 0.14 s. "Turn off Wi-Fi" through the
+    dashboard: finished in 8 steps, 158 s, Wi-Fi off checked over ADB. The model card's install line lacked
+    `torchvision`; fixed on the Hub.
 - **2026-11-12 (late): AC-HIGH IS A PER-STEP, TEACHER-FORCED NUMBER; PER GOAL IT EQUALS ANDROIDWORLD.**
   Note: `docs/research/2026-11-12-ACHIGH-vs-AW-FINAL.md`. An independent read-only agent re-derived every number below from the files.
   - **What AC-High measures.** v4 on the AndroidControl test set (InfiGUI scorer) gets **61.7% per step (5,213/8,444)**, but only **344/1,543 = 22.3% of episodes have every step right**.

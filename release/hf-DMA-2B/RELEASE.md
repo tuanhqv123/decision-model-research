@@ -47,3 +47,8 @@ Published model: https://huggingface.co/tuanhqv123/DMA-2B (public), Hub commit `
   (answer step: p 0.594 vs 0.586 recorded). Measured CPU time: about 46 s with 2 threads, 15 s with 16 threads.
 * Model card updated: AC-Low, AC-High and AndroidWorld tables per checkpoint (Type, Grounding, SR), and what each
   metric means.
+
+## 2026-11-17
+
+* Card install line: `torchvision` added (the image processor imports it; found when serving on a CPU-only host).
+  Hub commit `4b0b8085`. Weights unchanged (sha256 `284229c8…f209`, re-hashed after download).

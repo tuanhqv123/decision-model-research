@@ -53,7 +53,7 @@ The API is `serving/d1_api.py` in this repository. It imports `ac_common.py` and
 ```bash
 git clone https://github.com/tuanhqv123/decision-model-research.git && cd decision-model-research
 git clone https://huggingface.co/tuanhqv123/DMA-2B models/DMA-2B          # needs git-lfs
-pip install "transformers>=5" torch pillow fastapi uvicorn
+pip install "transformers>=5" torch torchvision pillow fastapi uvicorn
 cd serving
 PYTHONPATH=../benchmarks/train D1_MODEL=../models/DMA-2B D1_IMG_W=720 D1_API_TOKEN=tok \
   D1_APPS=/path/to/app_list.json D1_MEM_FRAC=0.4 \
@@ -63,6 +63,10 @@ curl -H "x-api-key: tok" http://localhost:8700/health      # "ok": true
 
 - `D1_APPS` must be the same app list as in step 2. The API refuses to start without it.
 - `D1_MEM_FRAC` caps the share of GPU memory the API may take.
+- **No free GPU:** add `D1_DEVICE=cpu` (and `OMP_NUM_THREADS=16`; install the CPU builds of `torch` and
+  `torchvision`). The model then runs in float32 and gives the same decision as the GPU on the released example
+  (`examples/ac_test_ep27_step1.json`: click on element 13, p = 0.9995 on CPU, 0.9994 on GPU). It is slower: about
+  11 s per decision on 16 cores of a Xeon Platinum 8444H, against 0.14 s on an RTX 4090, so a short task takes minutes.
 - Use `--host 127.0.0.1` and an SSH tunnel if the machine is shared.
 
 ## Step 4: install MobileUse with DMAgent
@@ -94,6 +98,7 @@ Any OpenAI-compatible chat-completions endpoint works. Set the model name with `
 ## Step 6: start the dashboard
 
 ```bash
+export DMA_API_TOKEN=tok      # the API's D1_API_TOKEN ("tok" if unset)
 python -m mobile_use.dma_dashboard \
   --dma-url http://<gpu-machine>:8700 --llm-url-file llm_url.txt --llm-key-file llm_key.txt \
   --apps-json app_list.json --serial emulator-5554 --port 7870

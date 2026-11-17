@@ -17,7 +17,9 @@ element list (`elements`, or `nodes`) on track VA; it is canonicalised, filtered
 confidence, aw_index (position in the request's list)}. A request without elements is refused with HTTP 400.
 
 Env: D1_MODEL (checkpoint dir), D1_IMG_W (picture width: 720 for the E2 checkpoint, 858 for the grounding run),
-D1_MEM_FRAC (cap on this process's GPU memory, protects the other services on the card), D1_API_TOKEN.
+D1_MEM_FRAC (cap on this process's GPU memory, protects the other services on the card), D1_API_TOKEN,
+D1_DEVICE ("cuda" by default; "cpu" serves without a GPU), D1_DTYPE (default bfloat16 on the GPU, float32 on the CPU,
+where bfloat16 has no hardware support on most processors).
 """
 import base64
 import io
@@ -62,13 +64,16 @@ if CONTRACTS[CONTRACT["name"]].get("app_choice"):
         raise SystemExit(f"contract {CONTRACT['name']!r} chooses the app from a list; {_apps_path} is missing")
     APPS = [x["name"] for x in json.load(open(_apps_path))]
 TOKEN = os.environ.get("D1_API_TOKEN", "")
-if os.environ.get("D1_MEM_FRAC"):
+DEVICE = os.environ.get("D1_DEVICE", "cuda")
+DTYPE = getattr(torch, os.environ.get("D1_DTYPE") or ("bfloat16" if DEVICE.startswith("cuda") else "float32"))
+if os.environ.get("D1_MEM_FRAC") and DEVICE.startswith("cuda"):
     torch.cuda.set_per_process_memory_fraction(float(os.environ["D1_MEM_FRAC"]))
 
 from transformers import AutoModel  # noqa: E402
 
 _t0 = time.time()
-MODEL = AutoModel.from_pretrained(MODEL_PATH, trust_remote_code=True, dtype=torch.bfloat16).cuda()
+MODEL = AutoModel.from_pretrained(MODEL_PATH, trust_remote_code=True, dtype=DTYPE)
+MODEL = MODEL.cuda() if DEVICE == "cuda" else MODEL.to(DEVICE)
 MODEL.engine.calibration = None  # raw readouts, as trained (calibration is applied by the caller)
 LOCK = threading.Lock()
 STATS = {"requests": 0, "errors": 0, "load_s": round(time.time() - _t0, 1), "started": time.strftime("%Y-%m-%d %H:%M:%S")}
@@ -180,7 +185,9 @@ def health():
              CONTRACT["element_rule"])} if _element_contract(CONTRACT) else {})
     return {"ok": True, "model": MODEL_PATH, "contract": CONTRACT["name"], "tracks": CONTRACT["tracks"], **rule,
             "img_width": int(os.environ.get("D1_IMG_W", "720")),
-            "gpu_mem_gb": round(torch.cuda.max_memory_allocated() / 2**30, 2), **STATS}
+            "device": DEVICE, "dtype": str(DTYPE).replace("torch.", ""),
+            "gpu_mem_gb": (round(torch.cuda.max_memory_allocated() / 2**30, 2) if DEVICE.startswith("cuda") else None),
+            **STATS}
 
 
 @app.get("/v1/info")
