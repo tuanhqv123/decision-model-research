@@ -178,8 +178,18 @@ while another job kept the GPU busy.
   to it, and "Turn off Wi-Fi" once wandered for 14 minutes looking for "a toggle" (Wi-Fi off only after a person
   allowed a tap). The planner now receives the whole UI tree, every element with its bounds, a switch's on/off state,
   and a label from its row for an element with none (`planner.render_elements`, two tests). The same task then
-  finished in 5 steps. **The 60/60 above was measured with the old element list**; the suite is re-run with the new
-  one when a GPU is free (on the CPU server a 60-run suite takes about 3 hours).
+  finished in 5 steps. The 60/60 above was measured with the old element list.
+- **Re-run with the whole UI tree, 2026-11-17: 60/60 again, all strict** (held-out 24/24, 95% CI 86.2–100%; tuned
+  36/36), `benchmark/dma_scenarios/results/rerun_2026-11-17_cpu/`. Three things differ from the final run, so the
+  two are not a controlled comparison of the planner change:
+  - the planner reads the whole UI tree (the change above);
+  - DMA-2B ran on a CPU (`D1_DEVICE=cpu`, float32), because no GPU was free: 10.9 s per decision instead of 0.14 s,
+    so a run took 128 s on average instead of 41 s;
+  - the app list was rebuilt from the emulator (34 apps).
+
+  Per run: 6.6 steps (6.7 before), 6.9 LLM calls (7.1), and 52 approval requests over the 60 runs (55). The largest
+  single change is `wifi_off`, the task the blind switch broke: 12.7 → 6.0 LLM calls and 1.0 → 0 requests per run.
+  `note_rename` needed 3.7 requests per run instead of 7.0; `device_name` took 10.7 steps instead of 5.0.
 
 **Human in the loop, checked through the dashboard.** In the task "Delete the note old_ideas", the agent stopped
 before "click Delete" and asked. After approval it deleted the note, and ADB confirmed it. The screen at that moment

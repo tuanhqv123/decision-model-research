@@ -147,8 +147,10 @@ Topic list (each maps to a file under `notes/`):
     DMA-2B probability drawn against the 0.79 ask threshold, questions answered in the chat, earlier runs reopenable).
     Found while testing it: **the planner never saw unlabelled switches** (its element list dropped elements without
     text), so "Turn off Wi-Fi" wandered for 14 minutes. It now receives the whole UI tree with bounds and on/off state;
-    the same task finished in 5 steps. The 60/60 agent result predates this change; the suite is re-run when a GPU is
-    free.
+    the same task finished in 5 steps. The 60/60 agent result predates this change. **Re-run 2026-11-17 with the
+    whole tree: 60/60 again, all strict** (held-out 24/24), with DMA-2B on a CPU (10.9 s per decision) and a rebuilt
+    34-app list, so it is not a controlled test of the planner change; `wifi_off` went from 12.7 to 6.0 LLM calls per
+    run (`integrations/mobile-use/benchmark/dma_scenarios/results/rerun_2026-11-17_cpu/`, `docs/dma_agent.md` §4).
   - **Decision cards and endpoint settings in the agent dashboard, 2026-11-17.** Each DMA-2B action opens a card in the
     form of the d1.2 answer cards (released by Liquid AI on 2026-11-16, API only, sizes not published): the screen it
     read with the chosen element boxed and its confidence, the question (the local goal), the answer, and each action's
