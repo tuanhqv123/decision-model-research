@@ -265,6 +265,25 @@ def decide(req: DecideReq, x_api_key: Optional[str] = Header(default=None)):
     return out
 
 
+def read_of(readout, state, style: str = "json_only"):
+    """Where a read (typed text, app name) came from. DMA-2B points at a start and an end token of its own input, and
+    the engine returns `span`, the character offsets in the state text, with `found`, the probability that there is
+    something to copy. Returns that text, `found`, `span`, the line of the state the span lies in (`context`, at most
+    80 characters either side) and the span's place in it (`at`); None when it pointed at nothing."""
+    if not isinstance(readout, dict) or not readout.get("span") or not str(style).startswith("json"):
+        return None
+    text = state if isinstance(state, str) else json.dumps(state, ensure_ascii=False, indent=2)
+    s, e = (int(x) for x in readout["span"])
+    if not 0 <= s <= e <= len(text):
+        return None
+    first = text.rfind("\n", 0, s) + 1
+    end = text.find("\n", e)
+    last = len(text) if end < 0 else end
+    lo, hi = max(first, s - 80), min(last, e + 80)
+    return {"text": readout.get("text"), "found": readout.get("found"), "span": [s, e], "context": text[lo:hi],
+            "at": [s - lo, e - lo], "clipped": [lo > first, hi < last]}
+
+
 def _respond_elements(req, ans, built, W, H, model_ms, t_req):
     """The response of an element contract (v2): the point is the CHOSEN element's centre; there is no box."""
     probs = ans["action"]["probabilities"]
@@ -288,6 +307,9 @@ def _respond_elements(req, ans, built, W, H, model_ms, t_req):
                            else ans["app_name"].get("text") or "")
     elif action == "type_text":
         out["text"] = ans["type_text"].get("text") or ""
+        rd = read_of(ans["type_text"], built["state"], getattr(MODEL.engine, "state_style", "json_only"))
+        if rd:
+            out["read"] = rd
     elif action == "answer":   # contract v4: the harness sends answer_text to AndroidWorld's `answer`
         out["answer_value"], out["answer_text"] = answer_text(ans, built["nodes"], built["kept"], built["keep_idx"])
     el = ans.get("target_el") or {}   # absent only when no element survived the rule

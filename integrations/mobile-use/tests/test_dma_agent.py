@@ -418,7 +418,9 @@ def test_each_dma_decision_reaches_the_page_as_question_answer_options_box_and_f
 
 
 def test_a_typing_decision_answers_with_the_text_and_a_scroll_with_its_direction():
-    typing = {"action": "type_text", "probabilities": {"type_text": 0.9}, "text": "Milk",
+    read = {"text": "Milk", "found": 0.97, "span": [120, 124], "context": 'Step instruction: Type "Milk" in the title',
+            "at": [24, 28]}
+    typing = {"action": "type_text", "probabilities": {"type_text": 0.9}, "text": "Milk", "read": read,
               "element": {"history_label": "Title", "aw_index": 0}, "element_point": [100, 100]}
     scroll = {"action": "scroll", "probabilities": {"scroll": 0.8}, "direction": "down", "element": {}}
     a = agent([SCREEN] * 3, [GOAL, FINISH], [typing, scroll, DONE], [{"complete": True}],
@@ -426,3 +428,4 @@ def test_a_typing_decision_answers_with_the_text_and_a_scroll_with_its_direction
     run(a)
     ds = [e["decision"] for e in a.events if e["type"] == "action"]
     assert [(d["action"], d["answer"]) for d in ds] == [("type_text", "Milk"), ("scroll", "down")]
+    assert ds[0]["read"] == read and "read" not in ds[1]          # where the typed words were copied from

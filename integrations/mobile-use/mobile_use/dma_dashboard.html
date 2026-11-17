@@ -268,6 +268,10 @@ button { cursor: pointer; }
 .opts .bar i.low { background: #a86f0c; }
 .opts .bar b { position: absolute; top: -3px; width: 1px; height: 10px; background: var(--text); }
 .opts .v { text-align: right; }
+.qa .src { font-family: var(--mono); font-size: 12px; line-height: 20px; color: var(--muted); overflow-wrap: anywhere; }
+.qa .src mark { color: var(--text); }
+.qa .fd { display: inline-block; margin-left: 6px; font: 500 10px/16px var(--font); color: #fff; background: var(--accent);
+  padding: 0 5px; border-radius: 3px; vertical-align: 1px; white-space: nowrap; }
 .ask .dcard { margin: 0 0 12px; }
 @media (max-width: 520px) { .dcard { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .it.dec .chev { transition: none; } }
@@ -490,6 +494,12 @@ function decAnswer(d) {
   if (d.answer == null || d.answer === "") return esc(v);
   return `${esc(v)} <mark>${esc(d.answer)}</mark>`;
 }
+/* a copied text: the line of DMA-2B's input it pointed into, the span between its start and end marked */
+function readRow(r) {
+  if (!r || !r.context || !r.at) return "";
+  const [a, b] = r.at, c = r.context;
+  return `<span class="qk">Copied from</span><span class="src" title="characters ${r.span[0]}–${r.span[1]} of DMA-2B's input">${r.clipped && r.clipped[0] ? "…" : ""}${esc(c.slice(0, a))}<mark>${esc(c.slice(a, b))}</mark>${esc(c.slice(b))}${r.clipped && r.clipped[1] ? "…" : ""}${r.found != null ? `<em class="fd">found ${(+r.found).toFixed(2)}</em>` : ""}</span>`;
+}
 function decCard(d, thr) {
   const opts = (d.options || []).filter(o => o[1] >= 0.001).slice(0, 4);
   const bars = opts.map(([a, p]) => { const on = a === d.action, low = on && thr != null && p < thr;
@@ -497,6 +507,7 @@ function decCard(d, thr) {
   return `<div class="dcard">${shot(d)}<div class="qa">
     <span class="qk">Question</span><span>${esc(d.question || "")}</span>
     <span class="qk">Answer</span><span class="qv">${decAnswer(d)}</span>
+    ${readRow(d.read)}
     ${bars ? `<div class="opts" title="DMA-2B probability of each action${thr != null ? "; the tick is the ask threshold" : ""}">${bars}</div>` : ""}</div></div>`;
 }
 function steps(events, thr, summary) {
