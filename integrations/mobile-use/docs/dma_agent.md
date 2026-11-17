@@ -173,6 +173,13 @@ while another job kept the GPU busy.
   first run. This was fixed before run 5, so those three `contact_add` results do not count.
 - The `location_off` failure in run 6 was a planning error of the LLM, not of the code that changed. It could happen
   again; the final 3/3 does not rule it out.
+- **Found 2026-11-17, after the final run:** the planner never saw unlabelled switches. Its element list dropped every
+  element without text, so the Wi-Fi switch on Settings → Internet (a `Switch` with no text, checked) was invisible
+  to it, and "Turn off Wi-Fi" once wandered for 14 minutes looking for "a toggle" (Wi-Fi off only after a person
+  allowed a tap). The planner now receives the whole UI tree, every element with its bounds, a switch's on/off state,
+  and a label from its row for an element with none (`planner.render_elements`, two tests). The same task then
+  finished in 5 steps. **The 60/60 above was measured with the old element list**; the suite is re-run with the new
+  one when a GPU is free (on the CPU server a 60-run suite takes about 3 hours).
 
 **Human in the loop, checked through the dashboard.** In the task "Delete the note old_ideas", the agent stopped
 before "click Delete" and asked. After approval it deleted the note, and ADB confirmed it. The screen at that moment

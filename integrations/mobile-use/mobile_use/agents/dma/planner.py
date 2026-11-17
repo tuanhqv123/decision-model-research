@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 import requests
 
 SYSTEM = """You control an Android phone through a helper that executes short local goals.
-Each turn you see the user's task, what was done so far, and the current screen (a list of UI elements).
+Each turn you see the user's task, what was done so far, and the current screen: EVERY element of the UI tree, one per line, as [id] Class 'label' (flags) @x0,y0,x1,y1 in screen pixels. A switch or checkbox says on or off; an element with no text of its own is labelled from the text on its row; elements on the same line of the screen have overlapping y ranges.
 Think step by step, then reply with ONE JSON object and nothing else, one of:
   {"thought": "...", "next": "local_goal", "instruction": "<what to do next>"}
   {"thought": "...", "next": "answer", "text": "<the answer to the user's question>"}
@@ -52,20 +52,53 @@ Reflect before finishing. Does the CURRENT screen show that the task is fully co
 {{"thought": "...", "complete": true}} or {{"thought": "...", "complete": false, "missing": "<what is still missing>"}}"""
 
 
-def render_elements(els: List[Dict[str, Any]], limit: int = 120) -> str:
+def _own_label(e: Dict[str, Any]) -> str:
+    return " | ".join(x for x in (e.get("text"), e.get("content_description"), e.get("hint_text")) if x)
+
+
+def _box(e):
+    b = e.get("bbox_pixels") or {}
+    return b.get("x_min", 0), b.get("y_min", 0), b.get("x_max", 0), b.get("y_max", 0)
+
+
+def _row_label(e: Dict[str, Any], labelled: List[Dict[str, Any]]) -> str:
+    """A label for a switch or a clickable row that has no text of its own (Android puts a setting's name in a child
+    TextView): the text inside it (a row with at most three texts), else the nearest text to its left on the same
+    line (a switch beside its setting's name)."""
+    x0, y0, x1, y1 = _box(e)
+    centre = lambda o: ((_box(o)[0] + _box(o)[2]) / 2, (_box(o)[1] + _box(o)[3]) / 2)  # noqa: E731
+    inside = [o for o in labelled if x0 <= centre(o)[0] <= x1 and y0 <= centre(o)[1] <= y1]
+    if inside:
+        return " | ".join(_own_label(o) for o in inside[:2]) if len(inside) <= 3 else ""
+    left = [o for o in labelled if y0 <= centre(o)[1] <= y1 and _box(o)[2] <= x0 + 4]
+    return _own_label(max(left, key=lambda o: _box(o)[2])) if left else ""
+
+
+def render_elements(els: List[Dict[str, Any]], limit: int = None) -> str:
+    """The whole screen as the planner reads it: every element the device reports, none filtered out, in tree order,
+    with its class, its label (an unlabelled switch or clickable row takes the text on its row), its flags, a switch's
+    on/off state and its bounds in screen pixels (x0,y0,x1,y1). The planner's context has room for all of it, and a
+    filter once hid the Wi-Fi switch (it has no text) so the planner looped looking for "a toggle"."""
+    labelled = [e for e in els if _own_label(e)]
     lines = []
     for i, e in enumerate(els):
-        label = " | ".join(x for x in (e.get("text"), e.get("content_description"), e.get("hint_text")) if x)
-        if not (label or e.get("is_editable")):
-            continue
-        flags = [f for f in ("clickable", "editable", "checked", "selected", "scrollable") if e.get("is_" + f)]
-        lines.append("[%d] %s %r%s" % (i, e["class_name"].split(".")[-1], label[:80],
-                                        " (%s)" % ", ".join(flags) if flags else ""))
-        if len(lines) >= limit:
+        label = _own_label(e)
+        if not label and (e.get("is_checkable") or e.get("is_clickable")):
+            label = _row_label(e, labelled)
+        flags = [f for f in ("clickable", "long_clickable", "editable", "selected", "scrollable", "focused")
+                 if e.get("is_" + f)]
+        if e.get("is_checkable"):
+            flags.append("on" if e.get("is_checked") else "off")
+        if e.get("is_enabled") is False:
+            flags.append("disabled")
+        x0, y0, x1, y1 = (int(v) for v in _box(e))
+        lines.append("[%d] %s %r%s @%d,%d,%d,%d" % (i, (e.get("class_name") or "?").split(".")[-1], label[:160],
+                                                    " (%s)" % ", ".join(flags) if flags else "", x0, y0, x1, y1))
+        if limit and len(lines) >= limit:
             break
     pk = [e.get("package_name") for e in els if e.get("package_name")]
     return "Current app package: %s\n%s" % (max(set(pk), key=pk.count) if pk else "unknown",
-                                            "\n".join(lines) or "(no readable elements)")
+                                            "\n".join(lines) or "(no elements)")
 
 
 def first_json(text: str) -> Optional[Dict[str, Any]]:

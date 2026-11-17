@@ -143,6 +143,12 @@ Topic list (each maps to a file under `notes/`):
     (click element 13, p 0.9995 vs 0.9994); about 11 s per decision instead of 0.14 s. "Turn off Wi-Fi" through the
     dashboard: finished in 8 steps, 158 s, Wi-Fi off checked over ADB. The model card's install line lacked
     `torchvision`; fixed on the Hub.
+  - **Agent dashboard rebuilt as a chat console with the phone docked beside it, 2026-11-17** (trajectory inline,
+    DMA-2B probability drawn against the 0.79 ask threshold, questions answered in the chat, earlier runs reopenable).
+    Found while testing it: **the planner never saw unlabelled switches** (its element list dropped elements without
+    text), so "Turn off Wi-Fi" wandered for 14 minutes. It now receives the whole UI tree with bounds and on/off state;
+    the same task finished in 5 steps. The 60/60 agent result predates this change; the suite is re-run when a GPU is
+    free.
 - **2026-11-12 (late): AC-HIGH IS A PER-STEP, TEACHER-FORCED NUMBER; PER GOAL IT EQUALS ANDROIDWORLD.**
   Note: `docs/research/2026-11-12-ACHIGH-vs-AW-FINAL.md`. An independent read-only agent re-derived every number below from the files.
   - **What AC-High measures.** v4 on the AndroidControl test set (InfiGUI scorer) gets **61.7% per step (5,213/8,444)**, but only **344/1,543 = 22.3% of episodes have every step right**.

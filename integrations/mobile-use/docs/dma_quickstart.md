@@ -1,14 +1,15 @@
 # Quickstart: run DMAgent (LLM + DMA-2B) with the web dashboard
 
-When it runs, a browser page shows:
-- **a task box** at the top, with **Start** and **Stop**, e.g. "Turn off Wi-Fi", or "Create a new note in Markor named
-  groceries with the text: bread and butter";
-- **the phone screen** on the left, streamed live (about 2 frames per second), with the agent's last tap circled;
-- **a timeline** in the middle: each LLM thought and local goal, each DMA-2B action with its probability, pop-up
-  recoveries and reflection checks;
-- **a "Needs you" panel** on the right, shown only when the agent needs a person: a sensitive action to approve, an
-  action the model is unsure of, or a question. Approve, reject, or type an answer;
-- **a summary** (outcome, steps, time, LLM calls) and **earlier tasks**.
+When it runs, a browser page shows a chat on the left and the phone on the right:
+- **the chat**: you type a task at the bottom (e.g. "Turn off Wi-Fi", or "Create a new note in Markor named groceries
+  with the text: bread and butter") and press Enter. The agent's work appears under it as it happens: each planner
+  thought and local goal, each DMA-2B action with its probability drawn against the ask threshold, pop-up recoveries
+  and the reflection check before it finishes, then a result line (outcome, steps, time, planner calls);
+- **questions inline**: when the agent needs a person (a sensitive action, an action DMA-2B is unsure of, or a
+  question), the chat shows Allow / Don't allow, or a box for your answer, with an optional note for the planner;
+- **the phone**, streamed live (about 2 frames per second), with the agent's last tap circled;
+- **earlier tasks** in the left column (click one to read its whole run again), and the setup at its foot: the device,
+  where DMA-2B runs (GPU or CPU), the planner model and the ask threshold.
 
 While no task runs, clicking the screen taps the phone at that point, and the **Back** and **Home** buttons press
 those keys. During a task, manual control is off.

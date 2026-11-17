@@ -366,3 +366,35 @@ def test_the_api_token_comes_from_the_environment_with_the_quickstart_default(mo
     monkeypatch.delenv("DMA_API_TOKEN")
     assert Executor("http://x").token == "tok"
     assert Executor("http://x", token="given").token == "given"
+
+
+def _el(cls, x0, y0, x1, y1, text=None, **flags):
+    return {"class_name": "android.widget." + cls, "text": text, "content_description": None, "hint_text": None,
+            "bbox_pixels": {"x_min": x0, "y_min": y0, "x_max": x1, "y_max": y1}, "package_name": "com.android.settings",
+            **{"is_" + k: v for k, v in flags.items()}}
+
+
+def test_an_unlabelled_switch_and_its_row_reach_the_planner_with_the_row_label_and_the_state():
+    # the Settings > Internet screen: the Wi-Fi row is a clickable container whose label is a child TextView, and the
+    # toggle is a Switch with no text; the planner used to see neither, and looped looking for "a toggle"
+    from mobile_use.agents.dma.planner import render_elements
+    els = [_el("LinearLayout", 0, 820, 1080, 960, clickable=True),
+           _el("TextView", 40, 860, 300, 910, "Wi-Fi"),
+           _el("Switch", 892, 826, 1038, 952, checkable=True, checked=True),
+           _el("TextView", 40, 1000, 400, 1050, "Airplane mode"),
+           _el("Switch", 892, 975, 1038, 1075, checkable=True, checked=False)]
+    out = render_elements(els)
+    assert "[0] LinearLayout 'Wi-Fi' (clickable)" in out
+    assert "[2] Switch 'Wi-Fi' (on)" in out
+    assert "[4] Switch 'Airplane mode' (off)" in out
+    assert "checked" not in out
+
+
+def test_the_planner_sees_every_element_with_its_bounds_none_filtered_out():
+    from mobile_use.agents.dma.planner import render_elements
+    els = [_el("FrameLayout", 0, 0, 1080, 2400), _el("TextView", 10, 10, 200, 60, "Title")]
+    els += [_el("TextView", 0, 100 + 10 * k, 50, 105 + 10 * k, "item %d" % k) for k in range(200)]
+    out = render_elements(els)
+    assert "[0] FrameLayout '' @0,0,1080,2400" in out
+    assert "[1] TextView 'Title' @10,10,200,60" in out
+    assert "[201] TextView 'item 199'" in out          # no line limit
