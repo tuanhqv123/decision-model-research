@@ -105,9 +105,9 @@ Topic list (each maps to a file under `notes/`):
     - Easy: 89.72% (7,516/8,377).
     - Hard, box: 73.60% (6,208/8,435).
     - Hard, improved tasks: 77.02% (6,452/8,377).
-    - **The scorer is our re-implementation and is NOT yet differential-tested** against the authors' code.
-      `benchmarks/train/diff_curated_official.py` does it; running it was refused by the tool permission check and
-      waits for the operator.
+    - The scorer is our re-implementation. **Differential test against the authors' scoring functions, 2026-11-17:
+      0 mismatches on all three splits** (8,377 + 8,435 + 8,377 rows; same counts as above),
+      `benchmarks/results/2026-11-16-ac-noterm/curated_official_diff.json`.
   - **Latency** (`benchmarks/results/2026-11-16-latency/`):
     - Released model, 500 AC-High steps, batch 1, over HTTP: 255 ms median and 305 ms p95 for the forward pass;
       266 / 315 ms for the whole request.
@@ -134,9 +134,10 @@ Topic list (each maps to a file under `notes/`):
     - training seeds 1–2: the 2026-11-16 launch failed. Both runs stopped at their own memory cap of 0.72, at steps
       ~180 and ~1,160, and were not evaluated. Re-queued 2026-11-17 with a cap of 0.77, after run acdual
       (`docs/research/PRE-REG-2026-11-16-acdual.md`, AndroidControl only, both test formats), all in `run_queue.sh`;
-    - the Curated differential test;
-    - a physical-phone run;
-    - the next training direction (operator's choice).
+    - a physical-phone run.
+  - **Closed 2026-11-17:** the Curated differential test (0 mismatches, above); the next training direction (run
+    acdual, chosen by the operator); private names removed from the published git history (both branches scan
+    clean; GitHub still holds the old commits under the merged pull request #27 until GitHub Support removes them).
 - **2026-11-12 (late): AC-HIGH IS A PER-STEP, TEACHER-FORCED NUMBER; PER GOAL IT EQUALS ANDROIDWORLD.**
   Note: `docs/research/2026-11-12-ACHIGH-vs-AW-FINAL.md`. An independent read-only agent re-derived every number below from the files.
   - **What AC-High measures.** v4 on the AndroidControl test set (InfiGUI scorer) gets **61.7% per step (5,213/8,444)**, but only **344/1,543 = 22.3% of episodes have every step right**.

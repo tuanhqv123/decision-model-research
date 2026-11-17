@@ -1,0 +1,34 @@
+{
+ "what": "Row-by-row differential test of benchmarks/train/score_curated.py against the authors' scoring functions (calculate_single_android / calculate_multi_android in src/eval/utils.py of github.com/zuitbjc1096/AndroidControl_Curated), run 2026-11-17 with benchmarks/train/diff_curated_official.py in a clean venv (Python 3.9, colorama 0.4.6).",
+ "official_commit": "87894871a13e6e6fced2d1a2959fc57b108e9f5b",
+ "note": "The authors' functions score every row; the ground-truth list and the answer string are built by diff_curated_official.py as their evaluate_actions_androidControl_vllm.py builds them (lines 88-114). Their inference code (vLLM) is not run: the predictions are ours.",
+ "results": {
+  "easy_box_low": {
+   "rows": 8377,
+   "official_sr": 7516,
+   "official_sr_pct": 89.72,
+   "ours_sr": 7516,
+   "ours_sr_pct": 89.72,
+   "mismatches": 0,
+   "args": "--curated android_control_low_bbox.json --pred eval-ours_actest_low_noterm-VA-val.jsonl"
+  },
+  "hard_box_high": {
+   "rows": 8435,
+   "official_sr": 6208,
+   "official_sr_pct": 73.6,
+   "ours_sr": 6208,
+   "ours_sr_pct": 73.6,
+   "mismatches": 0,
+   "args": "--curated android_control_high_bbox.json --pred eval-ours_actest_noterm-VA-val.jsonl"
+  },
+  "hard_improved_high": {
+   "rows": 8377,
+   "official_sr": 6452,
+   "official_sr_pct": 77.02,
+   "ours_sr": 6452,
+   "ours_sr_pct": 77.02,
+   "mismatches": 0,
+   "args": "--curated android_control_high_task-improved.json --pred eval-ours_actest_noterm-VA-val.jsonl --improved --revised eval-ours_currev_high_noterm-VA-val.jsonl"
+  }
+ }
+}

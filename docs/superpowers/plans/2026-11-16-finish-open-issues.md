@@ -28,7 +28,7 @@
 | 12 | Shared resources still running | Stop the emulator container, the DMA-2B API, the relay and the tunnels | Nothing of ours is left running |
 
 ## Needs the user (not done by the agent)
-- **Next training direction.** Options: each step in both AC forms, or drop the "done" row. Only seed runs (task 10) are planned until the user chooses.
+- ~~Next training direction.~~ Chosen 2026-11-16: every step in both AC forms (run acdual, pre-registered).
 - **Rotate the LLM API key** that was pasted into the chat.
 - **Test on a physical phone:** plug one in. The checklist is in the quickstart.
 
@@ -42,7 +42,7 @@
 | # | Status |
 |---|---|
 | 1 | Done: 123 ms median on an idle RTX 4090, 255 ms on a shared one (paper, card, presentation, README) |
-| 2 | Blocked: running the authors' scorer was refused by the tool permission check. `benchmarks/train/diff_curated_official.py` is ready for the operator to run |
+| 2 | Done (2026-11-17): the authors' scoring functions agree with ours on every row of the three splits, 0 mismatches (`benchmarks/results/2026-11-16-ac-noterm/curated_official_diff.json`) |
 | 3 | Done (tests) |
 | 4 | Done: dnd_on 26 → 6 steps, note_create finishes by itself; typing, keyboard and shade fixes |
 | 5 | Done: 20 tasks × 3, held-out 24/24 (95% CI 86.2–100%), tuned 36/36 |
