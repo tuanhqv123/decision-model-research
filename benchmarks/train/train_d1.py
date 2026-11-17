@@ -507,6 +507,8 @@ def main():
     ap.add_argument("--no-memory", action="store_true")
     ap.add_argument("--mem-frac", type=float, default=0.0, help="cap this process's share of GPU memory")
     ap.add_argument("--save-every", type=int, default=500)
+    ap.add_argument("--resume-dir", default="", help="pause/resume (resume_state.py): on SIGTERM/SIGUSR1 finish the "
+                    "optimizer step, write the whole training state here and exit 75; at start, continue from it")
     ap.add_argument("--keep-ckpts", action="store_true",
                     help="save each checkpoint to its own ckpt_<step> directory (choose the best on validation)")
     ap.add_argument("--grad-ckpt", action="store_true")
@@ -593,9 +595,17 @@ def main():
     rng = random.Random(a.seed)
     order = list(range(len(recs)))
     cursor, epoch = 0, 0
+    start, pause = 0, None
+    if a.resume_dir:
+        from resume_state import PauseFlag, has_state, load_state
+        pause = PauseFlag().install()
+        if has_state(a.resume_dir):
+            st = load_state(a.resume_dir, model=model, opt=opt, sched=sched, rng=rng)
+            start, order, cursor, epoch = st["step"], st["order"], st["cursor"], st["epoch"]
+            print(f"[resume] continuing at step {start + 1} of {total} from {a.resume_dir}", flush=True)
     log = open(f"{a.out}/train.log", "a")
     agg, t_last = {}, time.time()
-    for step in range(total):
+    for step in range(start, total):
         if a.bucket:
             # The same per_step samples per optimizer step, grouped by length into micro-batches (`length_buckets`):
             # every sample keeps weight 1/per_step, only the padding inside a micro-batch shrinks.
@@ -647,6 +657,19 @@ def main():
             dest = f"{a.out}/ckpt_{step + 1}" if a.keep_ckpts else f"{a.out}/ckpt"
             save(model, dest, base_dir)
             print(f"[save] step {step+1} -> {dest}", flush=True)
+            if a.resume_dir and step + 1 < total:   # a crash (e.g. memory taken by another user) resumes from here
+                from resume_state import save_state
+                save_state(a.resume_dir, step=step + 1, model=model, opt=opt, sched=sched, rng=rng, order=order,
+                           cursor=cursor, epoch=epoch)
+        if pause is not None and pause.is_set() and step + 1 < total:
+            from resume_state import PAUSED_EXIT, save_state
+            save_state(a.resume_dir, step=step + 1, model=model, opt=opt, sched=sched, rng=rng, order=order,
+                       cursor=cursor, epoch=epoch)
+            print(f"[pause] paused after step {step + 1}; state in {a.resume_dir}", flush=True)
+            log.close()
+            sys.exit(PAUSED_EXIT)
+    if a.resume_dir:
+        shutil.rmtree(a.resume_dir, ignore_errors=True)    # the run is complete; the state is no longer needed
     print("TRAIN_DONE", flush=True)
 
 

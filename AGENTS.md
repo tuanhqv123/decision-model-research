@@ -151,6 +151,13 @@ Topic list (each maps to a file under `notes/`):
     whole tree: 60/60 again, all strict** (held-out 24/24), with DMA-2B on a CPU (10.9 s per decision) and a rebuilt
     34-app list, so it is not a controlled test of the planner change; `wifi_off` went from 12.7 to 6.0 LLM calls per
     run (`integrations/mobile-use/benchmark/dma_scenarios/results/rerun_2026-11-17_cpu/`, `docs/dma_agent.md` §4).
+  - **Run acdual stopped by the operator, 2026-11-17 08:17 UTC, at step 2,750 of 9,330** (checkpoint 2,000 kept,
+    not evaluated). Reason: it only raises an AndroidControl number with a model the agent cannot use (no `status`).
+    The exec2 seeds 1–2 now run alone under `benchmarks/train/gpu_share.py`, which yields the shared GPU whenever
+    another process appears or the resident service needs more memory, and continues after 10 free minutes. The
+    trainer pauses at the end of an optimizer step and resumes with the same data order, schedule, optimizer state
+    and random streams (`resume_state.py`; tested to give identical weights on a toy loop, and paused/resumed on the
+    GPU). Each seed is evaluated on AC-Low/High after it ends.
   - **Decision cards and endpoint settings in the agent dashboard, 2026-11-17.** Each DMA-2B action opens a card in the
     form of the d1.2 answer cards (released by Liquid AI on 2026-11-16, API only, sizes not published): the screen it
     read with the chosen element boxed and its confidence, the question (the local goal), the answer, and each action's
