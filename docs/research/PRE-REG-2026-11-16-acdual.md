@@ -66,3 +66,21 @@ Only the data changes.
 - Expected time: about 10 s per step on the shared RTX 4090.
 - Disk: before starting, the seed runs' intermediate checkpoints are deleted, keeping `ckpt_7000` and the final one.
   This run keeps one checkpoint every 2,000 steps plus the final one.
+
+## Appended 2026-11-17, before training (the predictions and rules above are unchanged)
+
+- **Data built.** `compact_dual_v1.jsonl`: 149,292 rows; md5 `8a834e82e4da9a812e6e347f45e31f36`.
+  - 74,714 rows `dual_high` and 74,578 rows `dual_low`; 136 steps have no instruction.
+  - 0 `status` rows.
+  - Steps = 149,292 // 16 = 9,330.
+- **Correction of a factual line in "Predictions".** The goal-only data grows by **2.95×** over exec2 (74,714 rows
+  against 25,340), not "about 3.5 times". The 3.5 figure came from an estimate made before the data was built.
+  - The predicted AC-High gain (+1 to +3 points) and the decision rules are kept exactly as registered.
+  - The smaller ratio makes a gain at the low end of that range, or none, more likely.
+- **Launched 2026-11-17 02:00 UTC** (`run_queue.sh` on the training host): 149,292 rows, 9,330 steps.
+  - **Order changed:** acdual runs first, then the exec2 seeds 1 and 2.
+  - **Memory cap 0.77 for all three runs.** The cap is a resource setting; it does not change the training
+    computation. Both seed runs launched on 2026-11-16 with the 0.72 cap stopped at their own cap (seed 1 at step
+    ~180, seed 2 at step ~1,160), and so did exec2 seed 0 at step ~7,190.
+  - An earlier start of this run at 01:58 was stopped by mistake after a few minutes and deleted. Its checkpoints were
+    never evaluated.

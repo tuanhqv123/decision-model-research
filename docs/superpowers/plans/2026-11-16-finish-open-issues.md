@@ -50,7 +50,7 @@
 | 7 | Done: about 2 frames/s, click-to-tap, Back/Home |
 | 8 | Done for every client step from a fresh GitHub download; the API step was checked by equivalence (same code and files), not by a fresh start |
 | 9 | Done: agent docs, presentation and 26 research notes in English (numbers checked digit by digit) |
-| 10 | Running: seeds 1 and 2 on the training host (`run_seeds_exec2.sh`), each followed by AC-Low/High evaluation (`ev_seed.sh`) |
+| 10 | The 2026-11-16 seed runs failed at their own 0.72 memory cap (steps ~180 and ~1,160). Re-queued 2026-11-17 with a 0.77 cap, after run acdual (`PRE-REG-2026-11-16-acdual.md`); each run is followed by its AC-Low/High evaluation (`run_queue.sh`) |
 | 11 | Done |
 | 12 | Done: emulator stopped, API, relay and tunnels stopped, LLM key files deleted |
 

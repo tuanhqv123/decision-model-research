@@ -131,7 +131,9 @@ Topic list (each maps to a file under `notes/`):
     - Two earlier partial runs on older code were 12/13 and 17/20. Their failures and fixes are listed in
       `integrations/mobile-use/docs/dma_agent.md` §4.
   - **Open:**
-    - training seeds 1–2: running since 2026-11-16 on the training host (`run_seeds_exec2.sh`, then `ev_seed.sh`);
+    - training seeds 1–2: the 2026-11-16 launch failed. Both runs stopped at their own memory cap of 0.72, at steps
+      ~180 and ~1,160, and were not evaluated. Re-queued 2026-11-17 with a cap of 0.77, after run acdual
+      (`docs/research/PRE-REG-2026-11-16-acdual.md`, AndroidControl only, both test formats), all in `run_queue.sh`;
     - the Curated differential test;
     - a physical-phone run;
     - the next training direction (operator's choice).
