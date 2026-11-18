@@ -139,10 +139,8 @@ shown with the goal only, as in the High setting. In the remaining episodes the 
 goal; after the last step of each local goal, the next screen is added with the answer ``done'', so the model also
 learns when an instruction has been carried out. Steps that continue an instruction from the previous step
 (AndroidControl repeats an instruction over several steps, for example for repeated scrolls or a wait after a
-click) are given three times the weight. The training set has 116{,}139 rows. One row, whose text state is longer than 10{,}000 tokens (the median is about
-700), is left out. Training runs for one epoch (7{,}259 steps of 16 rows, learning rate $10^{-5}$, cosine
-schedule), and we evaluate the checkpoint at step 7{,}000 (learning rate $3\times10^{-8}$). The released model is
-seed 0; \cref{sec:seeds} repeats the training with other seeds.
+click) are given three times the weight. The training set has 116{,}139 rows. We train for 7{,}000 steps of 16 rows with learning rate $10^{-5}$ and a
+cosine decay. The released model is seed 0; \cref{sec:seeds} repeats the training with other seeds.
 
 \subsection{Scoring}
 The AndroidControl action space has no ``done'' action, and the test split contains no step whose correct action
