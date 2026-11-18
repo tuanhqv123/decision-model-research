@@ -1,0 +1,72 @@
+{
+ "seeds": {
+  "0": {
+   "low": {
+    "steps": 8444,
+    "exact": 7642,
+    "sr": 90.5,
+    "type": 96.85,
+    "episodes": 1543,
+    "episodes_all_right": 985,
+    "episode_sr": 63.84
+   },
+   "high": {
+    "steps": 8444,
+    "exact": 6266,
+    "sr": 74.21,
+    "type": 87.01,
+    "episodes": 1543,
+    "episodes_all_right": 473,
+    "episode_sr": 30.65
+   }
+  },
+  "1": {
+   "low": {
+    "steps": 8444,
+    "exact": 7679,
+    "sr": 90.94,
+    "type": 97.11,
+    "episodes": 1543,
+    "episodes_all_right": 990,
+    "episode_sr": 64.16
+   },
+   "high": {
+    "steps": 8444,
+    "exact": 6203,
+    "sr": 73.46,
+    "type": 86.07,
+    "episodes": 1543,
+    "episodes_all_right": 456,
+    "episode_sr": 29.55
+   }
+  }
+ },
+ "low_sr": {
+  "n": 2,
+  "mean": 90.72,
+  "sd": 0.3111269837220793,
+  "min": 90.5,
+  "max": 90.94
+ },
+ "low_episode_sr": {
+  "n": 2,
+  "mean": 64.0,
+  "sd": 0.22627416997969038,
+  "min": 63.84,
+  "max": 64.16
+ },
+ "high_sr": {
+  "n": 2,
+  "mean": 73.835,
+  "sd": 0.5303300858899106,
+  "min": 73.46,
+  "max": 74.21
+ },
+ "high_episode_sr": {
+  "n": 2,
+  "mean": 30.1,
+  "sd": 0.7778174593052007,
+  "min": 29.55,
+  "max": 30.65
+ }
+}

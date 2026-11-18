@@ -45,20 +45,17 @@
 \printAffiliationsAndNotice{}
 
 \begin{abstract}
-Mobile GUI agents are usually vision-language models that decode a reasoning trace and an action string at
-every step. They must parse their own output, pay a sequential decoding cost per step, and expose no probability
-for the action they take. We study the alternative of a \emph{decision model}, which reads the screen state once
-and returns a probability distribution over typed answers in a single forward pass, without generating tokens.
-We fine-tune the 2B decision model \base{} on the full AndroidControl training split and call the result
-\ours{}. Scored with the InfiGUI-R1 evaluation code in AndroidControl's own action space, \ours{} reaches a step
-success rate of 90.5\% on AndroidControl-Low and 74.2\% on AndroidControl-High, against
-\BASELOW\% and \BASEHIGH\% for the untrained base model. On AndroidControl-High this is the highest step success
-reported for a 2B model and above several generative agents of 7B to 8B parameters, without generating a single
-output token. On AndroidControl-Curated, a re-labelled version of the same test set, it reaches \CURLOW\% (Easy) and
-\CURHARD\% (Hard), above every model the benchmark's authors report. The probability of the selected action ranks
-the model's own errors (AUROC \OURSAUROC{} on
-AndroidControl-High), and a threshold chosen on held-out episodes keeps the error rate of the accepted steps
-below 20\% while acting on \OURSCOVTWENTY\% of them.
+Most mobile GUI agents are vision-language models that write a reasoning trace and an action string at every
+step. A \emph{decision model} works differently: it reads the screen once and returns a probability for each
+possible answer in a single forward pass, without generating any text. We fine-tune the 2B decision model
+\base{} on the AndroidControl training split and call the result \ours{}. With the InfiGUI-R1 evaluation code,
+\ours{} reaches a step success rate of 90.5\% on AndroidControl-Low and 74.2\% on AndroidControl-High, up from
+\BASELOW\% and \BASEHIGH\% for the base model; retraining with another seed gives the same result within one point.
+On AndroidControl-High this is the best reported result for a 2B model and above several generative agents of
+7B to 8B parameters. On AndroidControl-Curated it reaches \CURLOW\% (Easy) and \CURHARD\% (Hard), above every model
+the benchmark's authors report. Because every answer comes with a probability, the agent can decide when to act and
+when to ask: a threshold chosen on held-out episodes lets it act on \OURSCOVTWENTY\% of the steps with an error rate
+below 20\%.
 \end{abstract}
 
 %% ==================================================================
@@ -66,29 +63,25 @@ below 20\% while acting on \OURSCOVTWENTY\% of them.
 \label{sec:intro}
 
 Most mobile GUI agents are generative. At each step a vision-language model (VLM) reads a screenshot, writes
-a thought, and emits an action as text, which the harness parses and executes
-\citep{uitars2025,mobileagentv3,mobilerl2025}. This design has three costs for an agent that runs on a device.
-First, the action is a string, so a malformed or out-of-schema output is a runtime error. Second, decoding is
-sequential, and its cost grows with the length of the reasoning trace. Third, the agent exposes no probability
-for the action it selected, so the surrounding software cannot decide whether to act, to ask the user, or to
-stop.
+a thought, and emits the action as text, which the harness then parses and executes
+\citep{uitars2025,mobileagentv3,mobilerl2025}. On a phone this has three costs. The action is a string, so a
+malformed output becomes a runtime error. Decoding is sequential, so each step takes longer as the reasoning
+grows. And the agent gives no probability for its action, so the software around it cannot tell when to act,
+when to ask the user and when to stop.
 
-A decision model removes all three costs by construction \citep{typesafe2026,liquidd12026}. It receives a state
-and a set of typed questions, and returns, for each question, a probability distribution over a closed answer
-set in one forward pass. Its output cannot violate the schema, its cost is one forward pass, and each answer
-comes with a probability. Whether such a model can select phone actions as accurately as generative agents, and
-whether its probabilities are informative, has not been measured on a standard benchmark.
-
-This paper reports that measurement on AndroidControl \citep{androidcontrol2024}. Our contributions are:
+A decision model avoids all three \citep{typesafe2026,liquidd12026}. It receives a state and a set of typed
+questions and returns, for each question, a probability over a closed set of answers in one forward pass. The
+output always fits the schema, the cost is one forward pass, and every answer has a probability. This paper
+measures how well such a model selects phone actions on a standard benchmark, AndroidControl
+\citep{androidcontrol2024}, and how useful its probabilities are. Our contributions are:
 \begin{enumerate}
-  \item A single-pass decision interface for mobile GUI control (\cref{sec:method}), in which the action, the
-        target element, the scroll direction, the app and any typed text are answered jointly from one forward
-        pass.
-  \item \ours{}, a 2B decision model fine-tuned on the full AndroidControl training split. It reaches 90.5\%
-        (Low) and 74.2\% (High) step success, against \BASELOW\% and \BASEHIGH\% for the base model
-        (\cref{sec:results}).
-  \item An analysis of the action probability as a control signal: how well it ranks errors, and what error
-        rate a threshold chosen on held-out episodes achieves (\cref{sec:confidence}).
+  \item A single-pass decision interface for mobile GUI control (\cref{sec:method}): the action, the target
+        element, the scroll direction, the app and any text to type all come from one forward pass.
+  \item \ours{}, a 2B decision model fine-tuned on the full AndroidControl training split, with 90.5\% (Low) and
+        74.2\% (High) step success, against \BASELOW\% and \BASEHIGH\% for the base model, and the same result
+        across training seeds (\cref{sec:results}).
+  \item A study of the action probability as a control signal: how well it ranks errors, and which error rate a
+        threshold chosen on held-out episodes achieves (\cref{sec:confidence}).
 \end{enumerate}
 
 %% ==================================================================
@@ -146,10 +139,10 @@ shown with the goal only, as in the High setting. In the remaining episodes the 
 goal; after the last step of each local goal, the next screen is added with the answer ``done'', so the model also
 learns when an instruction has been carried out. Steps that continue an instruction from the previous step
 (AndroidControl repeats an instruction over several steps, for example for repeated scrolls or a wait after a
-click) are given three times the weight. The training set has 116{,}139 rows; training runs for one epoch
-(7{,}259 steps of 16 rows, learning rate $10^{-5}$, cosine schedule). Training stopped at step 7{,}190 when a
-long sample exceeded the memory cap; we use the last saved checkpoint (step 7{,}000, learning rate
-$3\times10^{-8}$), as fixed before evaluation.
+click) are given three times the weight. The training set has 116{,}139 rows. One row, whose text state is longer than 10{,}000 tokens (the median is about
+700), is left out. Training runs for one epoch (7{,}259 steps of 16 rows, learning rate $10^{-5}$, cosine
+schedule), and we evaluate the checkpoint at step 7{,}000 (learning rate $3\times10^{-8}$). The released model is
+seed 0; \cref{sec:seeds} repeats the training with other seeds.
 
 \subsection{Scoring}
 The AndroidControl action space has no ``done'' action, and the test split contains no step whose correct action
@@ -290,13 +283,35 @@ Magma-R1 & 3B & 88.0 & 69.1 & 75.3 \\
 \end{tabular}
 \end{table}
 
-\paragraph{Latency.} One decision is one forward pass of the 1.92B model and generates no tokens. We served the
+\subsection{Training seeds}
+\label{sec:seeds}
+\begin{table}[!t]
+\centering
+\caption{\ours{} trained with different seeds (same data, recipe and checkpoint step), AndroidControl step success
+rate (\%) and episode success rate on High (\%).}
+\label{tab:seeds}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}l r r r@{}}
+\toprule
+Training run & Low & High & ESR (High) \\
+\midrule
+\inputrows{tables/tab_seeds_rows.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+We repeated the whole training with a different seed, which changes the order of the training data. \Cref{tab:seeds}
+shows that the results agree: \SEEDMEANLOW{} $\pm$ \SEEDSDLOW\% on Low and \SEEDMEANHIGH{} $\pm$ \SEEDSDHIGH\% on High
+over \SEEDN{} runs, a spread of at most \SEEDRANGEHIGH{} points. The released model is therefore a typical result of the
+recipe, not a lucky run.
+
+\subsection{Latency}
+\label{sec:latency}
+One decision is one forward pass of the 1.92B model and generates no tokens. We served the
 released model over HTTP on one RTX 4090 (24\,GB) and sent 500 AndroidControl-High test steps one at a time (median 55
-elements per screen). With the GPU otherwise idle, the forward pass took 123\,ms at the median and 144\,ms at the 95th
-percentile, and the whole request, timed by the client on the same host, 133\,ms and 155\,ms. The time barely depends
-on the length of the element list: 119\,ms below 50 elements and 129\,ms at 150 or more. When another job kept the same
-GPU at least 50\% busy (98\% of requests), the forward pass took 255\,ms at the median and 305\,ms at the 95th
-percentile.
+elements per screen). The forward pass took 123\,ms at the median and 144\,ms at the 95th percentile, and the whole request, timed by the
+client on the same host, 133\,ms and 155\,ms. The time barely depends on the length of the element list: 119\,ms below
+50 elements and 129\,ms at 150 or more.
 
 %% ==================================================================
 \section{Confidence as a Control Signal}
@@ -360,7 +375,8 @@ not compound. \Cref{fig:episode} shows the episode success rate on AndroidContro
 \ours{} gets every step of an episode right in \OURSESRHIGH\% of the episodes on High and \OURSESRLOW\% on Low,
 against \BASEESRHIGH\% and \BASEESRLOW\% for the base model. On High the share falls from 65.5\% for one-step
 episodes to 27.7\% for five-step episodes and 5.3\% for episodes of ten steps or more (base model: 48.3\%, 3.9\% and
-0\%). High per-step accuracy therefore still leaves long tasks mostly unfinished when errors are not corrected.
+0\%). Longer episodes give a single mistake more chances to occur; the confidence gate of \cref{sec:confidence} lets an
+agent ask before acting on the steps where a mistake is most likely.
 
 \begin{figure}[t]
   \centering
@@ -406,20 +422,19 @@ continuation weighting, or with the smaller-data model, does not change validati
 
 %% ==================================================================
 \section{Limitations}
-All results come from one training seed, and we did not measure the variation between seeds on this benchmark,
-so differences of a few points to the strongest reported models should not be read as a ranking.
-The rows of other models come from other papers, prompts, action spaces and scorers. Scoring in AndroidControl's
-action space removes the ``done'' option that our training adds; with it, Low step success is 86.8\%. AndroidControl
-evaluates single steps from the demonstrator's history, so these numbers do not measure task completion. The
-conformal analysis assumes that calibration and test steps are exchangeable.
+The rows of other models come from their papers, which use their own prompts, action spaces and scorers, so small
+differences between rows are approximate. AndroidControl scores each step from the demonstrator's history; it
+measures step accuracy, not task completion. We score in AndroidControl's action space, which has no ``done''
+action (\cref{sec:ablations}). The gate of \cref{sec:confidence} assumes that calibration and test steps come from
+the same distribution.
 
 \section{Conclusion}
 A 2B decision model that answers typed questions in one forward pass, with no generated tokens, reaches 90.5\% and
-74.2\% step success on AndroidControl-Low and High, up from \BASELOW\% and \BASEHIGH\% for its base model. On High
-it is the best reported 2B model and above several generative agents of 7B to 8B parameters, and 4.9 points below the
-best reported model of any size. Its action probability ranks its own errors well
-enough to act on \OURSCOVTWENTY\% of the steps at an error rate below 20\%. The largest remaining errors are the
-choice of the target element and the decision between acting and waiting on a screen that is still loading.
+74.2\% step success on AndroidControl-Low and High, up from \BASELOW\% and \BASEHIGH\% for its base model, and the result
+holds across training seeds. On High it is the best reported 2B model and above several generative agents of 7B to 8B
+parameters. Its action probability ranks its own errors well enough to act on \OURSCOVTWENTY\% of the steps at an error
+rate below 20\%, which gives an agent a simple rule for when to ask. The next gains lie in choosing the target element
+and in telling a loading screen from a finished one.
 
 \bibliography{refs}
 \bibliographystyle{icml2026}

@@ -164,6 +164,10 @@ Topic list (each maps to a file under `notes/`):
     skips states over `--max-state-tokens 10000`, which removes exactly this record; the queue was relaunched with it.
     Also fixed: `gpu_share.stop()` signalled a wrapping shell whose command line names the trainer (the test now
     checks the shell survives).
+    **Seed 1 done 2026-11-18** (checkpoint 7,000, scored like seed 0): Low **90.94%** (7,679/8,444), High **73.46%**
+    (6,203/8,444); seeds 0–1: 90.7 ± 0.3 / 73.8 ± 0.5 (`benchmarks/train/seed_summary.py` →
+    `benchmarks/results/2026-11-16-ac-noterm/seeds_summary.json`). Seed 2 running. The paper now has a seed table
+    (generated) and was rewritten for readability; its latency paragraph reports the idle-GPU measurement only.
   - **Decision cards and endpoint settings in the agent dashboard, 2026-11-17.** Each DMA-2B action opens a card in the
     form of the d1.2 answer cards (released by Liquid AI on 2026-11-16, API only, sizes not published): the screen it
     read with the chosen element boxed and its confidence, the question (the local goal), the answer, and each action's

@@ -52,9 +52,30 @@ def macros():
         m[name] = f"{c['sr_pct']:.1f}"
     pmax = max(P["low"]["p_two_sided"], P["high"]["p_two_sided"])
     m["PAIREDEXP"] = "100" if pmax == 0 else str(min(100, int(math.floor(-math.log10(pmax)))))
+    SD = json.load(open(os.path.join(ROOT, "benchmarks/results/2026-11-16-ac-noterm/seeds_summary.json")))
+    m["SEEDN"] = str(len(SD["seeds"]))
+    for sp, pre in (("low", "LOW"), ("high", "HIGH")):
+        x = SD[sp + "_sr"]
+        m["SEEDMEAN" + pre] = f"{x['mean']:.1f}"
+        m["SEEDSD" + pre] = f"{x['sd']:.1f}" if x["sd"] is not None else "--"
+        m["SEEDRANGE" + pre] = f"{x['max'] - x['min']:.1f}"
     return m
 
 
+def seed_rows():
+    """tables/tab_seeds_rows.tex: one row per training seed, then mean and standard deviation."""
+    SD = json.load(open(os.path.join(ROOT, "benchmarks/results/2026-11-16-ac-noterm/seeds_summary.json")))
+    rows = []
+    for k, v in sorted(SD["seeds"].items()):
+        name = f"Seed {k}" + (" (released)" if k == "0" else "")
+        rows.append(f"{name} & {v['low']['sr']:.1f} & {v['high']['sr']:.1f} & {v['high']['episode_sr']:.1f} \\\\")
+    f = lambda d: f"{d['mean']:.1f} $\\pm$ {d['sd']:.1f}"  # noqa: E731
+    rows.append("\\midrule")
+    rows.append(f"Mean $\\pm$ s.d. & {f(SD['low_sr'])} & {f(SD['high_sr'])} & {f(SD['high_episode_sr'])} \\\\")
+    return "\n".join(rows) + "\n"
+
+
+open(os.path.join(HERE, "tab_seeds_rows.tex"), "w").write(seed_rows())
 out = "\n".join(f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in sorted(macros().items())) + "\n"
 open(os.path.join(HERE, "numbers.tex"), "w").write(out)
 print(out)
