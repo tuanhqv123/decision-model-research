@@ -1,0 +1,23 @@
+{
+ "track": "VA",
+ "n": 8444,
+ "step_acc": 0.8247,
+ "type_acc": 0.9693,
+ "grounding": 0.8004,
+ "per_type": {
+  "click": "3925/5074",
+  "long_press": "5/9",
+  "navigate_back": "326/343",
+  "open_app": "556/608",
+  "scroll": "1128/1211",
+  "type_text": "520/632",
+  "wait": "504/567"
+ },
+ "ece_action": 0.1538,
+ "always_status": 0.0,
+ "eval_sec": 2113,
+ "contract": "v4",
+ "element_rule": "all_reading_noime",
+ "tag": "exec2_s2_low_noterm",
+ "status_threshold": null
+}

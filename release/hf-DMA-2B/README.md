@@ -57,7 +57,8 @@ option.
 - **A probability for each decision.** On AndroidControl-High, acting only when the action probability is above a
   threshold chosen on held-out episodes keeps the error rate at 19% while acting on 80% of the steps.
 
-> Research model, one training seed. Rows marked *reported* are copied from other papers; everything else is
+> Research model (seed 0 of three training seeds; the other two score within one point: AndroidControl-Low
+> 90.7 ± 0.2%, High 74.0 ± 0.4% over three seeds). Rows marked *reported* are copied from other papers; everything else is
 > measured by us.
 
 ## Results on AndroidControl
@@ -202,4 +203,3 @@ After executing the action, append one history line built with `v.history_entry_
   (AC-Low SR 86.8%), mostly when the screen is still loading after a click.
 - **Needs the accessibility element list.** It cannot act from pixels only, or tap a target that has no element.
 - **Types only text that appears in its input** (the goal or the instruction).
-- **One seed.** Seed-to-seed spread is not measured.

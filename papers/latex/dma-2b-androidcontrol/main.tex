@@ -50,7 +50,7 @@ step. A \emph{decision model} works differently: it reads the screen once and re
 possible answer in a single forward pass, without generating any text. We fine-tune the 2B decision model
 \base{} on the AndroidControl training split and call the result \ours{}. With the InfiGUI-R1 evaluation code,
 \ours{} reaches a step success rate of 90.5\% on AndroidControl-Low and 74.2\% on AndroidControl-High, up from
-\BASELOW\% and \BASEHIGH\% for the base model; retraining with another seed gives the same result within one point.
+\BASELOW\% and \BASEHIGH\% for the base model; retraining with two other seeds gives the same result within one point.
 On AndroidControl-High this is the best reported result for a 2B model and above several generative agents of
 7B to 8B parameters. On AndroidControl-Curated it reaches \CURLOW\% (Easy) and \CURHARD\% (Hard), above every model
 the benchmark's authors report. Because every answer comes with a probability, the agent can decide when to act and
@@ -298,7 +298,7 @@ Training run & Low & High & ESR (High) \\
 \bottomrule
 \end{tabular}
 \end{table}
-We repeated the whole training with a different seed, which changes the order of the training data. \Cref{tab:seeds}
+We repeated the whole training with two other seeds; the seed changes the order of the training data. \Cref{tab:seeds}
 shows that the results agree: \SEEDMEANLOW{} $\pm$ \SEEDSDLOW\% on Low and \SEEDMEANHIGH{} $\pm$ \SEEDSDHIGH\% on High
 over \SEEDN{} runs, a spread of at most \SEEDRANGEHIGH{} points. The released model is therefore a typical result of the
 recipe, not a lucky run.
