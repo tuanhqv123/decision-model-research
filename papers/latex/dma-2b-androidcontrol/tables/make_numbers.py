@@ -42,7 +42,7 @@ def macros():
         for d, name in (("0.2", "TWENTY"), ("0.15", "FIFTEEN"), ("0.1", "TEN")):
             x = cf[d]
             if x["coverage_mean"] is not None:
-                m[pre + "COV" + name] = f"{100 * x['coverage_mean']:.0f}" if name == "TWENTY" else pct(x["coverage_mean"])
+                m[pre + "COV" + name] = pct(x["coverage_mean"])
                 m[pre + "RISK" + name] = pct(x["risk_mean"])
                 m[pre + "VIOL" + name] = f"{100 * x['violation_rate']:.0f}"
             m[pre + name + "SPLITS"] = str(x["seeds"] - x["no_threshold"])
@@ -59,6 +59,61 @@ def macros():
         m["SEEDMEAN" + pre] = f"{x['mean']:.1f}"
         m["SEEDSD" + pre] = f"{x['sd']:.1f}" if x["sd"] is not None else "--"
         m["SEEDRANGE" + pre] = f"{x['max'] - x['min']:.1f}"
+    m.update(bootstrap_and_errors())
+    return m
+
+
+def _perstep(path):
+    out = {}
+    for line in open(path):
+        r = json.loads(line)
+        out[(str(r["episode_id"]), r["step"])] = r
+    return out
+
+
+def bootstrap_and_errors(reps=2000, seed=0):
+    """95% intervals over episodes (resampled with replacement; steps of one episode are not independent) for our step
+    success rate and for its paired difference from the base model; the base model's upper bound if every one of its
+    "done" answers were replaced by a correct action; and the breakdown of our AndroidControl-High errors."""
+    import random
+    res = os.path.join(ROOT, "benchmarks/results")
+    files = {"low": ("2026-11-16-ac-noterm/perstep-ours_actest_low_noterm.jsonl", "2026-11-12-base/perstep-base_actest_low.jsonl"),
+             "high": ("2026-11-16-ac-noterm/perstep-ours_actest_noterm.jsonl", "2026-11-12-base/perstep-base_actest.jsonl")}
+    m = {}
+    for sp, (fo, fb) in files.items():
+        ours, base = _perstep(os.path.join(res, fo)), _perstep(os.path.join(res, fb))
+        assert ours.keys() == base.keys()
+        ep = {}
+        for k in ours:
+            ep.setdefault(k[0], []).append((ours[k]["exact_match"], base[k]["exact_match"]))
+        keys, rnd, sr, diff = list(ep), random.Random(seed), [], []
+        for _ in range(reps):
+            pick = [ep[rnd.choice(keys)] for _ in keys]
+            n = sum(len(x) for x in pick)
+            o = sum(a for x in pick for a, _ in x)
+            b = sum(c for x in pick for _, c in x)
+            sr.append(100 * o / n)
+            diff.append(100 * (o - b) / n)
+        sr.sort(), diff.sort()
+        lo, hi = int(0.025 * reps), int(0.975 * reps) - 1
+        P = sp.upper()
+        m["OURSCILO" + P], m["OURSCIHI" + P] = f"{sr[lo]:.1f}", f"{sr[hi]:.1f}"
+        n = len(ours)
+        d = 100 * (sum(r["exact_match"] for r in ours.values()) - sum(r["exact_match"] for r in base.values())) / n
+        m["DIFF" + P], m["DIFFCILO" + P], m["DIFFCIHI" + P] = f"{d:.1f}", f"{diff[lo]:.1f}", f"{diff[hi]:.1f}"
+        b = S["base_" + sp]
+        m["BASEBOUND" + P] = f"{100 * (b['correct'] + b['predicted_terminate']) / b['steps']:.1f}"
+    high = _perstep(os.path.join(res, files["high"][0])).values()
+    err = [r for r in high if not r["exact_match"]]
+    act = lambda a: a["action"]  # noqa: E731
+    m["ERRHIGH"] = f"{len(err):,}".replace(",", "{,}")
+    m["ERRTYPEHIGH"] = f"{sum(not r['type_match'] for r in err):,}".replace(",", "{,}")
+    wrong_target = [r for r in err if r["type_match"]]
+    m["ERRARGHIGH"] = f"{len(wrong_target):,}".replace(",", "{,}")
+    m["ERRCLICKTARGETHIGH"] = str(sum(act(r["gt"]) == "click" for r in wrong_target))
+    pair = lambda r: {act(r["gt"]), act(r["pred"])}  # noqa: E731
+    m["ERRCLICKSCROLLHIGH"] = str(sum(not r["type_match"] and pair(r) == {"click", "swipe"} for r in err))
+    m["ERRCLICKWAITHIGH"] = str(sum(not r["type_match"] and pair(r) == {"click", "wait"} for r in err))
     return m
 
 

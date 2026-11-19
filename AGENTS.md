@@ -168,7 +168,15 @@ Topic list (each maps to a file under `notes/`):
     (6,203/8,444); seeds 0–1: 90.7 ± 0.3 / 73.8 ± 0.5 (`benchmarks/train/seed_summary.py` →
     `benchmarks/results/2026-11-16-ac-noterm/seeds_summary.json`). **Seed 2 done 2026-11-18:** Low **90.63%**
     (7,653/8,444), High **74.24%** (6,269/8,444); three seeds: Low 90.7 ± 0.2, High 74.0 ± 0.4, episodes all right
-    on High 30.7 ± 1.2. Model card and paper updated; the seed queue is finished and the 4090 is free of our jobs. The paper now has a seed table
+    on High 30.7 ± 1.2. Model card and paper updated; the seed queue is finished and the 4090 is free of our jobs.
+    **Paper review 2026-11-19** (an independent reviewer pass and a source check of every comparison row against the
+    primary PDFs): UI-Genie-7B High is 74.2 in its own paper (MobileRL quotes 74.5), so the row now cites UI-Genie;
+    OS-Atlas rows are marked as scored on 7,708 steps; the placement sentences now name every model above ours; bib
+    authors fixed (Curated = Leung et al., OmegaUse = Zhang et al.). Added: episode-bootstrap intervals and paired gains,
+    the base model's bound if every "done" were right (62.5 / 44.2), the High error breakdown (1,097 type, 1,081
+    argument, 907 wrong element), training compute and optimizer, the history-effect rule, GUI-JEPA and Jev-Mobile in
+    related work, the correct Learn-then-Test guarantee wording, and an impact statement; all new numbers are macros
+    from `tables/make_numbers.py`. The paper now has a seed table
     (generated) and was rewritten for readability; its latency paragraph reports the idle-GPU measurement only.
   - **Decision cards and endpoint settings in the agent dashboard, 2026-11-17.** Each DMA-2B action opens a card in the
     form of the d1.2 answer cards (released by Liquid AI on 2026-11-16, API only, sizes not published): the screen it

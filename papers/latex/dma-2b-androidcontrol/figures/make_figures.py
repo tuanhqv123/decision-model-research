@@ -72,7 +72,9 @@ def fig_calibration():
     axs[0].set_xlim(0, 1)
     axs[0].set_ylim(0, 0.7)
     axs[0].set_title("(a) risk–coverage, AC-High")
-    axs[0].legend(frameon=False, loc="upper left", handlelength=1.2)
+    # direct labels: a legend box overlaps one of the curves wherever it is put
+    axs[0].text(0.06, 0.52, "d1-2B (base)", color=C["gray"], fontsize=7)
+    axs[0].text(0.42, 0.04, OURS, color=C["blue"], fontsize=7)
     axs[1].plot([0, 1], [0, 1], ls="--", color="#AAAAAA", lw=0.7)
     axs[1].set_xlabel("$p(\\hat a\\mid s)$ (bin mean)")
     axs[1].set_ylabel("step accuracy")
