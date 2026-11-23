@@ -1,0 +1,9 @@
+{
+ "source": "exec_report.py on the AC-Low and validation prediction files (not pushed); exec1 rows recomputed with the same script",
+ "ac_low_wrong_terminate": {
+  "exec2": {"total": 449, "on continuation steps": "291/1544", "on other steps": "158/6900"},
+  "exec1": {"total": 720, "on continuation steps": "530/1544", "on other steps": "190/6900"}
+ },
+ "tau_on_exec2_validation": {"rows": 1024, "errors by tau": {"0.5": 48, "0.55": 50, "0.6": 52, "0.65": 55, "0.7": 57, "0.75": 60, "0.8": 66, "0.85": 80, "0.9": 88, "0.95": 116, "0.97": 152, "0.99": 252}, "tau": 0.5},
+ "tau_0.5_bound_on_ac_low": {"wrong done predictions": 449, "with p(terminate) < 0.5": 25, "max AC-Low under tau=0.5": "(7328+25)/8444 = 87.08"}
+}

@@ -1,5 +1,20 @@
 # Hugging Face releases of DMA-2B
 
+## 2026-11-23: training seeds 1 and 2, and the results dataset
+
+* https://huggingface.co/tuanhqv123/DMA-2B-seed1 (Hub commit `fc5cad68`) and
+  https://huggingface.co/tuanhqv123/DMA-2B-seed2 (`e9acc88f`): the step-7,000 checkpoints of seeds 1 and 2, same
+  recipe as DMA-2B. `model.safetensors` sha256 `571d3b9a…c3a0` (seed 1) and `a069e5dd…16e3` (seed 2); the Hub's LFS
+  sha256 was checked against the training host's file after upload. Code, tokenizer, config and LICENSE are the
+  checkpoint's own files, byte-identical to the DMA-2B repo except `app_vocab.json` (each seed repo carries the one its
+  checkpoint was trained with, as seed 0's checkpoint does; no code reads it); `example.py`, `ac_common.py` and
+  `examples/` are copied from DMA-2B. Cards and NOTICE: `release/hf-DMA-2B-seeds/` (`make_seed_cards.py`).
+* https://huggingface.co/datasets/tuanhqv123/DMA-2B-results (commit `d0640063`, 2,605 files): `benchmarks/results/`
+  (every prediction, per-step verdict and summary, AndroidWorld trajectories with screenshots; `.tgz` duplicates left
+  out), the training logs and arguments of seeds 0–2 (home paths replaced by `~`), and the run card. Card:
+  `release/hf-DMA-2B-results/README.md`. Everything was scanned for private names before upload.
+* DMA-2B card links both (Hub commit `0ea9322e`).
+
 ## 2026-11-16: the final model (current)
 
 * Model repo https://huggingface.co/tuanhqv123/DMA-2B, Hub commit `60df93e9` (2026-11-16 08:28 UTC).

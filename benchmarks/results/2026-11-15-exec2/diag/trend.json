@@ -1,0 +1,242 @@
+{
+ "e2c1000": {
+  "val AC-Low style (690 action rows)": {
+   "n": 690,
+   "correct": 500,
+   "said done": 68,
+   "n first": 576,
+   "said done first": 35,
+   "said done, last step of unit": 61,
+   "n continuation": 114,
+   "said done continuation": 33
+  },
+  "train sample, executor scorer": {
+   "action rows": 1124,
+   "step success %": 73.31,
+   "false done on action rows": "71/1124",
+   "false done inside a local goal": "13/642",
+   "false done on its last action": "58/482",
+   "done rows": 482,
+   "done recall %": 81.54,
+   "done precision %": 84.7,
+   "AUROC p(status) done vs action": 0.9619,
+   "rows without a prediction": 0
+  },
+  "train sample by row kind": {
+   "n first of instruction": 838,
+   "said done first of instruction": 24,
+   "n continuation": 286,
+   "said done continuation": 47
+  }
+ },
+ "e2c2000": {
+  "val AC-Low style (690 action rows)": {
+   "n": 690,
+   "correct": 569,
+   "said done": 14,
+   "n first": 576,
+   "said done first": 3,
+   "said done, last step of unit": 14,
+   "n continuation": 114,
+   "said done continuation": 11
+  },
+  "train sample, executor scorer": {
+   "action rows": 1124,
+   "step success %": 82.12,
+   "false done on action rows": "24/1124",
+   "false done inside a local goal": "1/642",
+   "false done on its last action": "23/482",
+   "done rows": 482,
+   "done recall %": 73.65,
+   "done precision %": 93.67,
+   "AUROC p(status) done vs action": 0.9798,
+   "rows without a prediction": 0
+  },
+  "train sample by row kind": {
+   "n first of instruction": 838,
+   "said done first of instruction": 4,
+   "n continuation": 286,
+   "said done continuation": 20
+  }
+ },
+ "e2c3000": {
+  "val AC-Low style (690 action rows)": {
+   "n": 690,
+   "correct": 567,
+   "said done": 25,
+   "n first": 576,
+   "said done first": 5,
+   "said done, last step of unit": 24,
+   "n continuation": 114,
+   "said done continuation": 20
+  },
+  "train sample, executor scorer": {
+   "action rows": 1124,
+   "step success %": 83.01,
+   "false done on action rows": "38/1124",
+   "false done inside a local goal": "6/642",
+   "false done on its last action": "32/482",
+   "done rows": 482,
+   "done recall %": 79.88,
+   "done precision %": 91.02,
+   "AUROC p(status) done vs action": 0.9759,
+   "rows without a prediction": 0
+  },
+  "train sample by row kind": {
+   "n first of instruction": 838,
+   "said done first of instruction": 4,
+   "n continuation": 286,
+   "said done continuation": 34
+  }
+ },
+ "e2c4000": {
+  "val AC-Low style (690 action rows)": {
+   "n": 690,
+   "correct": 568,
+   "said done": 33,
+   "n first": 576,
+   "said done first": 12,
+   "said done, last step of unit": 30,
+   "n continuation": 114,
+   "said done continuation": 21
+  },
+  "train sample, executor scorer": {
+   "action rows": 1124,
+   "step success %": 83.54,
+   "false done on action rows": "39/1124",
+   "false done inside a local goal": "6/642",
+   "false done on its last action": "33/482",
+   "done rows": 482,
+   "done recall %": 89.83,
+   "done precision %": 91.74,
+   "AUROC p(status) done vs action": 0.9873,
+   "rows without a prediction": 0
+  },
+  "train sample by row kind": {
+   "n first of instruction": 838,
+   "said done first of instruction": 6,
+   "n continuation": 286,
+   "said done continuation": 33
+  }
+ },
+ "e2c5000": {
+  "val AC-Low style (690 action rows)": {
+   "n": 690,
+   "correct": 568,
+   "said done": 34,
+   "n first": 576,
+   "said done first": 13,
+   "said done, last step of unit": 29,
+   "n continuation": 114,
+   "said done continuation": 21
+  },
+  "train sample, executor scorer": {
+   "action rows": 1124,
+   "step success %": 86.21,
+   "false done on action rows": "31/1124",
+   "false done inside a local goal": "5/642",
+   "false done on its last action": "26/482",
+   "done rows": 482,
+   "done recall %": 89.83,
+   "done precision %": 93.32,
+   "AUROC p(status) done vs action": 0.9893,
+   "rows without a prediction": 0
+  },
+  "train sample by row kind": {
+   "n first of instruction": 838,
+   "said done first of instruction": 7,
+   "n continuation": 286,
+   "said done continuation": 24
+  }
+ },
+ "e2c6000": {
+  "val AC-Low style (690 action rows)": {
+   "n": 690,
+   "correct": 575,
+   "said done": 31,
+   "n first": 576,
+   "said done first": 13,
+   "said done, last step of unit": 26,
+   "n continuation": 114,
+   "said done continuation": 18
+  },
+  "train sample, executor scorer": {
+   "action rows": 1124,
+   "step success %": 87.54,
+   "false done on action rows": "25/1124",
+   "false done inside a local goal": "5/642",
+   "false done on its last action": "20/482",
+   "done rows": 482,
+   "done recall %": 89.21,
+   "done precision %": 94.51,
+   "AUROC p(status) done vs action": 0.9913,
+   "rows without a prediction": 0
+  },
+  "train sample by row kind": {
+   "n first of instruction": 838,
+   "said done first of instruction": 6,
+   "n continuation": 286,
+   "said done continuation": 19
+  }
+ },
+ "e2c7000": {
+  "val AC-Low style (690 action rows)": {
+   "n": 690,
+   "correct": 575,
+   "said done": 30,
+   "n first": 576,
+   "said done first": 12,
+   "said done, last step of unit": 27,
+   "n continuation": 114,
+   "said done continuation": 18
+  },
+  "train sample, executor scorer": {
+   "action rows": 1124,
+   "step success %": 87.54,
+   "false done on action rows": "21/1124",
+   "false done inside a local goal": "3/642",
+   "false done on its last action": "18/482",
+   "done rows": 482,
+   "done recall %": 90.25,
+   "done precision %": 95.39,
+   "AUROC p(status) done vs action": 0.9923,
+   "rows without a prediction": 0
+  },
+  "train sample by row kind": {
+   "n first of instruction": 838,
+   "said done first of instruction": 3,
+   "n continuation": 286,
+   "said done continuation": 18
+  }
+ },
+ "e1c6000": {
+  "val AC-Low style (690 action rows)": {
+   "n": 690,
+   "correct": 571,
+   "said done": 38,
+   "n first": 576,
+   "said done first": 9,
+   "said done, last step of unit": 35,
+   "n continuation": 114,
+   "said done continuation": 29
+  },
+  "train sample, executor scorer": {
+   "action rows": 1124,
+   "step success %": 82.83,
+   "false done on action rows": "68/1124",
+   "false done inside a local goal": "18/642",
+   "false done on its last action": "50/482",
+   "done rows": 482,
+   "done recall %": 95.85,
+   "done precision %": 87.17,
+   "AUROC p(status) done vs action": 0.9884,
+   "rows without a prediction": 0
+  },
+  "train sample by row kind": {
+   "n first of instruction": 838,
+   "said done first of instruction": 9,
+   "n continuation": 286,
+   "said done continuation": 59
+  }
+ }
+}

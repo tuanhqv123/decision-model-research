@@ -1,0 +1,1 @@
+SimpleCalendarAddRepeatingEvent and SimpleSmsSend moved to aw116_v4t_s0_7 (emulator 6) on 2026-11-12 12:2xZ: emulator 5 lost the accessibility tree at step 16 in every attempt (RetroSavePlaylist 20 times, SimpleCalendarAddRepeatingEvent 8 times).

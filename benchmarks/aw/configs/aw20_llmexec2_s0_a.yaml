@@ -1,0 +1,52 @@
+# LLM planner + exec2 executor (2026-11-16), trial on 20 tasks (the aw20_q10 list), seed 30, half a.
+# LLM (OpenAI-compatible endpoint, Qwen3.5-27B, no thinking) writes local goals; exec2 ckpt_7000 executes them and says
+# when each is done (awenv/planner.py). Harness settings = V12 (aw116_v4g). The endpoint and key are read from /tmp/llm_url and /tmp/llm_key only.
+protocol: aw-main-v1
+agent: d1_exec2_llm
+checkpoint: exec2_s0_ckpt7000
+model:
+  url: http://172.17.0.1:8711
+  token: tok
+  track: VA
+  return_readouts: true
+  history_format: v3
+  img_width: 720
+  done_threshold: 0.0
+  effect: v4
+environment:
+  url: http://127.0.0.1:5000
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+  emulator_setup: false
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  step_budgets_file: /tmp/budgets.json
+  tasks:
+  - SimpleSmsReply
+  - BrowserMultiply
+  - SimpleDrawProCreateDrawing
+  - CameraTakePhoto
+  - SimpleCalendarEventsInNextWeek
+  - AudioRecorderRecordAudio
+  - MarkorMoveNote
+  - SimpleCalendarLocationOfEvent
+  - ExpenseAddMultipleFromGallery
+  - SystemCopyToClipboard
+harness:
+  deferred_effect: true
+  scroll_index: true
+  post_action_wait_s: 1.5
+  fresh_wait_s: 20.0
+record:
+  state: true
+planner:
+  url_file: /tmp/llm_url
+  model: Qwen/Qwen3.5-27B
+  key_file: /tmp/llm_key
+  thinking: false
+  max_tokens: 300
+  max_goal_steps: 6
+  stuck_unchanged: 2

@@ -1,0 +1,62 @@
+# LLM planner + exec2 executor (2026-11-16), all 116 tasks, seed 30, part 4/6 (balanced by step budget).
+# Planner = awenv/planner.py after the 20-task trial fixes (05a89fa0). Paired with DMA-2B alone: aw116_v4g_s0 (25/115).
+# The endpoint and key are read from /tmp/llm_url and /tmp/llm_key only.
+protocol: aw-main-v1
+agent: d1_exec2_llm
+checkpoint: exec2_s0_ckpt7000
+model:
+  url: http://172.17.0.1:8711
+  token: tok
+  track: VA
+  return_readouts: true
+  history_format: v3
+  img_width: 720
+  done_threshold: 0.0
+  effect: v4
+environment:
+  url: http://127.0.0.1:5000
+  serial: emulator-5554
+  adb_path: /opt/android/platform-tools/adb
+  memory_gb: 24
+  emulator_setup: false
+suite:
+  family: android_world
+  seed: 30
+  n_task_combinations: 1
+  step_budgets_file: /tmp/budgets.json
+  tasks:
+  - CameraTakeVideo
+  - ContactsAddContact
+  - ExpenseAddMultipleFromGallery
+  - ExpenseDeleteMultiple
+  - MarkorChangeNoteContent
+  - MarkorDeleteNewestNote
+  - MarkorMoveNote
+  - OpenAppTaskEval
+  - RecipeAddMultipleRecipesFromMarkor
+  - RecipeDeleteMultipleRecipes
+  - RecipeDeleteMultipleRecipesWithNoise
+  - RetroPlayingQueue
+  - SimpleCalendarEventsInTimeRange
+  - SimpleDrawProCreateDrawing
+  - SimpleSmsResend
+  - SportsTrackerActivitiesCountForWeek
+  - SportsTrackerActivitiesOnDate
+  - SystemBrightnessMax
+  - SystemWifiTurnOffVerify
+  - TasksHighPriorityTasksDueOnDate
+harness:
+  deferred_effect: true
+  scroll_index: true
+  post_action_wait_s: 1.5
+  fresh_wait_s: 20.0
+record:
+  state: true
+planner:
+  url_file: /tmp/llm_url
+  model: Qwen/Qwen3.5-27B
+  key_file: /tmp/llm_key
+  thinking: false
+  max_tokens: 300
+  max_goal_steps: 6
+  stuck_unchanged: 2

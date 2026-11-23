@@ -1,0 +1,309 @@
+{
+ "1 by position": {
+  "dma | continuation": {
+   "n": 1547,
+   "said done": 0,
+   "correct": 1283
+  },
+  "dma | first of unit": {
+   "n": 6897,
+   "said done": 0,
+   "correct": 5525
+  },
+  "exec1 | continuation": {
+   "n": 1547,
+   "said done": 530,
+   "correct": 928
+  },
+  "exec1 | first of unit": {
+   "n": 6897,
+   "said done": 190,
+   "correct": 5545
+  },
+  "exec1_noterm | continuation": {
+   "n": 1547,
+   "correct": 1333
+  },
+  "exec1_noterm | first of unit": {
+   "n": 6897,
+   "correct": 5642
+  },
+  "exec2 | continuation": {
+   "n": 1547,
+   "said done": 291,
+   "correct": 1122
+  },
+  "exec2 | first of unit": {
+   "n": 6897,
+   "said done": 158,
+   "correct": 5530
+  },
+  "exec2_noterm | continuation": {
+   "n": 1547,
+   "correct": 1345
+  },
+  "exec2_noterm | first of unit": {
+   "n": 6897,
+   "correct": 5599
+  }
+ },
+ "2 paired with executor test": {
+  "exec1 | first of unit, executor text == AC-Low text": {
+   "n": 2168,
+   "AC-Low said done": 55,
+   "executor said done": 55,
+   "both": 55,
+   "same pred": 2168
+  },
+  "exec2 | first of unit, executor text == AC-Low text": {
+   "n": 2168,
+   "AC-Low said done": 42,
+   "executor said done": 41,
+   "both": 41,
+   "same pred": 2166
+  },
+  "exec1 | continuation, executor text == AC-Low text": {
+   "n": 606,
+   "AC-Low said done": 213,
+   "executor said done": 212,
+   "both": 212,
+   "same pred": 605
+  },
+  "exec2 | continuation, executor text == AC-Low text": {
+   "n": 606,
+   "AC-Low said done": 107,
+   "executor said done": 108,
+   "both": 107,
+   "same pred": 605
+  },
+  "exec1 | first of unit, executor text = several instructions": {
+   "n": 4680,
+   "AC-Low said done": 135,
+   "executor said done": 12,
+   "both": 8
+  },
+  "exec2 | first of unit, executor text = several instructions": {
+   "n": 4680,
+   "AC-Low said done": 115,
+   "executor said done": 10,
+   "both": 5
+  },
+  "exec1 | continuation, executor text = several instructions": {
+   "n": 910,
+   "AC-Low said done": 316,
+   "executor said done": 171,
+   "both": 143
+  },
+  "exec2 | continuation, executor text = several instructions": {
+   "n": 910,
+   "AC-Low said done": 183,
+   "executor said done": 100,
+   "both": 82
+  },
+  "no executor row": {
+   "n": 80
+  }
+ },
+ "2b exec2 same-text prediction mismatches (examples)": [
+  {
+   "k": [
+    "11946",
+    2
+   ],
+   "low": "Open the Stellarium app.",
+   "exe": "Open the Stellarium app",
+   "low_pred": "wait",
+   "exe_pred": "status",
+   "pt_low": 0.411,
+   "pt_exe": 0.424
+  },
+  {
+   "k": [
+    "18066",
+    2
+   ],
+   "low": "Click on the Calendar option.",
+   "exe": "Click on the Calendar option",
+   "low_pred": "status",
+   "exe_pred": "click",
+   "pt_low": 0.501,
+   "pt_exe": 0.486
+  },
+  {
+   "k": [
+    "18938",
+    0
+   ],
+   "low": "Click on the Clock App.",
+   "exe": "Click on the Clock App",
+   "low_pred": "open_app",
+   "exe_pred": "click",
+   "pt_low": 0.0,
+   "pt_exe": 0.0
+  }
+ ],
+ "3 exec2 false done": {
+  "n": 449,
+  "gold action": {
+   "click": 204,
+   "wait": 152,
+   "scroll": 48,
+   "navigate_back": 34,
+   "type_text": 10,
+   "open_app": 1
+  },
+  "position": {
+   "j=2 of 2": 170,
+   "j=1 of 1": 138,
+   "j=3 of 3": 29,
+   "j=2 of 3": 22,
+   "j=1 of 2": 16,
+   "j=4 of 4": 12,
+   "j=3 of 4": 8,
+   "j=5 of >4": 8,
+   "j=7 of >4": 7,
+   "j=4 of >4": 6,
+   "j=2 of >4": 6,
+   "j=2 of 4": 5
+  },
+  "p(terminate)": {
+   "0.8-0.95": 146,
+   "0.5-0.8": 192,
+   ">=0.95": 86,
+   "<0.5": 25
+  },
+  "last step of unit": 359
+ },
+ "3 exec1 false done": {
+  "n": 720,
+  "gold action": {
+   "click": 270,
+   "wait": 212,
+   "scroll": 166,
+   "navigate_back": 59,
+   "type_text": 12,
+   "open_app": 1
+  },
+  "position": {
+   "j=2 of 2": 258,
+   "j=1 of 1": 164,
+   "j=3 of 3": 47,
+   "j=2 of 3": 37,
+   "j=5 of >4": 24,
+   "j=4 of 4": 22,
+   "j=3 of >4": 19,
+   "j=3 of 4": 18,
+   "j=1 of 2": 18,
+   "j=6 of >4": 17,
+   "j=4 of >4": 17,
+   "j=7 of >4": 14
+  },
+  "p(terminate)": {
+   "0.8-0.95": 198,
+   "0.5-0.8": 368,
+   ">=0.95": 135,
+   "<0.5": 19
+  },
+  "last step of unit": 517
+ },
+ "3b gold action by position (all AC-Low)": {
+  "first of unit": {
+   "click": 4864,
+   "open_app": 606,
+   "type_text": 603,
+   "scroll": 535,
+   "navigate_back": 245,
+   "wait": 35,
+   "long_press": 9
+  },
+  "continuation": {
+   "scroll": 676,
+   "wait": 532,
+   "click": 210,
+   "navigate_back": 98,
+   "type_text": 29,
+   "open_app": 2
+  }
+ },
+ "3c false done per position x gold action [n, exec1, exec2]": {
+  "continuation | wait": [
+   532,
+   209,
+   151
+  ],
+  "first of unit | click": [
+   4864,
+   169,
+   149
+  ],
+  "continuation | click": [
+   210,
+   101,
+   55
+  ],
+  "continuation | scroll": [
+   676,
+   157,
+   46
+  ],
+  "continuation | navigate_back": [
+   98,
+   51,
+   28
+  ],
+  "continuation | type_text": [
+   29,
+   11,
+   10
+  ],
+  "first of unit | navigate_back": [
+   245,
+   8,
+   6
+  ],
+  "first of unit | scroll": [
+   535,
+   9,
+   2
+  ],
+  "first of unit | wait": [
+   35,
+   3,
+   1
+  ],
+  "continuation | open_app": [
+   2,
+   1,
+   1
+  ],
+  "first of unit | open_app": [
+   606,
+   0,
+   0
+  ],
+  "first of unit | type_text": [
+   603,
+   1,
+   0
+  ],
+  "first of unit | long_press": [
+   9,
+   0,
+   0
+  ]
+ },
+ "4 exec1->exec2 (ok / said done / other error)": {
+  "ok->ok": 6326,
+  "err->err": 1153,
+  "done->done": 394,
+  "done->ok": 245,
+  "ok->err": 109,
+  "err->ok": 81,
+  "done->err": 81,
+  "ok->done": 38,
+  "err->done": 17
+ },
+ "5 exec1: false done on steps the noterm run gets right": 502,
+ "5 exec2: false done on steps the noterm run gets right": 292,
+ "5 need correct for 88.3": 7457
+}

@@ -1,0 +1,1 @@
+RetroSavePlaylist removed from this targeted run on 2026-11-12 11:58Z: in 20 consecutive attempts the episode lost the accessibility tree ("Could not get a11y tree") at step 16 and was abandoned; environment failure, not scored, not counted as a model failure. Its earlier (V12) result stands in the merged table.

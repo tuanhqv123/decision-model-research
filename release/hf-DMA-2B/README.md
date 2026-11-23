@@ -58,7 +58,10 @@ option.
   threshold chosen on held-out episodes keeps the error rate at 19% while acting on 80% of the steps.
 
 > Research model (seed 0 of three training seeds; the other two score within one point: AndroidControl-Low
-> 90.7 ± 0.2%, High 74.0 ± 0.4% over three seeds). Rows marked *reported* are copied from other papers; everything else is
+> 90.7 ± 0.2%, High 74.0 ± 0.4% over three seeds). The other seeds are
+> [DMA-2B-seed1](https://huggingface.co/tuanhqv123/DMA-2B-seed1) and
+> [DMA-2B-seed2](https://huggingface.co/tuanhqv123/DMA-2B-seed2); every prediction, score and training log is in the
+> dataset [DMA-2B-results](https://huggingface.co/datasets/tuanhqv123/DMA-2B-results). Rows marked *reported* are copied from other papers; everything else is
 > measured by us.
 
 ## Results on AndroidControl
