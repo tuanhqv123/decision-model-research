@@ -177,8 +177,9 @@ Topic list (each maps to a file under `notes/`):
     argument, 907 wrong element), training compute and optimizer, the history-effect rule, GUI-JEPA and Jev-Mobile in
     related work, the correct Learn-then-Test guarantee wording, and an impact statement; all new numbers are macros
     from `tables/make_numbers.py`.
-    **Published 2026-11-23:** seeds 1 and 2 as `tuanhqv123/DMA-2B-seed1` / `-seed2` (step-7,000 weights, Hub LFS
-    sha256 checked against the training host; `example.py` from a fresh download gives the recorded decision for both),
+    **Published 2026-11-23:** seeds 1 and 2 as branches `seed1` / `seed2` of `tuanhqv123/DMA-2B` (one repo, the Hub's
+    layout for other checkpoints; step-7,000 weights, Hub LFS sha256 checked against the training host; `example.py`
+    from a fresh download of each branch gives the recorded decision),
     and every result and training log as the dataset `tuanhqv123/DMA-2B-results` (2,605 files, privacy-scanned); see
     `release/hf-DMA-2B/RELEASE.md`. The public git branch also gained 155 tracked files it had never received (late
     analyses, pre-registrations, the exec2 run card, AndroidWorld planner code and configs). Large AndroidWorld run

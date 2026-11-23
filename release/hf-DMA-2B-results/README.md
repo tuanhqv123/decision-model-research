@@ -15,8 +15,8 @@ size_categories:
 
 # DMA-2B results: evaluation outputs and training logs
 
-Everything measured for [DMA-2B](https://huggingface.co/tuanhqv123/DMA-2B) and its training seeds
-([seed 1](https://huggingface.co/tuanhqv123/DMA-2B-seed1), [seed 2](https://huggingface.co/tuanhqv123/DMA-2B-seed2)):
+Everything measured for [DMA-2B](https://huggingface.co/tuanhqv123/DMA-2B) and its training seeds (branches
+[`seed1`](https://huggingface.co/tuanhqv123/DMA-2B/tree/seed1) and [`seed2`](https://huggingface.co/tuanhqv123/DMA-2B/tree/seed2)):
 the model's prediction for every evaluated step, the per-step verdicts of the scorers, the summaries every reported
 number is computed from, and the training logs. Paths mirror the code repository, so every script there reads these
 files where it expects them.

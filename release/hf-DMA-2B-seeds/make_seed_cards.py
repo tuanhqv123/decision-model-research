@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Model cards and NOTICE files of the DMA-2B seed repos (tuanhqv123/DMA-2B-seed1, -seed2), from
+"""Model cards and NOTICE files of the DMA-2B seed branches (revisions `seed1`, `seed2` of tuanhqv123/DMA-2B), from
 benchmarks/results/2026-11-16-ac-noterm/seeds_summary.json. Writes release/hf-DMA-2B-seeds/seed{1,2}/{README,NOTICE}.md."""
 import json
 import os
@@ -13,7 +13,7 @@ SHA = json.load(open(os.path.join(HERE, "sha256.json")))  # {"1": "...", "2": ".
 def card(seed):
     v = S["seeds"][str(seed)]
     rows = "\n".join(
-        f"| {k}{' (released as DMA-2B)' if k == '0' else ''}{' **(this repo)**' if k == str(seed) else ''} | "
+        f"| {k}{' (released as DMA-2B)' if k == '0' else ''}{' **(this branch)**' if k == str(seed) else ''} | "
         f"{x['low']['sr']:.2f} | {x['high']['sr']:.2f} | {x['high']['episode_sr']:.2f} |"
         for k, x in sorted(S["seeds"].items()))
     m = lambda k: f"{S[k]['mean']:.2f} ± {S[k]['sd']:.2f}"  # noqa: E731
@@ -60,15 +60,17 @@ model-index:
             value: {v['high']['sr']:.2f}
 ---
 
-# DMA-2B, training seed {seed}
+# DMA-2B, training seed {seed} (revision `seed{seed}`)
 
-This is **training seed {seed}** of [DMA-2B](https://huggingface.co/tuanhqv123/DMA-2B). The released DMA-2B is seed 0.
+This branch holds **training seed {seed}** of [DMA-2B](https://huggingface.co/tuanhqv123/DMA-2B). The default branch
+(`main`) is the released model, seed 0.
 All seeds use the same data, recipe and checkpoint step (7,000); only the training seed, and with it the order of the
-training data, differs. This repository lets anyone reproduce the seed table and check that the released model is a
+training data, differs. These branches let anyone reproduce the seed table and check that the released model is a
 typical run of the recipe.
 
 For what the model does, its inputs and outputs, usage, training data and limitations, read the
-[DMA-2B card](https://huggingface.co/tuanhqv123/DMA-2B). Everything there applies here; only the weights differ.
+[DMA-2B card](https://huggingface.co/tuanhqv123/DMA-2B) on the `main` branch. Everything there applies here; only the
+weights differ.
 
 ## Results on AndroidControl
 
@@ -85,11 +87,18 @@ scores of every seed are in the dataset [DMA-2B-results](https://huggingface.co/
 
 ## How to use
 
-Exactly as DMA-2B, with this repository's id:
+Exactly as DMA-2B, with `revision="seed{seed}"`:
+
+```python
+model = AutoModel.from_pretrained("tuanhqv123/DMA-2B", revision="seed{seed}", trust_remote_code=True,
+                                  dtype=torch.bfloat16)
+```
+
+or, to run the example:
 
 ```bash
 pip install "transformers>=5" torch torchvision pillow
-git clone https://huggingface.co/tuanhqv123/DMA-2B-seed{seed} && cd DMA-2B-seed{seed}
+git clone -b seed{seed} https://huggingface.co/tuanhqv123/DMA-2B DMA-2B-seed{seed} && cd DMA-2B-seed{seed}
 python example.py
 ```
 
